@@ -1,0 +1,41 @@
+
+mkdir GWAS_PROJECT
+cd GWAS_PROJECT
+mkdir GWAS
+
+#copy contents of this zip to the GWAS folder
+#DO THIS
+#!!!!!!!!!!!!!!!!!!!!
+
+git clone git://github.com/xianyi/OpenBLAS
+cd OpenBLAS
+
+#make sure g++ its 4.8 or above!on rwth cluster module load gcc/4.8, choose 32 or 64 also
+make all HOSTCC=g++ FC=gfortran USE_OPENMP=1
+
+make PREFIX=../GWAS/ install
+cd ../GWAS/lib/
+
+#this hopefully lets the Os knwo where BLAS is
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:pwd
+
+cd ..
+
+
+
+#compile the contents of the GWAS solver
+g++ *.cpp  -I./include -L./lib -lopenblas -w
+
+#this creates an a.out
+
+a.out -c XL --geno XR -p Y -o B -n 2 -t 2
+
+Must be included:
+-c --cov filename		covariates in fv (no need for the .fvd/.fvi, both should have the same name!)
+-g --geno filename		snps in fv (no need for the .fvd/.fvi, both should have the same name!)
+-p --phe filename		traits in fv (no need for the .fvd/.fvi, both should have the same name!)
+-o --out filename		file where betas will be written in fv (no need for the .fvd/.fvi, both should have the same name!)
+
+Optional:
+-n --ngred                     if the file in snp has a different model like direct data genotipic (2 columns per snp) specify -n 2, default is 1
+-t --thr			amount of threads to use, use = as the amount of physical processors in the system (max)
