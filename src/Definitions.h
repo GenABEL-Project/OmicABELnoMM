@@ -22,7 +22,6 @@
     #include <cblas.h>
     #define cpu_freq 4.6
 #else
-    #include "mkl.h"
     //#include "mpi.h"
     //#define cpu_freq 3.0
     #define cpu_freq 3.0
@@ -31,6 +30,7 @@
 #endif
 
 #ifdef __INTEL_MKL__
+    #include "mkl.h"
     #define blas_set_num_threads(n) mkl_set_num_threads(n)
 #else
     #define blas_set_num_threads(n) goto_set_num_threads(n)
