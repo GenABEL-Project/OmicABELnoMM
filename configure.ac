@@ -49,7 +49,8 @@ AC_SUBST(AM_CXXFLAGS, "$OPENMP_CXXFLAGS")
 AC_CHECK_HEADERS([limits.h stdlib.h string.h sys/time.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
-AC_CHECK_HEADER_STDBOOL
+#AC_CHECK_HEADER_STDBOOL # USE THIS WITH AUTOCONF 2.69
+AC_HEADER_STDBOOL
 AC_TYPE_SIZE_T
 
 # Checks for library functions.
