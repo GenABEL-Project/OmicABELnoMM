@@ -2,9 +2,9 @@
 #define defs_H_INCLUDED
 
 #ifdef __linux__
-  #define LINUX
+    #define LINUX
 #else
-  #define WINDOWS
+    #define WINDOWS
 #endif
 
 #include <stdio.h>
@@ -69,14 +69,14 @@ static usCount GetUsCount()
     static LARGE_INTEGER ticksPerSec;
     static double scalefactor;
     LARGE_INTEGER val;
-    if(!scalefactor)
+    if (!scalefactor)
     {
-        if(QueryPerformanceFrequency(&ticksPerSec))
+        if (QueryPerformanceFrequency(&ticksPerSec))
             scalefactor=ticksPerSec.QuadPart/1000000000000.0;
         else
             scalefactor=1;
     }
-    if(!QueryPerformanceCounter(&val))
+    if (!QueryPerformanceCounter(&val))
         return (usCount) GetTickCount() * 1000000000;
     return (usCount) (val.QuadPart/scalefactor);
 }
@@ -103,40 +103,46 @@ static usCount usCountOverhead, CPUClockSpeed;
 #include "x86intrin.h"
 #define __rdtsc() __builtin_ia32_rdtsc()
 #endif
+
 static usCount GetClockSpeed()
 {
-  int n;
-  usCount start, end, start_tsc, end_tsc;
-  if(!usCountOverhead)
-  {
-    usCount foo=0;
-    start=GetUsCount();
-    for(n=0; n<1000000; n++)
+    int n;
+    usCount start, end, start_tsc, end_tsc;
+    if (!usCountOverhead)
     {
-      foo+=GetUsCount();
+        usCount foo = 0;
+        start=GetUsCount();
+        for (n = 0; n < 1000000; n++)
+        {
+            foo += GetUsCount();
+        }
+        end = GetUsCount();
+        usCountOverhead = (end - start)/n;
     }
-    end=GetUsCount();
-    usCountOverhead=(end-start)/n;
-  }
-  start=GetUsCount();
-  start_tsc=__rdtsc();
-  for(n=0; n<1000; n++)
+
+    start = GetUsCount();
+    start_tsc = __rdtsc();
+    for (n = 0; n <1000; n++)
+    {
 #ifdef WIN32
-    Sleep(0);
+        Sleep(0);
 #else
-    sched_yield();
+        sched_yield();
 #endif
-  end_tsc=__rdtsc();
-  end=GetUsCount();
-  return (usCount)((1000000000000.0*(end_tsc-start_tsc))/(end-start-usCountOverhead));
+    }
+
+    end_tsc = __rdtsc();
+    end = GetUsCount();
+    return(usCount)((1000000000000.0 * (end_tsc - start_tsc)) /
+                    (end - start - usCountOverhead));
 }
 
 
 using namespace std;
 
+
 struct Settings
 {
-
     int n;
     int t;
     int m;
@@ -157,12 +163,11 @@ struct Settings
     string fnameOutB;
 
     bool doublefileType;
-
 };
+
 
 struct Outputs
 {
-
     double duration;
     double gflops;
 
@@ -173,11 +178,7 @@ struct Outputs
     double acc_gemm;
     double acc_b;
     double firstloop;
-
-
 };
 
 
 #endif // UTILITY_H_INCLUDED
-
-
