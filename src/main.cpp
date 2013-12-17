@@ -86,7 +86,7 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             if (pos != string::npos)
                 params.fnameY = string(optarg).substr (0, pos);
 
-            cout << "using -p traits in file " << optarg << endl;
+            cout << "using -p with phenotypes from file " << optarg << endl;
             break;
 
         case 'g':
@@ -97,7 +97,7 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             if (pos != string::npos)
                 params.fnameAR = string(optarg).substr (0, pos);
 
-            cout << "using -g geno in file " << optarg << endl;
+            cout << "using -g with genotype data from file " << optarg << endl;
             break;
 
          case 'n':
@@ -108,24 +108,24 @@ void parse_params(int argc, char *argv[], struct Settings &params )
 
         case 'c':
             cov = !cov;
-            params.fnameAL= string(optarg);
+            params.fnameAL = string(optarg);
 
             pos = string(optarg).find(".");
             if (pos != string::npos)
                 params.fnameAL = string(optarg).substr(0, pos);
 
-            cout << "using -c covariates in file " << optarg << endl;
+            cout << "using -c with covariates from file " << optarg << endl;
             break;
 
         case 'o':
             bout = !bout;
-            params.fnameOutB= string(optarg);
+            params.fnameOutB = string(optarg);
 
             pos = string(optarg).find(".");
             if (pos != string::npos)
                 params.fnameOutB = string(optarg).substr(0, pos);
 
-            cout << "using -o as output file " << optarg << endl;
+            cout << "using -o with output file " << optarg << endl;
             break;
 
         case 't':
@@ -149,6 +149,7 @@ void parse_params(int argc, char *argv[], struct Settings &params )
         printf ("non-option ARGV-elements: ");
         while (optind < argc)
             printf ("%s ", argv[optind++]);
+
         putchar ('\n');
     }
 
@@ -166,7 +167,6 @@ void parse_params(int argc, char *argv[], struct Settings &params )
 
 int main( int argc, char *argv[] )
 {
-
     struct Settings params;
 
 //    cout << "Using Arguments: ";
