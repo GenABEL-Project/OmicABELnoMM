@@ -1304,7 +1304,7 @@ void Algorithm::partialQR(struct Settings params, struct Outputs &out)
     get_ticks(end_tick);
     out.duration = ticks2sec(end_tick - start_tick, cpu_freq);
     out.gflops = 2.0*(n*l*l/1000.0 + a_amount *
-                      (2.0 * n * l * r/ 1 000.0 +
+                      (2.0 * n * l * r / 1000.0 +
                        n *  r * r / 1000.0 +
                        y_amount / 1000.0 * (p * n + p * p * p))) /
         1000.0 / 1000.0;
