@@ -2,13 +2,13 @@
 
 Algorithm::Algorithm()
 {
-    //ctor
+    // ctor
 }
 
 
 Algorithm::~Algorithm()
 {
-    //dtor
+    // dtor
 }
 
 
@@ -16,32 +16,31 @@ void Algorithm::solve(struct Settings params, struct Outputs &out, int type)
 {
     switch (type)
     {
-        case FULL_NEQ:
-                fullNEQ(params, out);
-            break;
-        case P_NEQ:
-                partialNEQ(params, out);
-            break;
-        case P_NEQ_B_OPT:
-                partialNEQ_Blocked_STL(params, out);
-            break;
-        case FULL_QR:
-                fullQR(params, out);
-            break;
-        case P_QR:
-                partialQR(params, out);
-            break;
-        case P_QR_B_OPT:
-                partialQR_Blocked_Rtl(params, out);
-            break;
-        case P_NEQ_B_OPT_MD:
-                partialNEQ_Blocked_STL_MD(params, out);
-            break;
+    case FULL_NEQ:
+        fullNEQ(params, out);
+        break;
+    case P_NEQ:
+        partialNEQ(params, out);
+        break;
+    case P_NEQ_B_OPT:
+        partialNEQ_Blocked_STL(params, out);
+        break;
+    case FULL_QR:
+        fullQR(params, out);
+        break;
+    case P_QR:
+        partialQR(params, out);
+        break;
+    case P_QR_B_OPT:
+        partialQR_Blocked_Rtl(params, out);
+        break;
+    case P_NEQ_B_OPT_MD:
+        partialNEQ_Blocked_STL_MD(params, out);
+        break;
 
-        default:
-            break;
+    default:
+        break;
     }
-
 }
 
 
@@ -51,13 +50,13 @@ void Algorithm::extract_subMatrix(type_precision* source, type_precision* dest,
                                   int dim2_end)
 {
 
-    int i, j, idx=0;
+    int i, j, idx = 0;
     int size, source_ini;
-    for (i = dim2_ini; i<dim2_end; i++)
+    for (i = dim2_ini; i < dim2_end; i++)
     {
         j = dim1_ini;
-        source_ini = i*dim1_source+j;
-        size = dim1_end-dim1_ini;
+        source_ini = i * dim1_source+j;
+        size = dim1_end - dim1_ini;
         memcpy( (type_precision*)&dest[idx],
                 (type_precision*)&source[source_ini],
                 size * sizeof(type_precision) );
@@ -75,15 +74,15 @@ void Algorithm::prepare_Bfinal(type_precision* bfinal, type_precision* top,
                                type_precision* bot, int dim1_b,
                                int dim2_b, int dim1_b_bot)
 {
-    //memcpy are faster version of the fors
+    // memcpy are faster version of the fors
     int i, k, w, top_idx, bot_idx, max = dim1_b*dim2_b;
     int size;
     top_idx = 0;
     bot_idx = 0;
     for (k = 0; k < dim2_b; k++)
     {
-        size = k*dim1_b+(dim1_b-dim1_b_bot)-(k*dim1_b);
-        memcpy( (type_precision*)&bfinal[k*dim1_b],
+        size = k * dim1_b + (dim1_b - dim1_b_bot) - (k * dim1_b);
+        memcpy( (type_precision*)&bfinal[k * dim1_b],
                 (type_precision*)&top[top_idx],
                 size * sizeof(type_precision) );
 //        for (i = k*dim1_b; i < k*dim1_b+(dim1_b-dim1_b_bot); i++)
@@ -92,7 +91,7 @@ void Algorithm::prepare_Bfinal(type_precision* bfinal, type_precision* top,
 //            top_idx++;
 //        }
         top_idx += size;
-        i = k*dim1_b + size;
+        i = k * dim1_b + size;
         w = i;
 
         size = w + dim1_b_bot - w;
@@ -119,14 +118,14 @@ void Algorithm::prepare_QY(type_precision* qy, type_precision* top,
     bot_idx = 0;
     for (k = 0; k < dim2_QY; k++)
     {
-        for (i = k*dim1_QY; i < (k+1)*dim1_QY-dim1_qy_bot; i++)
+        for (i = k * dim1_QY; i < (k+1) * dim1_QY - dim1_qy_bot; i++)
         {
             qy[i] = top[top_idx];
             top_idx++;
         }
         w = i;
 
-        for (i = w; i < w+dim1_qy_bot; i++)
+        for (i = w; i < w + dim1_qy_bot; i++)
         {
             qy[i] = bot[bot_idx];
             bot_idx++;
@@ -190,14 +189,14 @@ void Algorithm::update_R(type_precision* R, type_precision* topRr,
     int rbr_idx = 0;
     for (j = r; j > 0; j--)
     {
-        for (i = max-dim1*j; i < max-dim1*j+dim2-r; i++)
+        for (i = max - dim1 * j; i < max - dim1 * j + dim2 - r; i++)
         {
             R[i] = topRr[rtr_idx];
             rtr_idx++;
         }
         w = i;
 
-        for (i = w; i < w+r; i++)
+        for (i = w; i < w + r; i++)
         {
             R[i] = botRr[rbr_idx];
             rbr_idx++;
@@ -214,7 +213,7 @@ void Algorithm::build_S(type_precision* S, type_precision* Stl,
 
     for (int i = 0; i < l; i++)
     {
-        Sidx = i*p;
+        Sidx = i * p;
         for (int j = 0; j <= i; j++)
         {
             S[Sidx] = Stl[j+i*l];
@@ -227,7 +226,7 @@ void Algorithm::build_S(type_precision* S, type_precision* Stl,
         Sidx = l*p + p*i;
         for (int j = 0; j < l; j++)
         {
-            S[Sidx] = Str[j+i*l];
+            S[Sidx] = Str[j + i * l];
             Sidx++;
         }
     }
@@ -237,7 +236,7 @@ void Algorithm::build_S(type_precision* S, type_precision* Stl,
         Sidx = l*p + l + p*i;
         for (int j= 0; j <= i; j++)
         {
-            S[Sidx] = Sbr[j+i*r];
+            S[Sidx] = Sbr[j + i * r];
             Sidx++;
         }
     }
@@ -252,12 +251,12 @@ void Algorithm::check_result(type_precision* AL, type_precision* AR,
                                                 sizeof(type_precision));
 
     int i, ar_idx = 0;
-    for (i = 0; i < rowsA*(colsA-colsAR); i++)
+    for (i = 0; i < rowsA * (colsA - colsAR); i++)
     {
         A[i] =  AL[i];
     }
 
-    for (i = rowsA*(colsA-colsAR); i < rowsA*colsA; i++)
+    for (i = rowsA * (colsA - colsAR); i < rowsA * colsA; i++)
     {
         A[i] = AR[ar_idx];
         ar_idx++;
@@ -295,7 +294,7 @@ void Algorithm::check_result(type_precision* AL, type_precision* AR,
         matlab_print_matrix("AL", rowsA, colsA-colsAR, AL);
         matlab_print_matrix("AR", rowsA, colsAR, AR);
         matlab_print_matrix("Y", rowsA, rhs, y);
-        printf("\nA = [AL AR]; [Q, R] = qr(A, 0); rr=R\\(Q'*Y)\n");
+        printf("\nA = [AL AR]; [Q, R] = qr(A, 0); rr = R\\(Q'*Y)\n");
         matlab_print_matrix("bcomputed", colsA, rhs, res);
         matlab_print_matrix("newsol", colsA, rhs, ynew);
         printf("\n%%\tnrom: %0.2g", u_norm);
@@ -309,7 +308,7 @@ void Algorithm::check_result(type_precision* AL, type_precision* AR,
     }
 
 
-    //cout << "\t**************";
+    // cout << "\t**************";
     free(ynew);
     free(new_sol);
     free(A);
@@ -339,10 +338,10 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
     AIOfile.initialize(params);
 
-    n = params.n; l=params.l; r=params.r; p = l+r;
+    n = params.n; l = params.l; r = params.r; p = l+r;
 
     int y_amount = params.t;
-    int y_block_size = params.tb;//kk
+    int y_block_size = params.tb;  // kk
 
     int a_amount = params.m;
     int a_block_size = params.mb;
@@ -398,7 +397,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
     type_precision* Y;
 
-    //printf("\n\n%%Computations\n%%");
+    // printf("\n\n%%Computations\n%%");
 
 
     get_ticks(start_tick);
@@ -464,7 +463,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
                     copy_vec(backupAL,&AL[aL_idx], n * l);
 
                     replace_with_zeros(&y_nan_idxs[jj], &AL[aL_idx], n, l, 1);
-                    //!Generate Stl
+                    //! Generate Stl
                     cblas_ssyrk(CblasColMajor, CblasUpper, CblasTrans,
                                 l, n, 1.0,&AL[aL_idx], lda, 0.0, Stl, l);
 
@@ -473,7 +472,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
                                        n, r, a_block_size);
 
                     get_ticks(start_tick2);
-                    //!Generate Str
+                    //! Generate Str
                     cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
                                 l, r * a_block_size, n, 1.0, &AL[aL_idx],
                                 n,&AR[aR_idx], n, 0.0, Str, l);
@@ -489,7 +488,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
                     for (int ii= 0; ii < a_block_size; ii++)
                     {
                         get_ticks(start_tick2);
-                        //!Generate Sbr
+                        //! Generate Sbr
                         cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
                                     r, r, n, 1.0, &AR[aR_idx+ii*r*n], n,
                                     &AR[aR_idx + ii * r * n], n, 0.0,
@@ -508,9 +507,9 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
                         type_precision* B = Ay;
                         type_precision S[p * p];
 
-                        //!Rebuild S
+                        //! Rebuild S
                         build_S(S, Stl, &Str[ii*r*l], &Sbr[ii*r*r], l, r);
-                        //matlab_print_matrix("S", p, p, S);
+                        // matlab_print_matrix("S", p, p, S);
 
                         get_ticks(end_tick);
                         out.acc_b += ticks2sec(end_tick - start_tick2,
@@ -518,7 +517,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
                         get_ticks(start_tick2);
 
-                        //!b=S\Ay
+                        //! b = S\Ay
                         info = LAPACKE_sposv(STORAGE_TYPE,'U', p, 1, S, p,
                                              &Ay[ii*p], p);
 
@@ -546,7 +545,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
     get_ticks(end_tick);
     out.duration = ticks2sec(end_tick - start_tick, cpu_freq);
-    //out.gflops = a_amount/1000.0*(n*l*r+n*r*r+y_amount*(n*r+p*p*p)))/1000.0/1000.0;
+    // out.gflops = a_amount/1000.0*(n*l*r+n*r*r+y_amount*(n*r+p*p*p)))/1000.0/1000.0;
     out.gflops = y_amount * (gemm_flops(l, n, 1, 0) +
                              a_amount * (gemm_flops(r, n, 1, 0) +
                                          gemm_flops(l, n, l, 0) +
@@ -561,8 +560,8 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
     delete []Ay_bot;
     delete []AR;
     delete []AL;
-    //delete []backupAL;
-    //delete []backupAR;
+    // delete []backupAL;
+    // delete []backupAR;
 
 }
 
@@ -589,10 +588,10 @@ void Algorithm::partialNEQ_Blocked_STL(struct Settings params,
 
     AIOfile.initialize(params);
 
-    n = params.n; l=params.l; r=params.r; p = l+r;
+    n = params.n; l = params.l; r = params.r; p = l+r;
 
     int y_amount = params.m;
-    int y_block_size = params.mb;  //kk
+    int y_block_size = params.mb;  // kk
 
     int a_amount = params.t;
     int a_block_size = params.tb;
@@ -628,13 +627,13 @@ void Algorithm::partialNEQ_Blocked_STL(struct Settings params,
     type_precision* Y;
     type_precision* backupAR;
 
-    //printf("\n\n%%Computations\n%%");
+    // printf("\n\n%%Computations\n%%");
 
 
     get_ticks(start_tick);
 
 
-    //!Generate S
+    //! Generate S
     cblas_ssyrk(CblasColMajor, CblasUpper, CblasTrans,
                 l, n, 1.0, backupAL, lda, 0.0, Stl, l);
 
@@ -642,7 +641,7 @@ void Algorithm::partialNEQ_Blocked_STL(struct Settings params,
     {
         AIOfile.load_Yblock(&Y, y_block_size);
 
-        //! Ay_top=AL'*Y
+        //! Ay_top = AL'*Y
         cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
                     l, y_block_size, n, 1.0, AL, n, Y, n, 0.0,
                     &Ay_top[j * l * y_block_size], l);
@@ -661,8 +660,8 @@ void Algorithm::partialNEQ_Blocked_STL(struct Settings params,
         AIOfile.reset_Y();
         copy_vec(backupAR, AR, n*r*a_block_size);
 
-        //matlab_print_matrix("A", n, p, A);
-        //!Generate Str
+        // matlab_print_matrix("A", n, p, A);
+        //! Generate Str
         cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
                     l, r * a_block_size, n, 1.0, AL, n, AR, n, 0.0, Str, l);
 
@@ -671,7 +670,7 @@ void Algorithm::partialNEQ_Blocked_STL(struct Settings params,
         #pragma omp parallel for default(shared) schedule(static)
         for (int ii= 0; ii < a_block_size; ii++)
         {
-            //!Generate Sbr
+            //! Generate Sbr
             cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
                         r, r, n, 1.0, &AR[ii*r*n], n, &AR[ii*r*n],
                         n, 0.0, &Sbr[ii*r*r], r);
@@ -691,7 +690,7 @@ void Algorithm::partialNEQ_Blocked_STL(struct Settings params,
 
             AIOfile.load_Yblock(&Y, y_block_size);
 
-            //!Ay_bot=AR'*Y
+            //! Ay_bot = AR'*Y
             cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
                         r * a_block_size, y_block_size, n, 1.0, AR, n, Y, n,
                         0.0, Ay_bot, r * a_block_size);
@@ -699,9 +698,9 @@ void Algorithm::partialNEQ_Blocked_STL(struct Settings params,
             #pragma omp parallel for private(S, Ay) default(shared) schedule(static)
             for (int ii= 0; ii < a_block_size; ii++)
             {
-                //matlab_print_matrix("Y", n, y_block_size, Y);
+                // matlab_print_matrix("Y", n, y_block_size, Y);
 
-                //!Rebuild AY
+                //! Rebuild AY
 
                 for (int jj = 0; jj < y_block_size; jj++)
                 {
@@ -710,18 +709,18 @@ void Algorithm::partialNEQ_Blocked_STL(struct Settings params,
                 }
 
                 type_precision* B = Ay;
-                //matlab_print_matrix("Ay_top", l, y_block_size,&Ay_top[j*l*y_block_size]);
-                //matlab_print_matrix("Ay_bot", r, y_block_size, Ay_bot);
-                //matlab_print_matrix("Ay", p, y_block_size, Ay);
+                // matlab_print_matrix("Ay_top", l, y_block_size,&Ay_top[j*l*y_block_size]);
+                // matlab_print_matrix("Ay_bot", r, y_block_size, Ay_bot);
+                // matlab_print_matrix("Ay", p, y_block_size, Ay);
 
-                //!Rebuild S
+                //! Rebuild S
                 build_S(S, Stl, &Str[ii*r*l], &Sbr[ii*r*r], l, r);
-                //matlab_print_matrix("S", p, p, S);
+                // matlab_print_matrix("S", p, p, S);
 
-                //!b=S\Ay
+                //! b = S\Ay
                 info = LAPACKE_sposv(STORAGE_TYPE, 'U', p, y_block_size,
                                      S, p, Ay, p);
-                //assert(info == 0,"POSV");
+                // assert(info == 0,"POSV");
 
 
                 if (ForceCheck)
@@ -734,8 +733,8 @@ void Algorithm::partialNEQ_Blocked_STL(struct Settings params,
     }
 
     get_ticks(end_tick);
-    out.duration = ticks2sec(end_tick-start_tick, cpu_freq);
-    //out.gflops = a_amount/1000.0*(n*l*r+n*r*r+y_amount*(n*r+p*p*p)))/1000.0/1000.0;
+    out.duration = ticks2sec(end_tick - start_tick, cpu_freq);
+    // out.gflops = a_amount/1000.0*(n*l*r+n*r*r+y_amount*(n*r+p*p*p)))/1000.0/1000.0;
     out.gflops = gemm_flops(l, n, l, 0) + gemm_flops(l, n, y_amount, 0) +
                  a_amount * (gemm_flops(l, n, r, 0) +
                              gemm_flops(r, n, r, 0) +
@@ -774,10 +773,10 @@ void Algorithm::partialNEQ(struct Settings params, struct Outputs &out)
     cputime_type start_tick, start_tick2, end_tick;
     AIOfile.initialize(params);
 
-    n = params.n; l=params.l; r=params.r; p = l+r;
+    n = params.n; l = params.l; r = params.r; p = l+r;
 
     int y_amount = params.m;
-    int y_block_size = params.mb;//kk
+    int y_block_size = params.mb;// kk
 
     int a_amount = params.t;
     int a_block_size = 1;
@@ -793,33 +792,33 @@ void Algorithm::partialNEQ(struct Settings params, struct Outputs &out)
 
     AIOfile.load_AL(&backupAL);
 
-    type_precision* S = new type_precision[p*p];
-    type_precision Stl[l*l];
-    type_precision Str[l*r];
-    type_precision Sbr[r*r];
-    type_precision* A = new type_precision[n*p];
+    type_precision* S = new type_precision[p * p];
+    type_precision Stl[l * l];
+    type_precision Str[l * r];
+    type_precision Sbr[r * r];
+    type_precision* A = new type_precision[n * p];
     type_precision* AL = A;
-    type_precision* AR = &A[l*n];
+    type_precision* AR = &A[l * n];
 
     copy_vec(backupAL, AL, n*l);
 
 
-    int y_iters = y_amount/y_block_size;
+    int y_iters = y_amount / y_block_size;
 
     type_precision* Y;
     type_precision* backupAR;
 
-    //printf("\n\n%%Computations\n%%");
+    // printf("\n\n%%Computations\n%%");
 
     get_ticks(start_tick);
 
-    //!Generate S
+    //! Generate S
     cblas_ssyrk(CblasColMajor, CblasUpper, CblasTrans,
                 l, n, 1.0, backupAL, lda, 0.0, Stl, l);
 
     for (i = 0; i < a_iters; i++)
     {
-        if (a_iters < 10 || (i%(a_iters/10))==0)
+        if (a_iters < 10 || (i%(a_iters/10)) == 0)
         {
             cout << "%" << flush;
         }
@@ -828,42 +827,42 @@ void Algorithm::partialNEQ(struct Settings params, struct Outputs &out)
         AIOfile.reset_Y();
         copy_vec(backupAR, AR, n*r);
 
-        //matlab_print_matrix("A", n, p, A);
-        //!Generate Str
+        // matlab_print_matrix("A", n, p, A);
+        //! Generate Str
         cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
                     l, r, n, 1.0, AL, n, AR, n, 0.0, Str, l);
 
-        //!Generate Sbr
+        //! Generate Sbr
         cblas_ssyrk(CblasColMajor, CblasUpper, CblasTrans,
                     r, n, 1.0, backupAR, lda, 0.0, Sbr, r);
 
 
 
-        //matlab_print_matrix("S", p, p, S);
+        // matlab_print_matrix("S", p, p, S);
 
         for (j = 0; j < y_iters; j++)
         {
             build_S(S, Stl, Str, Sbr, l, r);
 
             AIOfile.load_Yblock(&Y, y_block_size);
-            type_precision Ay[y_block_size*p];
+            type_precision Ay[y_block_size * p];
 
-            //matlab_print_matrix("Y", n, y_block_size, Y);
+            // matlab_print_matrix("Y", n, y_block_size, Y);
 
-            //!Ay=A'*Y
+            //! Ay = A'*Y
             cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
                         p, y_block_size, n, 1.0, A, n, Y, n, 0.0, Ay, p);
 
             type_precision* B = Ay;
-            //matlab_print_matrix("Ay", p, y_block_size, Ay);
+            // matlab_print_matrix("Ay", p, y_block_size, Ay);
 
-            //!b=S\qy
+            //! b = S\qy
             info = LAPACKE_sposv(STORAGE_TYPE, 'U', p, y_block_size,
                                  S, p, Ay, p);
-            assert(info == 0,"POSV");
+            assert(info == 0, "POSV");
 
-            //matlab_print_matrix("B", p, y_block_size, B);
-            //exit(0);
+            // matlab_print_matrix("B", p, y_block_size, B);
+            // exit(0);
             if ( ForceCheck)
             {
                 check_result(backupAL, backupAR, n, p, y_block_size, r, Y, B);
@@ -907,10 +906,10 @@ void Algorithm::fullNEQ(struct Settings params, struct Outputs &out)
 
     AIOfile.initialize(params);
 
-    n = params.n; l=params.l; r=params.r; p = l+r;
+    n = params.n; l = params.l; r = params.r; p = l+r;
 
     int y_amount = params.m;
-    int y_block_size = params.mb;//kk
+    int y_block_size = params.mb;// kk
 
     int a_amount = params.t;
     int a_block_size = 1;
@@ -926,24 +925,24 @@ void Algorithm::fullNEQ(struct Settings params, struct Outputs &out)
 
     AIOfile.load_AL(&backupAL);
 
-    type_precision* S = new type_precision[p*p];
-    type_precision* Stemp = new type_precision[p*p];
-    type_precision* A = new type_precision[n*p];
+    type_precision* S = new type_precision[p * p];
+    type_precision* Stemp = new type_precision[p * p];
+    type_precision* A = new type_precision[n * p];
     type_precision* AL = A;
-    type_precision* AR = &A[l*n];
+    type_precision* AR = &A[l * n];
 
-    int y_iters = y_amount/y_block_size;
+    int y_iters = y_amount / y_block_size;
 
     type_precision* Y;
     type_precision* backupAR;
 
-    //printf("\n\n%%Computations\n%%");
+    // printf("\n\n%%Computations\n%%");
 
     get_ticks(start_tick);
 
     for (i = 0; i < a_iters; i++)
     {
-        if (a_iters < 10 || (i%(a_iters/10))==0)
+        if (a_iters < 10 || (i%(a_iters/10)) == 0)
         {
             cout << "%" << flush;
         }
@@ -954,34 +953,34 @@ void Algorithm::fullNEQ(struct Settings params, struct Outputs &out)
         AIOfile.reset_Y();
         copy_vec(backupAR, AR, n*r);
 
-        //matlab_print_matrix("A", n, p, A);
-        //!Generate S
+        // matlab_print_matrix("A", n, p, A);
+        //! Generate S
         cblas_ssyrk(CblasColMajor, CblasUpper, CblasTrans,
                     p, n, 1.0, A, lda, 0.0, S, p);
-        //matlab_print_matrix("S", p, p, S);
+        // matlab_print_matrix("S", p, p, S);
 
         for (j = 0; j < y_iters; j++)
         {
             AIOfile.load_Yblock(&Y, y_block_size);
-            type_precision Ay[y_block_size*p];
+            type_precision Ay[y_block_size * p];
             copy_vec(S, Stemp, p*p);
 
-            //matlab_print_matrix("Y", n, y_block_size, Y);
+            // matlab_print_matrix("Y", n, y_block_size, Y);
 
-            //!Ay=A'*Y
+            //! Ay = A'*Y
             cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
                         p, y_block_size, n, 1.0, A, n, Y, n, 0.0, Ay, p);
 
             type_precision* B = Ay;
-            //matlab_print_matrix("Ay", p, y_block_size, Ay);
+            // matlab_print_matrix("Ay", p, y_block_size, Ay);
 
-            //!b=S\qy
+            //! b = S\qy
             info = LAPACKE_sposv(STORAGE_TYPE, 'U', p, y_block_size,
                                  Stemp, p, Ay, p);
             assert(info == 0, "POSV");
 
-            //matlab_print_matrix("B", p, y_block_size, B);
-            //exit(0);
+            // matlab_print_matrix("B", p, y_block_size, B);
+            // exit(0);
             if ( ForceCheck)
             {
                 check_result(backupAL, backupAR, n, p, y_block_size, r, Y, B);
@@ -1018,12 +1017,12 @@ void Algorithm::fullQR(struct Settings params, struct Outputs &out)
 
 
     cputime_type start_tick, start_tick2, end_tick;
-    double acc_gemm=0;
-    double acc_trsm=0;
+    double acc_gemm = 0;
+    double acc_trsm = 0;
     double acc_other = 0;
-    double acc_atemp=0;
-    double acc_rtr=0;
-    double acc_rqr=0;
+    double acc_atemp = 0;
+    double acc_rtr = 0;
+    double acc_rqr = 0;
 
 
     type_precision *Ytemp;
@@ -1034,10 +1033,10 @@ void Algorithm::fullQR(struct Settings params, struct Outputs &out)
 
     AIOfile.initialize(params);
 
-    n = params.n; l=params.l; r=params.r; p = l+r;
+    n = params.n; l = params.l; r = params.r; p = l+r;
 
     int y_amount = params.m;
-    int y_block_size = 1;//kk
+    int y_block_size = 1;// kk
 
     int a_amount = params.t;
     int a_block_size = 1;
@@ -1069,7 +1068,7 @@ void Algorithm::fullQR(struct Settings params, struct Outputs &out)
 
 
 
-    //printf("\n\n%%Computations\n%%");
+    // printf("\n\n%%Computations\n%%");
 
     get_ticks(start_tick);
     for (i = 0; i < a_iters; i++)
@@ -1085,12 +1084,12 @@ void Algorithm::fullQR(struct Settings params, struct Outputs &out)
         AIOfile.reset_Y();
         copy_vec(backupAR, AR, n*r);
 
-        //!Generate R
+        //! Generate R
         info = LAPACKE_sgeqrf(STORAGE_TYPE, n, p, A, lda, tau);
         assert(info == 0,"QR decomp");
         type_precision* R = extract_R(A, n, p);
 
-        //!generate Q
+        //! generate Q
         info = LAPACKE_sorgqr(STORAGE_TYPE, n, p, k, Q, lda, tau);
         assert(info == 0,"Q form");
 
@@ -1102,19 +1101,19 @@ void Algorithm::fullQR(struct Settings params, struct Outputs &out)
         for (j = 0; j < y_iters; j++)
         {
 
-            //matlab_print_matrix("RR", p, p, R);
-            //matlab_print_matrix("QQ", n, p, Q);
+            // matlab_print_matrix("RR", p, p, R);
+            // matlab_print_matrix("QQ", n, p, Q);
 
             AIOfile.load_Yblock(&Y, y_block_size);
             type_precision Qy[y_block_size*p];
 
-            //!qy=Q'*Y
+            //! qy = Q'*Y
             cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
                         p, y_block_size, n, 1.0, Q, n, Y, n, 0.0, Qy, p);
 
             type_precision* B = Qy;
 
-            //!b=R\qy
+            //! b = R\qy
             cblas_strsm(CblasColMajor, CblasLeft, CblasUpper,
                         CblasNoTrans, CblasNonUnit,
                         p, y_block_size, 1.0, R, p, Qy, p);
@@ -1155,12 +1154,12 @@ void Algorithm::partialQR(struct Settings params, struct Outputs &out)
 
 
     cputime_type start_tick, start_tick2, end_tick;
-    double acc_gemm=0;
-    double acc_trsm=0;
+    double acc_gemm = 0;
+    double acc_trsm = 0;
     double acc_other = 0;
-    double acc_atemp=0;
-    double acc_rtr=0;
-    double acc_rqr=0;
+    double acc_atemp = 0;
+    double acc_rtr = 0;
+    double acc_rqr = 0;
 
 
     type_precision *RL, *Ytemp, *RtlRtr;
@@ -1171,10 +1170,10 @@ void Algorithm::partialQR(struct Settings params, struct Outputs &out)
 
     AIOfile.initialize(params);
 
-    n = params.n; l=params.l; r=params.r; p = l+r;
+    n = params.n; l = params.l; r = params.r; p = l+r;
 
     int y_amount = params.m;
-    int y_block_size = params.mb;//kk
+    int y_block_size = params.mb;// kk
 
     int a_amount = params.t;
     int a_block_size = 1;
@@ -1210,21 +1209,21 @@ void Algorithm::partialQR(struct Settings params, struct Outputs &out)
     type_precision Rbr[r*r];
 
     get_ticks(start_tick);
-    //!Generate RTL
+    //! Generate RTL
     info = LAPACKE_sgeqrf(STORAGE_TYPE, n, l, AL, lda, tau);
     assert(info == 0,"QR decomp");
 
     type_precision* R =prepare_R(AL, n, l, r);
     type_precision* Rtl = R;
 
-    QL=AL;//same as Q
-    AL=backupAL;
-    //!generate QL
+    QL = AL;// same as Q
+    AL = backupAL;
+    //! generate QL
     info = LAPACKE_sorgqr(STORAGE_TYPE, n, l, k, QL, lda, tau);
 
     assert(info == 0,"Q form");
 
-    //printf("\n\n%%Computations\n%%");
+    // printf("\n\n%%Computations\n%%");
 
 
     for (i = 0; i < a_iters; i++)
@@ -1237,13 +1236,13 @@ void Algorithm::partialQR(struct Settings params, struct Outputs &out)
         AIOfile.load_ARblock(&Ar, a_block_size);
         AIOfile.reset_Y();
 
-        //!Rtr=Q1'*AR
+        //! Rtr = Q1'*AR
         cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
                     l, r*a_block_size, n, 1.0, QL, n, Ar, n, 0.0, Rtr, l);
 
         type_precision* Atemp = replicate_vec(Ar, n*r*a_block_size);
 
-        //! Atemp=AR-Q1*Rtr
+        //! Atemp = AR-Q1*Rtr
         cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
                     n, r*a_block_size, l, -1.0, QL, n, Rtr, l, 1.0, Atemp, n);
 
@@ -1252,7 +1251,7 @@ void Algorithm::partialQR(struct Settings params, struct Outputs &out)
         info = LAPACKE_sgeqrf(STORAGE_TYPE, n, r, QrRbr, lda, tau);
         assert(info == 0,"QR decomp of QrRbr");
 
-        //reuse of old function
+        // reuse of old function
         type_precision* Rbrtemp = prepare_R(QrRbr, n, r, 0);
 
         copy_vec(Rbrtemp, Rbr, r*r);
@@ -1267,10 +1266,10 @@ void Algorithm::partialQR(struct Settings params, struct Outputs &out)
 //        matlab_print_matrix("Rbr", r, r, Rbr);
 //        matlab_print_matrix("RR", p, p, R);
 //        matlab_print_matrix("QQ", n, p, Q);
-        //matlab_print_matrix("ALL", n, l, AL);
-        //matlab_print_matrix("ARR", n, r, Ar);
-        //matlab_print_matrix("R", p, p, R);
-        int top_idx=0;
+        // matlab_print_matrix("ALL", n, l, AL);
+        // matlab_print_matrix("ARR", n, r, Ar);
+        // matlab_print_matrix("R", p, p, R);
+        int top_idx = 0;
 
         for (j = 0; j < y_iters; j++)
         {
@@ -1278,18 +1277,18 @@ void Algorithm::partialQR(struct Settings params, struct Outputs &out)
             type_precision Qy[y_block_size*p];
 
 
-            //!qy=Q'*Y
+            //! qy = Q'*Y
             cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
                         p, y_block_size, n, 1.0, Q, n, Y, n, 0.0, Qy, p);
 
             type_precision* B = Qy;
 
-            //!b=R\qy
+            //! b = R\qy
             cblas_strsm(CblasColMajor, CblasLeft, CblasUpper,
                         CblasNoTrans, CblasNonUnit,
                         p, y_block_size, 1.0, R, p, Qy, p);
 
-            //matlab_print_matrix("bcomp", p, y_block_size, B);
+            // matlab_print_matrix("bcomp", p, y_block_size, B);
 
 
             if ( ForceCheck)
@@ -1325,7 +1324,7 @@ void  Algorithm::partialQR_Blocked_Rtl(struct Settings params,
 {
     int max_threads = params.threads;
 
-    //srand (time(NULL));
+    // srand (time(NULL));
 
     int cpu_cores = max_threads;
 
@@ -1337,16 +1336,16 @@ void  Algorithm::partialQR_Blocked_Rtl(struct Settings params,
 
 
     cputime_type start_tick, start_tick2, end_tick;
-    double acc_pre=0;
-    double acc_trsm=0;
-    double acc_other = 0;
-    double acc_atemp=0;
-    double acc_rtr=0;
-    double acc_rqr=0;
-    double acc_RTL_QLY=0;
+    double acc_pre     = 0;
+    double acc_trsm    = 0;
+    double acc_other   = 0;
+    double acc_atemp   = 0;
+    double acc_rtr     = 0;
+    double acc_rqr     = 0;
+    double acc_RTL_QLY = 0;
 
 
-    type_precision *AL,*RL, *RQy_top, *Ytemp, *RtlRtr;
+    type_precision *AL, *RL, *RQy_top, *Ytemp, *RtlRtr;
     lapack_int info, n, lda, ldy, l, r, k, p;
 
     int i, j, w;
@@ -1355,7 +1354,7 @@ void  Algorithm::partialQR_Blocked_Rtl(struct Settings params,
 
     AIOfile.initialize(params);
 
-    n = params.n; l=params.l; r=params.r; p = l+r;
+    n = params.n; l = params.l; r = params.r; p = l+r;
 
 
 
@@ -1363,7 +1362,7 @@ void  Algorithm::partialQR_Blocked_Rtl(struct Settings params,
 
 
     int y_amount = params.t;
-    int y_block_size = params.tb;//kk
+    int y_block_size = params.tb;// kk
 
     int a_amount = params.m;
     int a_block_size = params.mb;
@@ -1372,7 +1371,7 @@ void  Algorithm::partialQR_Blocked_Rtl(struct Settings params,
 
     int y_iters = (y_amount+ y_block_size - 1)/y_block_size;
 
-    int qy_idx=0;
+    int qy_idx = 0;
 
     out.gflops = n/1000.0*l/1000.0*l/1000.0 +
         gemm_flops(l, n, y_amount, 0) +
@@ -1390,7 +1389,7 @@ void  Algorithm::partialQR_Blocked_Rtl(struct Settings params,
                                  (1.0*1000*1000) /
                                  (double)((sizeof(type_precision) * n * r))));
 
-    //cout << endl<< "taskChunk "<< sch_block_size <<endl;
+    // cout << endl<< "taskChunk "<< sch_block_size <<endl;
 
     lda = n; ldy = n;
     k = l;
@@ -1425,26 +1424,26 @@ void  Algorithm::partialQR_Blocked_Rtl(struct Settings params,
 
 
 
-    //printf("\n\n%%Computations\n%%");
+    // printf("\n\n%%Computations\n%%");
     for (i = 0; i < a_iters; i++)
     {
         if (a_iters >= 10 && (i%(a_iters/10))==0)
         {
-            //cout << "*" << flush;
+            // cout << "*" << flush;
         }
 
         for (j = 0; j < y_iters; j++)
         {
             if (a_iters < 10 && (y_iters < 10 || (j%(y_iters/10))==0))
             {
-                //cout << "*" << flush;
+                // cout << "*" << flush;
             }
         }
     }
     cout << endl;
 
 
-    //!Start of Computations
+    //! Start of Computations
 
     get_ticks(start_tick);
 
@@ -1452,9 +1451,9 @@ void  Algorithm::partialQR_Blocked_Rtl(struct Settings params,
     info = LAPACKE_sgeqrf(STORAGE_TYPE, n, l, AL, lda, tau);
     assert(info == 0,"QR decomp");
 
-    type_precision* Rtl=prepare_R(AL, n, l, 0);
+    type_precision* Rtl = prepare_R(AL, n, l, 0);
 
-    QL=AL;
+    QL = AL;
     AL = backupAL;
 
     info = LAPACKE_sorgqr(STORAGE_TYPE, n, l, k, QL, lda, tau);
@@ -1463,28 +1462,28 @@ void  Algorithm::partialQR_Blocked_Rtl(struct Settings params,
 
     matlab_print_matrix("QL", n, l, QL);
 
-    qy_idx=0;
+    qy_idx = 0;
 
-    //printf("\n%%Preparing IO\n");
-    //!Prepare File for the Y
+    // printf("\n%%Preparing IO\n");
+    //! Prepare File for the Y
 
 
     type_precision* Y;
 
-    //#pragma omp parallel default(shared)
+    // #pragma omp parallel default(shared)
 //    {
-//        //#pragma omp for private(Y, y_block_size, qy_idx) nowait schedule(static, 1)
+//        // #pragma omp for private(Y, y_block_size, qy_idx) nowait schedule(static, 1)
 //        for (int j = 0; j < y_iters; j++)
 //        {
-//            //qy_idx = j*y_block_size*l;
-//            //#pragma omp critical
+//            // qy_idx = j*y_block_size*l;
+//            // #pragma omp critical
 //            {AIOfile.load_Yblock(&Y, y_block_size);}
 //
-//            //!qy_top=QL'*Y
+//            //! qy_top = QL'*Y
 //            cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
 //                            l, y_block_size, n, 1.0, QL, n, Y, n, 0.0,&RQy_top[qy_idx], l);
 //
-//            //!K | RtlQlY =RTL\qy_top
+//            //! K | RtlQlY =RTL\qy_top
 //            cblas_strsm(CblasColMajor, CblasLeft, CblasUpper, CblasNoTrans, CblasNonUnit,
 //                                            l, y_block_size, 1.0, Rtl, l,&RQy_top[qy_idx], l);
 //            qy_idx += y_block_size*l;
@@ -1495,7 +1494,7 @@ void  Algorithm::partialQR_Blocked_Rtl(struct Settings params,
 
     out.acc_pre = ticks2sec(end_tick-start_tick, cpu_freq);
 
-    //cout << "\npre " << out.acc_pre << endl;
+    // cout << "\npre " << out.acc_pre << endl;
 
 
     y_block_size = params.tb;
@@ -1532,11 +1531,11 @@ void  Algorithm::partialQR_Blocked_Rtl(struct Settings params,
              #pragma omp sections
              {
                    {
-                       //!Rtr=Q1'*AR
+                       //! Rtr = Q1'*AR
                         cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
                                     l, r * a_block_size, n, 1.0, QL, n,
                                     Ar, n, 0.0, Rtr, l);
-                        //matlab_print_matrix("QL'*Ar", l, r*a_block_size, Rtr);
+                        // matlab_print_matrix("QL'*Ar", l, r*a_block_size, Rtr);
 
                    }
                    #pragma omp section
@@ -1554,11 +1553,11 @@ void  Algorithm::partialQR_Blocked_Rtl(struct Settings params,
 
 
 
-        //!Atemp=AR-Q1*Rtr
+        //! Atemp = AR-Q1*Rtr
         cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
             n, r*a_block_size, l,-1.0, QL, n, Rtr, l, 1.0, Atemp, n);
 
-        //!H=RTL\Rtr
+        //! H = RTL\Rtr
         cblas_strsm(CblasColMajor, CblasLeft, CblasUpper,
             CblasNoTrans, CblasNonUnit,
             l, r*a_block_size, 1.0, Rtl, l, Rtr, l);
@@ -1573,20 +1572,22 @@ void  Algorithm::partialQR_Blocked_Rtl(struct Settings params,
 
 
                 info = LAPACKE_sgeqrf(STORAGE_TYPE, n, r, QrRbr, lda, tau);
-                //assert(info == 0,"QR decomp of QrRbr");
-                type_precision* Rbrtemp = prepare_R(QrRbr, n, r, 0);//reuse of old function
+                // assert(info == 0,"QR decomp of QrRbr");
+
+                // reuse of old function
+                type_precision* Rbrtemp = prepare_R(QrRbr, n, r, 0);
                 copy_vec(Rbrtemp,&Rbr[r*r*ii], r*r);
 
 
                 info = LAPACKE_sorgqr(STORAGE_TYPE, n, r, r, QrRbr, lda, tau);
-                //assert(info == 0,"QR form");
+                // assert(info == 0,"QR form");
                 free(Rbrtemp);
             }
         }
 
 
-        //matlab_print_matrix("RTR", l, r, Rtr);
-        //matlab_print_matrix("RTL", l, l, Rtl);
+        // matlab_print_matrix("RTR", l, r, Rtr);
+        // matlab_print_matrix("RTL", l, l, Rtl);
 
 
 
@@ -1621,7 +1622,7 @@ void  Algorithm::partialQR_Blocked_Rtl(struct Settings params,
 
                 matlab_print_matrix("Ypre", n, y_block_size, Y);
 
-                 //!qy_top=QL'*Y
+                 //! qy_top = QL'*Y
                 cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
                             l, y_block_size, n, 1.0, QL, n, Y, n, 0.0,
                             &RQy_top[qy_idx], l);
@@ -1631,7 +1632,7 @@ void  Algorithm::partialQR_Blocked_Rtl(struct Settings params,
                 matlab_print_matrix("QL'*Y", l, y_block_size,
                                     &RQy_top[qy_idx]);
 
-                //!K | RtlQlY =RTL\qy_top
+                //! K | RtlQlY =RTL\qy_top
                 cblas_strsm(CblasColMajor, CblasLeft, CblasUpper,
                             CblasNoTrans, CblasNonUnit,
                             l, y_block_size, 1.0, Rtl, l,
@@ -1646,7 +1647,7 @@ void  Algorithm::partialQR_Blocked_Rtl(struct Settings params,
 
             matlab_print_matrix("Yprepre", n, y_block_size, Y);
 
-            //! qy_bot=Qr'*Y
+            //! qy_bot = Qr'*Y
             cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
                         r * a_block_size, y_block_size, n, 1.0,
                         Qr, n, Y, n, 0.0, Qy_bot, r * a_block_size);
@@ -1680,13 +1681,13 @@ void  Algorithm::partialQR_Blocked_Rtl(struct Settings params,
                     copy_vec(&RQy_top[top_idx], &B_top[b_top_idx],
                              l*y_block_size);
 
-                    //!bBot=Rbr\qy_bot
+                    //! bBot = Rbr\qy_bot
                     cblas_strsm(CblasColMajor, CblasLeft,
                                 CblasUpper, CblasNoTrans, CblasNonUnit,
                                 r, y_block_size, 1.0,&Rbr[ii*r*r], r,
                                 &B_bot[b_bot_idx], r);
 
-                    //!Btop=K-H*bBot     Btop=(Rtl\(Ql'*Y))-(Rtl\Rtr)*(Rbr\(Qr'*Y));
+                    //! Btop = K-H*bBot     Btop=(Rtl\(Ql'*Y))-(Rtl\Rtr)*(Rbr\(Qr'*Y));
                     cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
                                 l, y_block_size, r, -1.0, &RtlRtr[ii*l*r],
                                 l, &B_bot[b_bot_idx], r, 1.0,
