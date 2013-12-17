@@ -5,6 +5,7 @@
 #include "Definitions.h"
 #include "Algorithm.h"
 
+
 void print_params(struct Settings params)
 {
     cout << "Threads:" << params.threads << " ";
@@ -17,7 +18,8 @@ void print_params(struct Settings params)
     cout << "tb:" << params.tb << endl;
 }
 
-void parse_params(int argc, char *argv[],struct Settings &params )
+
+void parse_params(int argc, char *argv[], struct Settings &params )
 {
     int c;
 
@@ -38,28 +40,27 @@ void parse_params(int argc, char *argv[],struct Settings &params )
             //{"",   no_argument,       &verbose_flag, 0},
             // These options don't set a flag.
             //We distinguish them by their indices.
-            {"phe",     required_argument,       0, 'p'},
-            {"geno",     required_argument,       0, 'g'},
-            {"cov",     required_argument,       0, 'c'},
-            {"out",    required_argument,       0, 'o'},
-            {"ngred",    required_argument,         0, 'n'},
-            {"thr",     required_argument,         0, 't'},
-            {"mem",     required_argument,         0, 'm'},
+            {"phe",    required_argument, 0, 'p'},
+            {"geno",   required_argument, 0, 'g'},
+            {"cov",    required_argument, 0, 'c'},
+            {"out",    required_argument, 0, 'o'},
+            {"ngpred", required_argument, 0, 'n'},
+            {"thr",    required_argument, 0, 't'},
+            {"mem",    required_argument, 0, 'm'},
             {0, 0, 0, 0}
         };
 
         // getopt_long stores the option index here.
         int option_index = 0;
 
-        c = getopt_long (argc, argv, "c:p:g:o:n:t:m:",
-                         long_options, &option_index);
+        c = getopt_long(argc, argv, "c:p:g:o:n:t:m:", long_options, &option_index);
 
 
         // Detect the end of the options.
         if (c == -1)
             break;
 
-        if(!optarg)
+        if (!optarg)
         {
             cout << "\nerror with argument parameter " << c << endl;
             exit(1);
@@ -79,22 +80,22 @@ void parse_params(int argc, char *argv[],struct Settings &params )
 
         case 'p':
             phe = !phe;
-            params.fnameY= string(optarg);
+            params.fnameY = string(optarg);
 
             pos = string(optarg).find(".");
-            if(pos != string::npos)
-                params.fnameY = string(optarg).substr (0,pos);
+            if (pos != string::npos)
+                params.fnameY = string(optarg).substr (0, pos);
 
             cout << "using -p traits in file " << optarg << endl;
             break;
 
         case 'g':
             snp = !snp;
-            params.fnameAR= string(optarg);
+            params.fnameAR = string(optarg);
 
            pos = string(optarg).find(".");
-            if(pos != string::npos)
-                params.fnameAR = string(optarg).substr (0,pos);
+            if (pos != string::npos)
+                params.fnameAR = string(optarg).substr (0, pos);
 
             cout << "using -g geno in file " << optarg << endl;
             break;
@@ -109,9 +110,9 @@ void parse_params(int argc, char *argv[],struct Settings &params )
             cov = !cov;
             params.fnameAL= string(optarg);
 
-           pos = string(optarg).find(".");
-            if(pos != string::npos)
-                params.fnameAL = string(optarg).substr (0,pos);
+            pos = string(optarg).find(".");
+            if (pos != string::npos)
+                params.fnameAL = string(optarg).substr(0, pos);
 
             cout << "using -c covariates in file " << optarg << endl;
             break;
@@ -120,20 +121,18 @@ void parse_params(int argc, char *argv[],struct Settings &params )
             bout = !bout;
             params.fnameOutB= string(optarg);
 
-           pos = string(optarg).find(".");
-            if(pos != string::npos)
-                params.fnameOutB = string(optarg).substr (0,pos);
+            pos = string(optarg).find(".");
+            if (pos != string::npos)
+                params.fnameOutB = string(optarg).substr(0, pos);
 
             cout << "using -o as output file " << optarg << endl;
             break;
 
         case 't':
             params.threads = atoi(optarg);
-            params.threads = min(max(params.threads, 1),32);
+            params.threads = min(max(params.threads, 1), 32);
             cout << "using -t with value " << params.threads << endl;
             break;
-
-
 
         case '?':
             /* getopt_long already printed an error message. */
@@ -153,13 +152,17 @@ void parse_params(int argc, char *argv[],struct Settings &params )
         putchar ('\n');
     }
 
-    if(!bout || !phe || !cov || !snp)
+    if (!bout || !phe || !cov || !snp)
     {
-        cout << "Missing arguments! p:" << phe<< " g:"<<snp << " c:" << cov<< " o:"<< bout <<endl;
+        cout << "Missing arguments! p:" << phe
+             << " g:" << snp
+             << " c:" << cov
+             << " o:"<< bout
+             << endl;
         exit(1);
     }
-
 }
+
 
 int main( int argc, char *argv[] )
 {
@@ -167,7 +170,7 @@ int main( int argc, char *argv[] )
     struct Settings params;
 
 //    cout << "Using Arguments: ";
-//    for(int i = 0; i < argc; i++)
+//    for (int i = 0; i < argc; i++)
 //    {
 //        cout  << argv[i] << " ";
 //    }
@@ -177,7 +180,7 @@ int main( int argc, char *argv[] )
     params.r = 1;
     params.threads = 1;
 
-    parse_params(argc,argv,params);
+    parse_params(argc, argv,params);
 
 
     //omp_set_nested(false);
@@ -189,42 +192,33 @@ int main( int argc, char *argv[] )
 
     params.use_fake_files = false;
 
-    if(params.use_fake_files)
+    if (params.use_fake_files)
     {
         int multiplier = 1024;
 
-        params.n = 20*multiplier;
-        params.l=8;
-        params.r=2;
+        params.n = 20 * multiplier;
+        params.l = 8;
+        params.r = 2;
 
-        params.t =   {16*multiplier};
-        params.tb =  {4*multiplier};
+        params.t  = {16 * multiplier};
+        params.tb = {4 * multiplier};
 
-        params.m =   {4*multiplier};
-        params.mb =  {4*multiplier};
-
-
+        params.m  = {4 * multiplier};
+        params.mb = {4 * multiplier};
     }
 
 
     Algorithm alg;
     struct Outputs out = {0};
-    if ( params.use_fake_files)
+    if (params.use_fake_files)
     {
-        for(int i = 0; i< 100 ; i++)
-            alg.solve(params,out,P_NEQ_B_OPT_MD);
+        for (int i = 0; i < 100; i++)
+            alg.solve(params, out, P_NEQ_B_OPT_MD);
     }
     else
     {
         alg.solve(params,out,P_NEQ_B_OPT_MD);
     }
 
-
-
-
-
-
     return 0;
 }
-
-
