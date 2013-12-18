@@ -17,7 +17,7 @@ AM_MAINTAINER_MODE([enable])
 # Set some default compile flags
 if test -z "$CXXFLAGS"; then
    # User did not set CXXFLAGS, so we can put in our own defaults
-    CXXFLAGS="-g -O2 -lopenblas"   # TODO: proper openblas check
+    CXXFLAGS="-g -O2"
 fi
 if test -z "$CPPFLAGS"; then
    # User did not set CPPFLAGS, so we can put in our own defaults
@@ -25,7 +25,6 @@ if test -z "$CPPFLAGS"; then
 fi
 # If CXXFLAGS/CPPFLAGS are already set AC_PROG_CXX will not overwrite them
 # with its own defaults
-
 
 # Checks for programs.
 AC_PROG_CC
@@ -38,9 +37,13 @@ AC_SEARCH_LIBS([pthread_mutex_init], [pthread], [], [
    AC_MSG_ERROR([Unable to find the pthread_mutex_init() function])
 ])
 # Openblas
-dnl AC_SEARCH_LIBS([], [openblas], [], [
-dnl    AC_MSG_ERROR([Unable to find the  function])
-dnl ])
+AC_SEARCH_LIBS([cblas_sgemm], [openblas], [], [
+   AC_MSG_ERROR([Unable to find the openblas library])
+])
+# Lapack
+AC_SEARCH_LIBS([LAPACKE_sgeqrf], [lapack, lapacke], [], [
+   AC_MSG_ERROR([Unable to find a Lapack library])
+])
 
 
 # Check for openMP. If found the OPENMP_CXXFLAGS is set automatically
