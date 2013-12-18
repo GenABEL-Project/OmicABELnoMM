@@ -17,7 +17,7 @@ AM_MAINTAINER_MODE([enable])
 # Set some default compile flags
 if test -z "$CXXFLAGS"; then
    # User did not set CXXFLAGS, so we can put in our own defaults
-    CXXFLAGS="-g -O2"
+    CXXFLAGS="-g -O2 -lopenblas"   # TODO: proper openblas check
 fi
 if test -z "$CPPFLAGS"; then
    # User did not set CPPFLAGS, so we can put in our own defaults
@@ -31,19 +31,23 @@ fi
 AC_PROG_CC
 AC_PROG_CXX
 
-# Since our code is in C++, set that language as the default for the
-# subsequent checks
-AC_LANG_PUSH([C++])
 
 # Checks for libraries.
 # pthread library
 AC_SEARCH_LIBS([pthread_mutex_init], [pthread], [], [
    AC_MSG_ERROR([Unable to find the pthread_mutex_init() function])
 ])
+# Openblas
+dnl AC_SEARCH_LIBS([], [openblas], [], [
+dnl    AC_MSG_ERROR([Unable to find the  function])
+dnl ])
+
 
 # Check for openMP. If found the OPENMP_CXXFLAGS is set automatically
 AC_OPENMP
-AC_SUBST(AM_CXXFLAGS, "$OPENMP_CXXFLAGS")
+AC_SUBST(AM_CXXFLAGS, "$OPENMP_CFLAGS")
+
+
 
 # Checks for header files.
 AC_CHECK_HEADERS([limits.h stdlib.h string.h sys/time.h unistd.h])

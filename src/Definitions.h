@@ -25,15 +25,15 @@
     //#include "mpi.h"
     //#define cpu_freq 3.0
     #define cpu_freq 3.0
-    //#include "include/lapacke.h"
-
+    #include <lapacke.h>
+    #include "cblas.h"
 #endif
-
 #ifdef __INTEL_MKL__
     #include "mkl.h"
     #define blas_set_num_threads(n) mkl_set_num_threads(n)
 #else
-    #define blas_set_num_threads(n) goto_set_num_threads(n)
+    extern "C" void openblas_set_num_threads(int num_threads);
+    #define blas_set_num_threads(n) openblas_set_num_threads(n)
 #endif
 
 #include <unistd.h>
