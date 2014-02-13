@@ -36,19 +36,7 @@ class Algorithm
 
         void solve(struct Settings params, struct Outputs &out, int type);
 
-        void partialQR_Blocked_Rtl(struct Settings params, struct Outputs &out);
-
-        void partialQR(struct Settings params, struct Outputs &out);
-
-        void fullQR(struct Settings params, struct Outputs &out);
-
         void partialNEQ_Blocked_STL_MD(struct Settings params, struct Outputs &out);
-
-        //!///////////////////////!
-
-        void fullNEQ(struct Settings params, struct Outputs &out);
-
-        void partialNEQ(struct Settings params, struct Outputs &out);
 
         void partialNEQ_Blocked_STL(struct Settings params, struct Outputs &out);
 

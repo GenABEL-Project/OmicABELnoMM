@@ -29,9 +29,9 @@ void AIOwrapper::initialize(struct Settings &params)
 
     Fhandler->fakefiles = params.use_fake_files;
 
-    databel_fvi* Yfvi;
-    databel_fvi* ALfvi;
-    databel_fvi* ARfvi;
+//    databel_fvi* Yfvi;
+//    databel_fvi* ALfvi;
+//    databel_fvi* ARfvi;
 
     if (!Fhandler->fakefiles)
     {
@@ -49,7 +49,7 @@ void AIOwrapper::initialize(struct Settings &params)
         params.l = ALfvi->fvi_header.numVariables;
 
         //block size to keep mem under 1 gigabyte
-        int opt_block = params.n / (4*1000^3) * (1/(2*params.r));
+        //int opt_block = params.n / (4*1000^3) * (1/(2*params.r));
         int opt_tb = 1000;
         int opt_mb = 1000;
 
@@ -81,7 +81,7 @@ void AIOwrapper::initialize(struct Settings &params)
 void AIOwrapper::finalize()
 {
     //cout << "f";
-    void *status;
+    //void *status;
 
     Fhandler->not_done = false;
     pthread_mutex_lock(&(Fhandler->m_more));
@@ -368,13 +368,15 @@ void* AIOwrapper::async_io( void *ptr )
     }
 //
 //            //!induce realistic fileread delay
+
+    return 0;
 }
 
 
 void AIOwrapper::load_ARblock(type_precision** Ar, int &Ar_blockSize)
 {
-    int status;
-    int createstatus = 0;
+    //int status;
+    //int createstatus = 0;
     //cout<<"^";
 
     while (Fhandler->ar_full_buffers.empty())
@@ -428,8 +430,8 @@ void AIOwrapper::load_ARblock(type_precision** Ar, int &Ar_blockSize)
 
 void AIOwrapper::load_Yblock(type_precision** Y, int &y_blockSize)
 {
-    int status;
-    int createstatus = 0;
+    //int status;
+    //int createstatus = 0;
 
     while (Fhandler->full_buffers.empty())
     {
@@ -528,7 +530,7 @@ void AIOwrapper::prepare_Y(int y_blockSize, int n, int totalY)
 
 void AIOwrapper::reset_Y()
 {
-    void *status;
+    //void *status;
 
     Fhandler->seed = 1337;
 
@@ -569,7 +571,7 @@ void AIOwrapper::reset_Y()
 
 void AIOwrapper::reset_AR()
 {
-    void *status;
+    //void *status;
 
 
     //cout << "ra" << flush;
@@ -697,7 +699,7 @@ void AIOwrapper::free_databel_fvi( struct databel_fvi **fvi )
 FILE * AIOwrapper::fgls_fopen( const char *path, const char *mode )
 {
         FILE * f;
-        char err[100];
+        //char err[100];
 
         f = fopen(path, mode );
         if ( f == NULL )

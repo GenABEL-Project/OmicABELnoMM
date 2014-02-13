@@ -17,15 +17,12 @@
 
 
 #ifdef WINDOWS
-    #include "lapacke.h"
     #include <windows.h>
     #include <cblas.h>
-    #define cpu_freq 4.6
 #else
     //#include "mpi.h"
     //#define cpu_freq 3.0
     #define cpu_freq 3.0
-    #include <lapacke.h>
     #include "cblas.h"
 #endif
 #ifdef __INTEL_MKL__
@@ -41,7 +38,7 @@
 #include <limits.h>
 #include <queue>
 #include <iostream>
-
+#include <lapacke.h>
 
 //!SETTINGS
 #define EXTENDEDTEST 0
@@ -60,82 +57,82 @@
 
 //!for CPU speed!
 
-#ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-typedef unsigned __int64 usCount;
-static usCount GetUsCount()
-{
-    static LARGE_INTEGER ticksPerSec;
-    static double scalefactor;
-    LARGE_INTEGER val;
-    if (!scalefactor)
-    {
-        if (QueryPerformanceFrequency(&ticksPerSec))
-            scalefactor=ticksPerSec.QuadPart/1000000000000.0;
-        else
-            scalefactor=1;
-    }
-    if (!QueryPerformanceCounter(&val))
-        return (usCount) GetTickCount() * 1000000000;
-    return (usCount) (val.QuadPart/scalefactor);
-}
-#else
-#include <sys/time.h>
-#include <time.h>
-#include <sched.h>
-typedef unsigned long long usCount;
-static usCount GetUsCount()
-{
-#ifdef CLOCK_MONOTONIC
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return ((usCount) ts.tv_sec*1000000000000LL)+ts.tv_nsec*1000LL;
-#else
-    struct timeval tv;
-    gettimeofday(&tv, 0);
-    return ((usCount) tv.tv_sec*1000000000000LL)+tv.tv_usec*1000000LL;
-#endif
-}
-#endif
-static usCount usCountOverhead, CPUClockSpeed;
-#ifdef __GNUC__
-#include "x86intrin.h"
-#define __rdtsc() __builtin_ia32_rdtsc()
-#endif
+//#ifdef WIN32
+//#define WIN32_LEAN_AND_MEAN
+//#include <windows.h>
+//typedef unsigned __int64 usCount;
+//static usCount GetUsCount()
+//{
+//    static LARGE_INTEGER ticksPerSec;
+//    static double scalefactor;
+//    LARGE_INTEGER val;
+//    if (!scalefactor)
+//    {
+//        if (QueryPerformanceFrequency(&ticksPerSec))
+//            scalefactor=ticksPerSec.QuadPart/1000000000000.0;
+//        else
+//            scalefactor=1;
+//    }
+//    if (!QueryPerformanceCounter(&val))
+//        return (usCount) GetTickCount() * 1000000000;
+//    return (usCount) (val.QuadPart/scalefactor);
+//}
+//#else
+//#include <sys/time.h>
+//#include <time.h>
+//#include <sched.h>
+//typedef unsigned long long usCount;
+//static usCount GetUsCount()
+//{
+//#ifdef CLOCK_MONOTONIC
+//    struct timespec ts;
+//    clock_gettime(CLOCK_MONOTONIC, &ts);
+//    return ((usCount) ts.tv_sec*1000000000000LL)+ts.tv_nsec*1000LL;
+//#else
+//    struct timeval tv;
+//    gettimeofday(&tv, 0);
+//    return ((usCount) tv.tv_sec*1000000000000LL)+tv.tv_usec*1000000LL;
+//#endif
+//}
+//#endif
+//static usCount usCountOverhead;
+//#ifdef __GNUC__
+//#include "x86intrin.h"
+//#define __rdtsc() __builtin_ia32_rdtsc()
+//#endif
 
-static usCount GetClockSpeed()
-{
-    int n;
-    usCount start, end, start_tsc, end_tsc;
-    if (!usCountOverhead)
-    {
-        usCount foo = 0;
-        start=GetUsCount();
-        for (n = 0; n < 1000000; n++)
-        {
-            foo += GetUsCount();
-        }
-        end = GetUsCount();
-        usCountOverhead = (end - start)/n;
-    }
-
-    start = GetUsCount();
-    start_tsc = __rdtsc();
-    for (n = 0; n <1000; n++)
-    {
-#ifdef WIN32
-        Sleep(0);
-#else
-        sched_yield();
-#endif
-    }
-
-    end_tsc = __rdtsc();
-    end = GetUsCount();
-    return(usCount)((1000000000000.0 * (end_tsc - start_tsc)) /
-                    (end - start - usCountOverhead));
-}
+//static usCount GetClockSpeed()
+//{
+//    int n;
+//    usCount start, end, start_tsc, end_tsc;
+//    if (!usCountOverhead)
+//    {
+//        usCount foo = 0;
+//        start=GetUsCount();
+//        for (n = 0; n < 1000000; n++)
+//        {
+//            foo += GetUsCount();
+//        }
+//        end = GetUsCount();
+//        usCountOverhead = (end - start)/n;
+//    }
+//
+//    start = GetUsCount();
+//    start_tsc = __rdtsc();
+//    for (n = 0; n <1000; n++)
+//    {
+//#ifdef WIN32
+//        Sleep(0);
+//#else
+//        sched_yield();
+//#endif
+//    }
+//
+//    end_tsc = __rdtsc();
+//    end = GetUsCount();
+//    return(usCount)((1000000000000.0 * (end_tsc - start_tsc)) /
+//                    (end - start - usCountOverhead));
+//}
 
 
 using namespace std;

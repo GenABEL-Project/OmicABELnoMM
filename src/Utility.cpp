@@ -7,13 +7,13 @@ double gemm_flops(double m, double n, double k,int sum)
 
 
 
-void assert(int cond,char msg[])
+void assert(int cond,string msg)
 {
     if(cond < 0)
     {
-        printf("\nCondition violated on param %d: ",cond);
-        printf(msg);
-        printf("\n");
+        cout <<"\nCondition violated on param "<< cond << ": ";
+        cout << msg << endl;
+
         exit(cond);
     }
     else
@@ -32,7 +32,7 @@ void assert(int cond,char msg[])
 
 type_precision* random_vec(int size)
 {
-    int i;
+
     type_precision* vec = (type_precision*)malloc(size*sizeof(type_precision));
     if(vec==0)
     {
@@ -40,7 +40,7 @@ type_precision* random_vec(int size)
         system("pause");
         exit(1);
     }
-    for( i = 0; i < size; i++)
+    for( int i = 0; i < size; i++)
     {
         vec[i] = (type_precision)rand() / (type_precision)RAND_MAX;
     }
@@ -49,9 +49,9 @@ type_precision* random_vec(int size)
 
 void re_random_vec(type_precision* vec, int size)
 {
-    int i;
 
-    for( i = 0; i < size; i++)
+
+    for( int i = 0; i < size; i++)
     {
         vec[i] = (type_precision)rand() / (type_precision)RAND_MAX;
     }
@@ -59,7 +59,7 @@ void re_random_vec(type_precision* vec, int size)
 
 void re_random_vec_nan(type_precision* vec, int size)
 {
-    int i;
+    //int i;
 
 //    for( i = 0; i < size; i++)
 //    {
@@ -76,7 +76,7 @@ void copy_vec(type_precision*old, type_precision* new_vec, int size)
 
 type_precision* replicate_vec(type_precision*old, int size)
 {
-    int i;
+
     type_precision* vec = (type_precision*)malloc(size*sizeof(type_precision));
     if(vec==0)
     {
@@ -147,13 +147,11 @@ void replace_with_zeros(list<long int>* indexs, type_precision* vec, int n, int 
     }
 }
 
-void matlab_print_matrix(char name[],int m,int n,type_precision* A)
+void matlab_print_matrix(string name,int m,int n,type_precision* A)
 {//fix for row major
     if(PRINT)
     {
-        printf("\n");
-        printf(name);
-        printf(" = [\n");
+        cout << endl << name << " = [\n";
         int i;
         int j;
         int index=0;
@@ -167,9 +165,9 @@ void matlab_print_matrix(char name[],int m,int n,type_precision* A)
 
              printf("%.6g",A[index]);
           }
-          printf(" ; \n");
+          cout << " ; \n";
         }
-        printf("];\n");
+        cout << "];\n";
 
     }
 }
@@ -218,59 +216,5 @@ void cpu_benchmark(int n,int samples, int cpu_frequency, double &duration, doubl
     delete []B;
     delete []C;
 
-}
-
-int disk_benchmark(int n, int min_size, int max_size, int setps)
-{
-
-        FILE *fp;
-        int i,k;
-        cputime_type start_tick, end_tick;
-        printf("\nFileBenchmark\nUsing: ini: %d \t Step: %d \t max: %d\n",min_size,setps ,max_size);
-
-        double best_time=1000000;
-        int best_block;
-
-        for(k = min_size; k < max_size; k+=setps)
-        {
-
-            int size = k*n;
-
-            fp = fopen("benchmark.bin", "w+b");
-            char* buf = (char*)malloc(size*sizeof(type_precision));
-            if(buf==0)
-                exit(1);
-            fwrite(buf, sizeof(type_precision), size, fp);
-            fclose(fp);
-
-
-            double duration = 0;
-            for(i = 0; i < 50; i++)
-            {
-                get_ticks(start_tick);
-                fp = fopen("benchmark.bin", "rb");
-                fread (buf,sizeof(type_precision),size,fp);
-                fclose(fp);
-                get_ticks(end_tick);
-                duration += ((end_tick-start_tick)/(double)CLOCKS_PER_SEC);
-            }
-            duration = duration/50;
-
-
-
-            printf("%0.3gMB Block Read, Time: %f s \t Rate: %0.4g MBs\n",(double)size*sizeof(type_precision)/(1024.0*1024.0),
-                                                    duration,((double)size*sizeof(type_precision)/(1024.0*1024.0)/duration));
-            if(duration < best_time)
-            {
-                best_time = duration;
-                best_block = k;
-            }
-
-            free(buf);
-        }
-
-
-
-        return best_block;
 }
 

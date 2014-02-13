@@ -192,20 +192,20 @@ int main( int argc, char *argv[] )
 
     params.use_fake_files = false;
 
-    if (params.use_fake_files)
-    {
-        int multiplier = 1024;
-
-        params.n = 20 * multiplier;
-        params.l = 8;
-        params.r = 2;
-
-        params.t  = {16 * multiplier};
-        params.tb = {4 * multiplier};
-
-        params.m  = {4 * multiplier};
-        params.mb = {4 * multiplier};
-    }
+//    if (params.use_fake_files)
+//    {
+//        int multiplier = 1024;
+//
+//        params.n = 20 * multiplier;
+//        params.l = 8;
+//        params.r = 2;
+//
+//        params.t  = (16 * multiplier, 16 * multiplier);
+//        params.tb = (4 * multiplier,4 * multiplier);
+//
+//        params.m  = (4 * multiplier,4 * multiplier);
+//        params.mb = (4 * multiplier,4 * multiplier);
+//    }
 
 
     Algorithm alg;
