@@ -23,16 +23,16 @@ struct fileh
     string fnameY;
     string fnameOutB;
 
-    FILE*  fp_B;
-
     bool doublefileType;
     bool fakefiles;
 
     type_precision* Yb;
     type_precision* Ar;
     type_precision* AL;
+    type_precision* B;
     type_buffElement* currentReadBuff;
     type_buffElement* Ar_currentReadBuff;
+    type_buffElement* currentWriteBuff;
     int buff_count;
 
     queue<type_buffElement*> empty_buffers;
@@ -49,6 +49,7 @@ struct fileh
     int n;
     int r;
     int l;
+    int p;
 
     int Ar_Amount;
     int Ar_blockSize;
@@ -57,6 +58,8 @@ struct fileh
     int Y_Amount;
     int y_blockSize;
     int y_to_readSize;
+
+    int b_blockSize;
 
     bool not_done;
     bool reset_wait;
@@ -148,7 +151,7 @@ class AIOwrapper
         void prepare_AL( int columns, int n);
         void finalize_AL();
 
-        void prepare_B();
+        void prepare_B(int b_blockSize, int p);
         void finalize_B();
 
 
@@ -163,9 +166,14 @@ class AIOwrapper
         type_fileh FHandler;
         type_fileh* Fhandler;
 
+        FILE* fp_Ar;
+        FILE* fp_B;
+
+
         databel_fvi* Yfvi;
         databel_fvi* ALfvi;
         databel_fvi* ARfvi;
+
 
 
 

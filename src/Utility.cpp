@@ -37,7 +37,7 @@ type_precision* random_vec(int size)
     if(vec==0)
     {
         printf("\nNot enough RAM! %dMB\n",size*sizeof(type_precision)/1024/1024 );
-        system("pause");
+        //system("pause");
         exit(1);
     }
     for( int i = 0; i < size; i++)
@@ -81,7 +81,7 @@ type_precision* replicate_vec(type_precision*old, int size)
     if(vec==0)
     {
         printf("\nNot enough RAM! %dMB\n",size*sizeof(type_precision)/1024/1024 );
-        system("pause");
+        //system("pause");
         exit(1);
     }
 
