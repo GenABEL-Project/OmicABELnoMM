@@ -72,10 +72,10 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             /* If this option set a flag, do nothing else now. */
             if (long_options[option_index].flag != 0)
                 break;
-            printf ("Long option %s", long_options[option_index].name);
+            printf("Long option %s", long_options[option_index].name);
             if (optarg)
                 printf (" with arg %s", optarg);
-            printf ("\n");
+            printf("\n");
             break;
 
         case 'p':
@@ -84,7 +84,7 @@ void parse_params(int argc, char *argv[], struct Settings &params )
 
             pos = string(optarg).find(".");
             if (pos != string::npos)
-                params.fnameY = string(optarg).substr (0, pos);
+                params.fnameY = string(optarg).substr(0, pos);
 
             cout << "using -p with phenotypes from file " << optarg << endl;
             break;
@@ -95,7 +95,7 @@ void parse_params(int argc, char *argv[], struct Settings &params )
 
            pos = string(optarg).find(".");
             if (pos != string::npos)
-                params.fnameAR = string(optarg).substr (0, pos);
+                params.fnameAR = string(optarg).substr(0, pos);
 
             cout << "using -g with genotype data from file " << optarg << endl;
             break;
@@ -139,18 +139,18 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             break;
 
         default:
-            abort ();
+            abort();
         }
     }
 
     /* Print any remaining command line arguments (not options). */
     if (optind < argc)
     {
-        printf ("non-option ARGV-elements: ");
+        printf("non-option ARGV-elements: ");
         while (optind < argc)
-            printf ("%s ", argv[optind++]);
+            printf("%s ", argv[optind++]);
 
-        putchar ('\n');
+        putchar('\n');
     }
 
     if (!bout || !phe || !cov || !snp)
@@ -165,7 +165,7 @@ void parse_params(int argc, char *argv[], struct Settings &params )
 }
 
 
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[] )
 {
     struct Settings params;
 
@@ -180,7 +180,7 @@ int main( int argc, char *argv[] )
     params.r = 1;
     params.threads = 1;
 
-    parse_params(argc, argv,params);
+    parse_params(argc, argv, params);
 
 
     //omp_set_nested(false);
@@ -217,7 +217,7 @@ int main( int argc, char *argv[] )
     }
     else
     {
-        alg.solve(params,out,P_NEQ_B_OPT_MD);
+        alg.solve(params, out, P_NEQ_B_OPT_MD);
     }
 
     return 0;

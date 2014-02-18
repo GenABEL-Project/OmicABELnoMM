@@ -182,7 +182,7 @@ void cpu_benchmark(int n,int samples, int cpu_frequency, double &duration, doubl
 
     cputime_type start_tick, end_tick;
     duration = 9999999999.0;
-    int b;
+    int b = 0;
 
     cout << "\n%%Performing CPU GEMM Benchmark" << endl;
 
