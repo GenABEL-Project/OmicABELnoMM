@@ -163,9 +163,9 @@ class AIOwrapper
         type_fileh FHandler;
         type_fileh* Fhandler;
 
-
-
-
+        databel_fvi* Yfvi;
+        databel_fvi* ALfvi;
+        databel_fvi* ARfvi;
 
 
 

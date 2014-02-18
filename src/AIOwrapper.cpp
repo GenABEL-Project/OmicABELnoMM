@@ -29,9 +29,7 @@ void AIOwrapper::initialize(struct Settings &params)
 
     Fhandler->fakefiles = params.use_fake_files;
 
-//    databel_fvi* Yfvi;
-//    databel_fvi* ALfvi;
-//    databel_fvi* ARfvi;
+
 
     if (!Fhandler->fakefiles)
     {
@@ -40,9 +38,9 @@ void AIOwrapper::initialize(struct Settings &params)
         Fhandler->fnameY    = params.fnameY;
         Fhandler->fnameOutB = params.fnameOutB;
 
-        databel_fvi* Yfvi  = load_databel_fvi( (Fhandler->fnameY+".fvi").c_str() );
-        databel_fvi* ALfvi = load_databel_fvi( (Fhandler->fnameAL+".fvi").c_str() );
-        databel_fvi* ARfvi = load_databel_fvi( (Fhandler->fnameAR+".fvi").c_str() );
+        Yfvi  = load_databel_fvi( (Fhandler->fnameY+".fvi").c_str() );
+        ALfvi = load_databel_fvi( (Fhandler->fnameAL+".fvi").c_str() );
+        ARfvi = load_databel_fvi( (Fhandler->fnameAR+".fvi").c_str() );
         params.n = ALfvi->fvi_header.numObservations;
         params.m = ARfvi->fvi_header.numVariables / params.r;
         params.t = Yfvi->fvi_header.numVariables;
@@ -93,6 +91,10 @@ void AIOwrapper::finalize()
     finalize_AR();
     finalize_AL();
     finalize_B();
+
+    delete Yfvi;
+    delete ALfvi;
+    delete ARfvi;
 
     pthread_attr_destroy(&(Fhandler->attr));
 
