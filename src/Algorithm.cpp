@@ -354,12 +354,21 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
     cout << endl;
 
 
-    type_precision Stl[l*l];
-    type_precision Str[l*r*a_block_size];
 
+    //type_precision Stl[l*l];
+    //type_precision Str[l*r*a_block_size];
+    type_precision* Stl = new type_precision[l*l];
+    type_precision* Str = new type_precision[l*r*a_block_size];
+
+    type_precision* Sbr = new type_precision[r *  r * a_block_size];
+    type_precision* Ay = new type_precision[p * a_block_size];
+
+    type_precision* S = new type_precision[p * p];
 
     type_precision* Ay_top = new type_precision[l * y_amount];
     type_precision* Ay_bot = new type_precision[y_block_size * a_block_size * r];
+
+    list<long int>* y_nan_idxs = new list<long int>[y_block_size];
 
     type_precision* AR = new type_precision[n * r * a_block_size * 1];
     type_precision* AL = new type_precision[n * l * 1];
@@ -391,7 +400,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
         AIOfile.load_Yblock(&Y, y_block_size);
 
-        list<long int> y_nan_idxs[y_block_size];
+
 
         //int total_y_nans = replace_nans(&y_nan_idxs[0], Y, n, y_block_size);
         replace_nans(&y_nan_idxs[0], Y, n, y_block_size);
@@ -461,8 +470,9 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
                                                  cpu_freq);
 
 
-                    type_precision Sbr[r *  r * a_block_size];
-                    type_precision Ay[p * a_block_size];
+                    //type_precision Sbr[r *  r * a_block_size];
+                    //type_precision Ay[p * a_block_size];
+
 
                     #pragma omp for nowait  schedule(dynamic)
                     for (int ii= 0; ii < a_block_size; ii++)
@@ -485,7 +495,8 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
 
                         //type_precision* B = Ay;
-                        type_precision S[p * p];
+                        //type_precision S[p * p];
+
 
                         //! Rebuild S
                         build_S(S, Stl, &Str[ii*r*l], &Sbr[ii*r*r], l, r);
@@ -540,6 +551,12 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
     delete []Ay_bot;
     delete []AR;
     delete []AL;
+    delete []Stl;
+    delete []Str;
+    delete []Sbr;
+    delete []Ay;
+    delete []S;
+    delete []y_nan_idxs;
     // delete []backupAL;
     // delete []backupAR;
 }
