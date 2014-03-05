@@ -92,6 +92,9 @@ void AIOwrapper::finalize()
     pthread_mutex_unlock(&(Fhandler->m_more));
 
     pthread_barrier_wait(&(Fhandler->finalize_barrier));
+
+    pthread_join( (Fhandler->iothread), NULL);
+
     finalize_Y();
     finalize_AR();
     finalize_AL();
@@ -410,6 +413,8 @@ void* AIOwrapper::async_io( void *ptr )
         fclose(fp_Y);
         fclose(fp_Ar);
         fclose(fp_B);
+
+        //cout << "\nexited io\n";
 
         return 0;
 
