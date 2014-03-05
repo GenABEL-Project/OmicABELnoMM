@@ -168,6 +168,7 @@ void parse_params(int argc, char *argv[], struct Settings &params )
 int main(int argc, char *argv[] )
 {
     struct Settings params;
+    params.ForceCheck = false;
 
 //    cout << "Using Arguments: ";
 //    for (int i = 0; i < argc; i++)

@@ -284,7 +284,7 @@ void Algorithm::check_result(type_precision* AL, type_precision* AR,
     {
         matlab_print_matrix("bcomputed", colsA, rhs, res);
         matlab_print_matrix("newsol", colsA, rhs, ynew);
-        printf("\n%%\tnrom: %0.2g", u_norm);
+        //printf("\n%%\tnrom: %0.2g", u_norm);
     }
 
 
@@ -517,7 +517,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
                                                     cpu_freq);
                         assert(info == 0, "POSV");
 
-                        if (ForceCheck)
+                        if (params.ForceCheck)
                         {
                             #pragma omp critical
                             {

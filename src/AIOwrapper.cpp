@@ -118,7 +118,7 @@ void AIOwrapper::finalize_B()
 
 void* AIOwrapper::async_io( void *ptr )
 {
-    cout << "async_io\n" << flush;
+    //cout << "async_io\n" << flush;
     type_fileh* Fhandler = (type_fileh *)ptr;
     int size_buff,tmp_y_blockSize,tmp_ar_blockSize;
 
@@ -152,7 +152,7 @@ void* AIOwrapper::async_io( void *ptr )
     else
     {
         //cout << "\nPreping files\n" << flush;
-        fp_Y = fopen("tempY.bin", "rwb");
+        fp_Y = fopen("tempY.bin", "w+b");
         if(fp_Y == 0)
         {
             cout << "Error creating temp File Y " << endl;
@@ -164,18 +164,18 @@ void* AIOwrapper::async_io( void *ptr )
         delete []tempbuff1;
 
 
-        fp_Ar = fopen("tempAR.bin", "rwb");
+        fp_Ar = fopen("tempAR.bin", "w+b");
         if(fp_Ar == 0)
         {
             cout << "Error creating temp File AR "  << endl;
             exit(1);
         }
-        type_precision* tempbuff2 = new type_precision[Fhandler->n*Fhandler->Ar_blockSize];
-        fwrite(tempbuff2, sizeof(type_precision), Fhandler->n*Fhandler->Ar_blockSize, fp_Ar);
+        type_precision* tempbuff2 = new type_precision[Fhandler->n*Fhandler->Ar_blockSize*Fhandler->r];
+        fwrite(tempbuff2, sizeof(type_precision), Fhandler->n*Fhandler->Ar_blockSize*Fhandler->r, fp_Ar);
         //fclose(fp_Ar);
         delete []tempbuff2;
 
-        fp_B = fopen("tempB.bin", "wb");
+        fp_B = fopen("tempB.bin", "w+b");
         if(fp_B == 0)
         {
             cout << "Error setting up temp File B " << endl;
@@ -848,7 +848,7 @@ void AIOwrapper::prepare_AL( int columnsAL, int n)
             cout << "Error creating temp File AL "<< endl;
             exit(1);
         }
-        fwrite(Fhandler->AL, sizeof(type_precision), Fhandler->n*columnsAL, fp_AL);
+        fwrite(Fhandler->AL, sizeof(type_precision), n*columnsAL, fp_AL);
         fclose(fp_AL);
     }
 }

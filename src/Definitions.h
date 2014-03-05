@@ -41,9 +41,10 @@
 #include <lapacke.h>
 
 //!SETTINGS
+
 #define EXTENDEDTEST 0
 #define PRINT 0 //&& 1EXTENDEDTEST
-#define ForceCheck 0 || EXTENDEDTEST
+
 #define OUTPUT 0
 
 #define STORAGE_TYPE LAPACK_COL_MAJOR
@@ -160,6 +161,8 @@ struct Settings
     string fnameOutB;
 
     bool doublefileType;
+
+    bool ForceCheck;
 };
 
 

@@ -36,7 +36,7 @@ type_precision* random_vec(int size)
     type_precision* vec = (type_precision*)malloc(size*sizeof(type_precision));
     if(vec==0)
     {
-        printf("\nNot enough RAM! %dMB\n",(int)size*sizeof(type_precision)/1024/1024 );
+       cout << "\nNot enough RAM! " << (int)(size*sizeof(type_precision)/1024/1024) << "MB\n";
         //system("pause");
         exit(1);
     }
@@ -80,7 +80,7 @@ type_precision* replicate_vec(type_precision*old, int size)
     type_precision* vec = (type_precision*)malloc(size*sizeof(type_precision));
     if(vec==0)
     {
-        printf("\nNot enough RAM! %dMB\n",(int)size*sizeof(type_precision)/1024/1024 );
+        cout << "\nNot enough RAM! " << (int)(size*sizeof(type_precision)/1024/1024) << "MB\n";
         //system("pause");
         exit(1);
     }
