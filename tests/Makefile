@@ -1,0 +1,2 @@
+normal:
+		g++ *.cpp ../src/Algorithm.cpp ../src/Utility.cpp ../src/AIOwrapper.cpp -o test.out -L/usr/lib/openblas-base -lpthread -lopenblas -llapacke -fopenmp -O2 -g -Wall -pedantic -Wunused-result -Wmaybe-uninitialized -Wformat -g
