@@ -39,3 +39,31 @@ Must be included:
 Optional:
 -n --ngred                     if the file in snp has a different model like direct data genotipic (2 columns per snp) specify -n 2, default is 1
 -t --thr			amount of threads to use, use = as the amount of physical processors in the system (max)
+
+
+
+-------------------------Alternative Version-------------------------
+
+Install all required libraries for your system: 
+
+-Iinux ubuntu:
+
+sudo apt-get install libopenblas-dev
+sudo apt-get install libopenblas-base
+sudo apt-get install liblapack3gf
+sudo apt-get install liblapack-doc
+sudo apt-get install liblapack-dev
+sudo apt-get install liblapacke
+sudo apt-get install liblapacke-dev
+
+-Make sure autoconf is installed:
+
+sudo apt-get install autoconf
+autoreconf -fi
+autoconf
+make
+
+
+
+
+
