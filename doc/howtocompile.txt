@@ -1,34 +1,34 @@
 
 mkdir GWAS_PROJECT
 cd GWAS_PROJECT
-mkdir GWAS
 
-#copy contents of this zip to the GWAS folder
-#DO THIS
-#!!!!!!!!!!!!!!!!!!!!
-
+#recommended to compile your own optimized blas! if not check Alternative Version at the end of the document
+#BLAS
 git clone git://github.com/xianyi/OpenBLAS
 cd OpenBLAS
 
 #make sure g++ its 4.8 or above!on rwth cluster module load gcc/4.8, choose 32 or 64 also
 make all HOSTCC=g++ FC=gfortran USE_OPENMP=1
 
-make PREFIX=../GWAS/ install
-cd ../GWAS/lib/
+sudo make install PREFIX="/usr"
 
-#this hopefully lets the Os knwo where BLAS is
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:pwd
+sudo ldconfig
 
 cd ..
+#BLAS END
 
+svn checkout svn+ssh://developername@svn.r-forge.r-project.org/svnroot/genabel/OmicABELnoMM
 
+cd OmicABELnoMM
 
-#compile the contents of the GWAS solver
-g++ *.cpp  -I./include -L./lib -lopenblas -w
+./configure LDFLAGS="-L/usr/lib/"
 
-#this creates an a.out
+make
 
-a.out -c XL --geno XR -p Y -o B -n 2 -t 2
+#test it
+./omicabelnomm -c examples/XL --geno examples/XR -p examples/Y -o examples/B -n 2 -t 2
+
+#usage
 
 Must be included:
 -c --cov filename		covariates in fv (no need for the .fvd/.fvi, both should have the same name!)
@@ -61,7 +61,6 @@ sudo apt-get install liblapacke-dev
 sudo apt-get install autoconf
 autoreconf -fi
 autoconf
-make
 
 
 
