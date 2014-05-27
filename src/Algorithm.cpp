@@ -331,7 +331,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
     lda = n;
 
 
-    for (int j = 0; j < y_iters; j++)
+    for (int j = 0; j < y_iters && !params.ForceCheck; j++)
     {
         if (y_iters >= 40 && (j%(y_iters/40)) == 0)
         {
@@ -351,7 +351,9 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
             }
         }
     }
-    cout << endl;
+
+    if(!params.ForceCheck)
+        cout << endl;
 
 
 
@@ -392,7 +394,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
     for (int j = 0; j < y_iters; j++)
     {
-        if (y_iters >= 40 && (j%(y_iters/40)) == 0)
+        if (y_iters >= 40 && (j%(y_iters/40)) == 0 && !params.ForceCheck)
         {
             cout << AIOfile.io_overhead << flush;
             AIOfile.io_overhead = "*";
@@ -433,7 +435,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
             get_ticks(end_tick);
             out.firstloop += ticks2sec(end_tick - start_tick2, cpu_freq);
 
-            #pragma omp parallel default(shared)
+            //#pragma omp parallel default(shared)
             {
                 for (int jj = 0; jj < y_block_size; jj++)
                 {
@@ -443,7 +445,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
                     if (y_iters < 40 &&
                                   (y_block_size < 3 ||
-                                                  (jj%(y_block_size/3)) == 0))
+                                                  (jj%(y_block_size/3)) == 0) && !params.ForceCheck)
                     {
                         cout << AIOfile.io_overhead << flush;
                         AIOfile.io_overhead = "*";
@@ -474,7 +476,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
                     //type_precision Ay[p * a_block_size];
 
 
-                    #pragma omp for nowait  schedule(dynamic)
+                    //#pragma omp for nowait  schedule(dynamic)
                     for (int ii= 0; ii < a_block_size; ii++)
                     {
                         get_ticks(start_tick2);

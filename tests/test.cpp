@@ -29,6 +29,12 @@ int main(int argc, char *argv[] )
     int iters = 10;
     int max_threads = 2;
 
+    for(int th = 0; th < max_threads; th++)
+    {
+        cout << "****" << flush;
+    }
+
+    cout << "*\n*" << flush;
 
     for (int th = 0; th < max_threads; th++)
     {
@@ -37,12 +43,14 @@ int main(int argc, char *argv[] )
         params.n=10; params.l=4;  params.r=1;
         params.t=16; params.tb=1; params.m=16; params.mb=1;
 
+
+
         struct Outputs out = {0};
         for (int i = 0; i < iters; i++)
         {
             alg.solve(params, out, P_NEQ_B_OPT_MD);
         }
-        cout << endl;
+        cout << "*" << flush;
         /******************************/
         params.n=10; params.l=4;  params.r=2;
         params.t=16; params.tb=4; params.m=16; params.mb=4;
@@ -52,7 +60,7 @@ int main(int argc, char *argv[] )
         {
             alg.solve(params, out, P_NEQ_B_OPT_MD);
         }
-        cout << endl;
+        cout << "*" << flush;
         /******************************/
         params.n=10; params.l=4;  params.r=2;
         params.t=16; params.tb=5; params.m=16; params.mb=3;
@@ -62,7 +70,7 @@ int main(int argc, char *argv[] )
         {
             alg.solve(params, out, P_NEQ_B_OPT_MD);
         }
-        cout << endl;
+        cout << "*" << flush;
         /******************************/
         params.n=10; params.l=4;  params.r=2;
         params.t=4; params.tb=4; params.m=4; params.mb=4;
@@ -72,7 +80,7 @@ int main(int argc, char *argv[] )
         {
             alg.solve(params, out, P_NEQ_B_OPT_MD);
         }
-        cout << endl;
+        cout << "*" << flush;
 
     }
 

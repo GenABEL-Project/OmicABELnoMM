@@ -6,3 +6,6 @@ oanomm_cpp = src/AIOwrapper.cpp src/Algorithm.cpp src/Utility.cpp	\
  src/main.cpp
 
 omicabelnomm_SOURCES = $(oanomm_headers) $(oanomm_cpp)
+
+SUBDIRS = tests
+
