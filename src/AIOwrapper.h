@@ -173,7 +173,7 @@ class AIOwrapper
 
         void * fgls_malloc_impl( const char* file, long line, size_t size );
 
-            public: type_fileh FHandler;
+        type_fileh FHandler;
         type_fileh* Fhandler;
 
         FILE* fp_Ar;

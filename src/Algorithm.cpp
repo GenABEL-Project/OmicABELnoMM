@@ -479,8 +479,6 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
             get_ticks(end_tick);
             out.acc_gemm += ticks2sec(end_tick,start_tick2);
 
-            int aL_idx =  0*l * n;
-            int aR_idx = 0* r * n * a_block_size;
 
             get_ticks(start_tick3);
             for (int jj = 0; jj < y_block_size; jj++)
@@ -491,9 +489,9 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
                 get_ticks(start_tick2);
 
-                copy_vec(backupAL, &AL[aL_idx], n * l);//try to remove!
+                copy_vec(backupAL, AL, n * l);//try to remove!
 
-                replace_with_zeros(&y_nan_idxs[jj], &AL[aL_idx], n, l, 1);
+                replace_with_zeros(&y_nan_idxs[jj], AL, n, l, 1);
 
 
                 get_ticks(end_tick);//2%
@@ -503,30 +501,30 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
                 //! Generate Stl
                 cblas_ssyrk(CblasColMajor, CblasUpper, CblasTrans,
-                            l, n, 1.0, &AL[aL_idx], lda, 0.0, Stl, l);
+                            l, n, 1.0, AL, lda, 0.0, Stl, l);
 
                 get_ticks(end_tick);
                 out.acc_stl += ticks2sec(end_tick,start_tick2);
 
 
-                get_ticks(start_tick2);
+//                get_ticks(start_tick2);
 
-                copy_vec(backupAR,&AR[aR_idx], n*r*a_block_size);//!10%//try to remove!
-
-
-                replace_with_zeros(&y_nan_idxs[jj], backupAR,  n, r, a_block_size);
+                //copy_vec(backupAR,AR, n*r*a_block_size);//!10%//try to remove!
 
 
+                //replace_with_zeros(&y_nan_idxs[jj], AR,  n, r, a_block_size);
 
-                get_ticks(end_tick);
-                out.acc_other += ticks2sec(end_tick,start_tick2);
+
+
+//                get_ticks(end_tick);
+//                out.acc_other += ticks2sec(end_tick,start_tick2);
 
                 get_ticks(start_tick2);
 
                 //! Generate Str
                 cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
-                            l, r * a_block_size, n, 1.0, &AL[aL_idx],
-                            n, &AR[aR_idx], n, 0.0, Str, l);//!45
+                            l, r * a_block_size, n, 1.0, AL,
+                            n, AR, n, 0.0, Str, l);//!45
 
                 get_ticks(end_tick);
                 out.acc_str += ticks2sec(end_tick,start_tick2);
@@ -547,13 +545,21 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
                 {
                     //cout << omp_get_thread_num() << endl << flush;
 
+                    get_ticks(start_tick2);
+
+                    copy_vec(&backupAR[ii*r*n],&AR[ii*r*n], n*r);//!10%//try to remove!
+                    replace_with_zeros(&y_nan_idxs[jj], &AR[ii*r*n],  n, r, 1);
+
+                    get_ticks(end_tick);
+                    out.acc_other += ticks2sec(end_tick,start_tick2);
+
 
                     get_ticks(start_tick2);
 
                     //! Generate Sbr
                     cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
-                                r, r, n, 1.0, &AR[aR_idx+ii*r*n], n,
-                                &AR[aR_idx + ii * r * n], n, 0.0,
+                                r, r, n, 1.0, &AR[ii*r*n], n,
+                                &AR[ii * r * n], n, 0.0,
                                 &Sbr[ii * r * r], r);
 
 
@@ -595,7 +601,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
                     {
                         #pragma omp critical
                         {
-                            check_result(AL, &AR[aR_idx+ii*r*n], n, p,
+                            check_result(AL, &AR[ii*r*n], n, p,
                                          1, r, &Y[jj*n], &Ay[ii*p]);
                         }
                     }
