@@ -1,9 +1,13 @@
 //export MKL_NUM_THREADS=1 OMP_NUM_THREADS=1 OMP_NESTED=true
+
+#include <boost/math/special_functions/erf.hpp>
+
 #include <unistd.h>
 #include <getopt.h>
 
 #include "Definitions.h"
 #include "Algorithm.h"
+
 
 
 void print_params(struct Settings params)
@@ -47,13 +51,14 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             {"ngpred", required_argument, 0, 'n'},
             {"thr",    required_argument, 0, 't'},
             {"mem",    required_argument, 0, 'm'},
+            {"excl",    required_argument, 0, 'x'},
             {0, 0, 0, 0}
         };
 
         // getopt_long stores the option index here.
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "c:p:g:o:n:t:m:", long_options, &option_index);
+        c = getopt_long(argc, argv, "c:p:g:o:n:t:m:x:", long_options, &option_index);
 
 
         // Detect the end of the options.
@@ -134,6 +139,12 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             cout << "using -t with value " << params.threads << endl;
             break;
 
+         case 'x':
+            params.fname_excludelist = string(optarg);
+
+            cout << "Excluding ids on " << params.fname_excludelist << endl;
+            break;
+
         case '?':
             /* getopt_long already printed an error message. */
             break;
@@ -181,6 +192,8 @@ int main(int argc, char *argv[] )
     params.r = 1;
     params.threads = 1;
 
+    params.fname_excludelist = "";
+
     parse_params(argc, argv, params);
 
 
@@ -192,6 +205,7 @@ int main(int argc, char *argv[] )
     blas_set_num_threads(params.threads);
 
     params.use_fake_files = false;
+
 
 //    if (params.use_fake_files)
 //    {
@@ -220,6 +234,8 @@ int main(int argc, char *argv[] )
     {
         alg.solve(params, out, P_NEQ_B_OPT_MD);
     }
+
+    cout << endl;
 
     return 0;
 }

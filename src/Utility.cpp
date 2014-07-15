@@ -7,7 +7,7 @@ double gemm_flops(double m, double n, double k,int sum)
 
 
 
-void assert(int cond,string msg)
+void myassert(int cond,string msg)
 {
     if(cond < 0)
     {
@@ -69,10 +69,12 @@ void re_random_vec_nan(type_precision* vec, int size)
 }
 
 //no allocation!
-void copy_vec(type_precision*old, type_precision* new_vec, int size)
-{
-    memcpy( (type_precision*)new_vec, (type_precision*)old, size * sizeof(type_precision) );
-}
+//inline void inlinecopy_vec(type_precision*old, type_precision* new_vec, int size)
+//{
+//    memcpy( (type_precision*)new_vec, (type_precision*)old, size * sizeof(type_precision) );
+//}
+
+
 
 type_precision* replicate_vec(type_precision*old, int size)
 {
@@ -90,60 +92,61 @@ type_precision* replicate_vec(type_precision*old, int size)
     return vec;
 }
 
-int replace_nans(list<long int>* indexs, type_precision* vec, int rows , int cols)
+void replace_nans(list<long int>* indexs_vec, int vec_blocksize, type_precision* vec, int rows , int cols)
 {
-    int count_nans = 0;
-    //#pragma omp parallel default(shared) reduction(+:count_nans)
-    {
 
+    //#pragma omp parallel default(shared)
+
+    for( int k = 0; k < vec_blocksize; k++)
+    {
         //#pragma omp for nowait  schedule(static)
         for( int i = 0; i < cols; i++)//go thru all columns
         {
 
              for( int j = 0; j < rows; j++)//move over the rows of this column
              {
+
                 int idx = i*rows+j;
                 if(isnan( vec[idx] ))
                 {
                     vec[idx] = 0;
-                    if(indexs)
+                    if(indexs_vec)
                     {
                         //this col had this rows with nans
-                        indexs[i].push_back(j);
+                        indexs_vec[k].push_back(j);
                     }
 
-                    count_nans++;
                 }
 
              }
 
         }
     }
-    return count_nans;
+    if(cols)
+    {
+        replace_with_zeros(indexs_vec,vec,rows,cols,vec_blocksize);
+    }
+
 }
 
-void replace_with_zeros(list<long int>* indexs, type_precision* vec, int n, int r,int block_count)
+void replace_with_zeros(list<long int>* indexs, type_precision* vec, int n, int cols,int vec_block_count)
 {
     if(indexs)
     {
 
-
-        //#pragma omp parallel default(shared)
+        for( int i = 0; i < vec_block_count; i++)
         {
-            //#pragma omp for nowait  schedule(dynamic)
-            for( int i = 0; i < block_count; i++)
+            int idx;
+            for( int j = 0; j < cols; j++)
             {
-                int idx;
-               for( int j = 0; j < r; j++)
+                for (list<long int>::iterator it = indexs->begin(); it != indexs->end(); it++)
                 {
-                    for (list<long int>::iterator it = indexs->begin(); it != indexs->end(); it++)
-                    {
-                        idx = i*r*n+j*n+(*it);
-                        vec[idx] = 0;
-                    }
+                    idx = i*cols*n+j*n+(*it);
+                    vec[idx] = 0;
                 }
             }
         }
+
     }
 }
 
@@ -173,7 +176,7 @@ void matlab_print_matrix(string name,int m,int n,type_precision* A)
 }
 
 
-void cpu_benchmark(int n,int samples, int cpu_frequency, double &duration, double &GFLOPS)
+void cpu_benchmark(int n,int samples, double &duration, double &GFLOPS)
 {
     type_precision* A = new type_precision[n*n];
     type_precision* B = new type_precision[n*n];
@@ -184,12 +187,9 @@ void cpu_benchmark(int n,int samples, int cpu_frequency, double &duration, doubl
     duration = 9999999999.0;
     int b = 0;
 
-    cout << "\n%%Performing CPU GEMM Benchmark" << endl;
-
     for(int i = 0; i < samples; i++)
     {
-        if(samples < 10 || i%(samples/10)==0)
-            cout << "%" << flush;
+
 
         re_random_vec(A,n*n);
         re_random_vec(B,n*n);
@@ -198,7 +198,7 @@ void cpu_benchmark(int n,int samples, int cpu_frequency, double &duration, doubl
         get_ticks(start_tick);
         cblas_sgemm(CblasColMajor,CblasNoTrans,CblasNoTrans,n,n,n,1.0,A,n,B,n,1.0,C,n);
         get_ticks(end_tick);
-        duration = min(duration,(double)(ticks2sec(end_tick-start_tick,cpu_freq)));
+        duration = min(duration,(double)(ticks2sec(end_tick,start_tick)));
         int a = 0;
         for(int j = 0; j < n*n ; j++)
         {

@@ -1,5 +1,7 @@
 #include "Algorithm.h"
 
+
+
 Algorithm::Algorithm()
 {
     // ctor
@@ -51,41 +53,39 @@ void Algorithm::extract_subMatrix(type_precision* source, type_precision* dest,
 }
 
 
-void Algorithm::prepare_Bfinal(type_precision* bfinal, type_precision* top,
-                               type_precision* bot, int dim1_b,
-                               int dim2_b, int dim1_b_bot)
+void Algorithm::prepare_Bfinal(type_precision* bfinal, type_precision* bsource, int a_amount, int y_amount, int p)
 {
-    // memcpy are faster version of the fors
-    int i, k, w, top_idx, bot_idx;
-    int size;
-    top_idx = 0;
-    bot_idx = 0;
-    for (k = 0; k < dim2_b; k++)
-    {
-        size = k * dim1_b + (dim1_b - dim1_b_bot) - (k * dim1_b);
-        memcpy( (type_precision*)&bfinal[k * dim1_b],
-                (type_precision*)&top[top_idx],
-                size * sizeof(type_precision) );
-//        for (i = k*dim1_b; i < k*dim1_b+(dim1_b-dim1_b_bot); i++)
-//        {
-//            bfinal[i] = top[top_idx];
-//            top_idx++;
-//        }
-        top_idx += size;
-        i = k * dim1_b + size;
-        w = i;
-
-        size = w + dim1_b_bot - w;
-        memcpy( (type_precision*)&bfinal[w],
-                (type_precision*)&bot[bot_idx],
-                size * sizeof(type_precision) );
-//        for (i = w; i < w+dim1_b_bot; i++)
-//        {
-//            bfinal[i] = bot[bot_idx];
-//            bot_idx++;
-//        }
-        bot_idx += size;
-    }
+//    // memcpy are faster version of the fors
+//    int i, k, w, top_idx, bot_idx;
+//    int size;
+//    top_idx = 0;
+//    bot_idx = 0;
+//    for (k = 0; k < dim2_b; k++)
+//    {
+//        size = k * dim1_b + (dim1_b - dim1_b_bot) - (k * dim1_b);
+//        memcpy( (type_precision*)&bfinal[k * dim1_b],
+//                (type_precision*)&top[top_idx],
+//                size * sizeof(type_precision) );
+////        for (i = k*dim1_b; i < k*dim1_b+(dim1_b-dim1_b_bot); i++)
+////        {
+////            bfinal[i] = top[top_idx];
+////            top_idx++;
+////        }
+//        top_idx += size;
+//        i = k * dim1_b + size;
+//        w = i;
+//
+//        size = w + dim1_b_bot - w;
+//        memcpy( (type_precision*)&bfinal[w],
+//                (type_precision*)&bot[bot_idx],
+//                size * sizeof(type_precision) );
+////        for (i = w; i < w+dim1_b_bot; i++)
+////        {
+////            bfinal[i] = bot[bot_idx];
+////            bot_idx++;
+////        }
+//        bot_idx += size;
+//    }
 }
 
 
@@ -249,12 +249,13 @@ void Algorithm::check_result(type_precision* AL, type_precision* AR,
 
     lapack_int info = LAPACKE_sgels(STORAGE_TYPE, 'N', rowsA, colsA, rhs, A,
                                     rowsA, ynew, rowsA);
-    assert(info == 0, "Error Check");
+    myassert(info == 0, "Error Check");
 
 
     int index = 0;
     int index_new = 0;
     for (i = 0; i < rhs; i++)
+
     {
          copy_vec(&ynew[index], &new_sol[index_new], colsA);
          index += rowsA;
@@ -306,12 +307,13 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
     srand(time(NULL));
 
     blas_set_num_threads(max_threads);
+    omp_set_num_threads(max_threads);
 
 
     //type_precision *Ytemp;
     lapack_int info, n, lda, l, r, p;
 
-    cputime_type start_tick, start_tick2, end_tick;
+    cputime_type start_tick, start_tick2, start_tick3, end_tick;
 
     AIOfile.initialize(params);
 
@@ -333,54 +335,70 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
     for (int j = 0; j < y_iters && !params.ForceCheck; j++)
     {
-        if (y_iters >= 40 && (j%(y_iters/40)) == 0)
+        if (!params.ForceCheck &&  y_iters >= 10 && (j%(y_iters/10)) == 0 )
         {
             cout << "*" << flush;
         }
 
         for (int i = 0; i < a_iters; i++)
         {
-            for (int jj = 0; jj < y_block_size; jj++)
-            {
-                if (y_iters < 40 &&
-                    (y_block_size < 3 || (jj%(y_block_size/3)) == 0)
-                    )
+
+                if ( !params.ForceCheck &&  y_iters < 10 &&
+                (  (a_iters >= 10 && (i%(a_iters/(10/y_iters))) == 0) || (a_iters < (10/y_iters)) ))
                 {
                     cout << "*" << flush;
                 }
-            }
+
         }
     }
 
     if(!params.ForceCheck)
         cout << endl;
 
-
+    //add memalign
 
     //type_precision Stl[l*l];
     //type_precision Str[l*r*a_block_size];
-    type_precision* Stl = new type_precision[l*l];
-    type_precision* Str = new type_precision[l*r*a_block_size];
+    type_precision* Stl = new type_precision[l*l*1];
+    type_precision* Str = new type_precision[l*r*a_block_size*1];
 
     type_precision* Sbr = new type_precision[r *  r * a_block_size];
     type_precision* Ay = new type_precision[p * a_block_size];
+    //type_precision* B_resorted = new type_precision[p * a_block_size*y_block_size];
 
     type_precision* S = new type_precision[p * p];
+
 
     type_precision* Ay_top = new type_precision[l * y_amount];
     type_precision* Ay_bot = new type_precision[y_block_size * a_block_size * r];
 
-    list<long int>* y_nan_idxs = new list<long int>[y_block_size];
+    type_precision* y_residual = new type_precision[n * y_block_size ];
+    type_precision* y_res_norms = new type_precision[a_block_size];
 
+    list<long int>* al_nan_idxs = new list<long int>[1];
+    list<long int>* y_nan_idxs = new list<long int>[y_block_size];
+    list<long int>* ar_nan_idxs = new list<long int>[a_block_size];
+
+
+    type_precision* A = new type_precision[n * p * 1];
     type_precision* AR = new type_precision[n * r * a_block_size * 1];
-    type_precision* AL = new type_precision[n * l * 1];
+//  type_precision* AL = new type_precision[n * l * 1];
+    type_precision* AL = A;
+
+    type_precision* B = Ay;
+
     type_precision* backupAR;  // = new type_precision[n*r*a_block_size];
     type_precision* backupAL;  // = new type_precision[n*l];
 
 
     AIOfile.load_AL(&backupAL);
-    //int total_al_nans = replace_nans(0, backupAL, n, l);
-    replace_nans(0, backupAL, n, l);
+
+    //pthread_barrier_wait(&(AIOfile.Fhandler->finalize_barrier));
+
+    replace_nans(al_nan_idxs,1, backupAL, n, l);
+    al_nan_idxs->push_back(1);
+
+    //LAPACKE_dgesdd()
 
     copy_vec(backupAL, AL, n*l);
 
@@ -394,175 +412,368 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
     for (int j = 0; j < y_iters; j++)
     {
-        if (y_iters >= 40 && (j%(y_iters/40)) == 0 && !params.ForceCheck)
+        if (!params.ForceCheck &&  y_iters >= 10 && (j%(y_iters/10)) == 0 && !params.ForceCheck)
         {
             cout << AIOfile.io_overhead << flush;
             AIOfile.io_overhead = "*";
         }
 
+        get_ticks(start_tick2);
+
         AIOfile.load_Yblock(&Y, y_block_size);
 
+        get_ticks(end_tick);
+        out.acc_loady += ticks2sec(end_tick,start_tick2);
+
+        get_ticks(start_tick2);
+        replace_nans(&y_nan_idxs[0],y_block_size, Y, n,1);
+        //out.acc_other += ticks2sec(end_tick,start_tick2);
 
 
-        //int total_y_nans = replace_nans(&y_nan_idxs[0], Y, n, y_block_size);
-        replace_nans(&y_nan_idxs[0], Y, n, y_block_size);
-
+        get_ticks(start_tick2);
 
         //! Ay_top = AL'*Y
         cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
                     l, y_block_size, n, 1.0, AL, n, Y, n, 0.0,
                     &Ay_top[j * l * y_block_size], l);
 
+        get_ticks(end_tick);
+        out.acc_gemm += ticks2sec(end_tick,start_tick2);
+
 
         for (int i = 0; i < a_iters; i++)
         {
-            AIOfile.load_ARblock(&backupAR, a_block_size);
-            //int total_ar_nans = replace_nans(0, backupAR, n, a_block_size * r);
-            replace_nans(0, backupAR, n, a_block_size * r);
-            copy_vec(backupAR, AR, n *  r * a_block_size);
+
+            if (!params.ForceCheck && y_iters < 10 &&
+                (  (a_iters >= 10 && (i%(a_iters/(10/y_iters))) == 0) || (a_iters < (10/y_iters)) ))
+            {
+                cout << "*" << flush;
+            }
 
             get_ticks(start_tick2);
+
+            AIOfile.load_ARblock(&backupAR, a_block_size);
 
             get_ticks(end_tick);
-            out.acc_pre += ticks2sec(end_tick-start_tick2, cpu_freq);
+            out.acc_loadxr += ticks2sec(end_tick,start_tick2);
 
             get_ticks(start_tick2);
+
+            replace_nans(&ar_nan_idxs[0],a_block_size, backupAR, n, r);
+            replace_with_zeros(al_nan_idxs, backupAR,  n, r, a_block_size);
+
+            copy_vec(backupAR, AR, n *  r * a_block_size);
+
+            get_ticks(end_tick);
+            //out.acc_other += ticks2sec(end_tick,start_tick2);
+
+
+
+            get_ticks(start_tick2);
+
             //! Ay_bot = AR'*Y
             cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
                         r * a_block_size, y_block_size, n, 1.0, AR, n, Y, n,
                         0.0, Ay_bot, r * a_block_size);
 
             get_ticks(end_tick);
-            out.firstloop += ticks2sec(end_tick - start_tick2, cpu_freq);
+            out.acc_gemm += ticks2sec(end_tick,start_tick2);
 
-            //#pragma omp parallel default(shared)
+            int aL_idx =  0*l * n;
+            int aR_idx = 0* r * n * a_block_size;
+
+            get_ticks(start_tick3);
+            for (int jj = 0; jj < y_block_size; jj++)
             {
-                for (int jj = 0; jj < y_block_size; jj++)
+
+                //int thread_id = 0 * omp_get_thread_num();//so far singel thread version only
+
+
+                get_ticks(start_tick2);
+
+                copy_vec(backupAL, &AL[aL_idx], n * l);//try to remove!
+
+                replace_with_zeros(&y_nan_idxs[jj], &AL[aL_idx], n, l, 1);
+
+
+                get_ticks(end_tick);//2%
+                out.acc_other += ticks2sec(end_tick,start_tick2);
+
+                 get_ticks(start_tick2);
+
+                //! Generate Stl
+                cblas_ssyrk(CblasColMajor, CblasUpper, CblasTrans,
+                            l, n, 1.0, &AL[aL_idx], lda, 0.0, Stl, l);
+
+                get_ticks(end_tick);
+                out.acc_stl += ticks2sec(end_tick,start_tick2);
+
+
+                get_ticks(start_tick2);
+
+                copy_vec(backupAR,&AR[aR_idx], n*r*a_block_size);//!10%//try to remove!
+
+
+                replace_with_zeros(&y_nan_idxs[jj], backupAR,  n, r, a_block_size);
+
+
+
+                get_ticks(end_tick);
+                out.acc_other += ticks2sec(end_tick,start_tick2);
+
+                get_ticks(start_tick2);
+
+                //! Generate Str
+                cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
+                            l, r * a_block_size, n, 1.0, &AL[aL_idx],
+                            n, &AR[aR_idx], n, 0.0, Str, l);//!45
+
+                get_ticks(end_tick);
+                out.acc_str += ticks2sec(end_tick,start_tick2);
+
+
+
+                //type_precision Sbr[r *  r * a_block_size*1];
+                //type_precision Ay[p * a_block_size*1];
+
+                blas_set_num_threads(1);
+                omp_set_num_threads(max_threads);
+
+                #pragma omp parallel default(shared)
                 {
-                    int thread_id = 0 * omp_get_thread_num();
-                    int aL_idx = thread_id * l * n;
-                    int aR_idx = thread_id * r * n * a_block_size;
 
-                    if (y_iters < 40 &&
-                                  (y_block_size < 3 ||
-                                                  (jj%(y_block_size/3)) == 0) && !params.ForceCheck)
-                    {
-                        cout << AIOfile.io_overhead << flush;
-                        AIOfile.io_overhead = "*";
-                    }
+                #pragma omp for nowait
+                for (int ii= 0; ii < a_block_size; ii++)
+                {
+                    //cout << omp_get_thread_num() << endl << flush;
 
-                    copy_vec(backupAL, &AL[aL_idx], n * l);
-
-                    replace_with_zeros(&y_nan_idxs[jj], &AL[aL_idx], n, l, 1);
-                    //! Generate Stl
-                    cblas_ssyrk(CblasColMajor, CblasUpper, CblasTrans,
-                                l, n, 1.0, &AL[aL_idx], lda, 0.0, Stl, l);
-
-                    copy_vec(backupAR,&AR[aR_idx], n*r*a_block_size);
-                    replace_with_zeros(&y_nan_idxs[jj], &AR[aR_idx],
-                                       n, r, a_block_size);
 
                     get_ticks(start_tick2);
-                    //! Generate Str
+
+                    //! Generate Sbr
                     cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
-                                l, r * a_block_size, n, 1.0, &AL[aL_idx],
-                                n, &AR[aR_idx], n, 0.0, Str, l);
+                                r, r, n, 1.0, &AR[aR_idx+ii*r*n], n,
+                                &AR[aR_idx + ii * r * n], n, 0.0,
+                                &Sbr[ii * r * r], r);
+
+
                     get_ticks(end_tick);
-                    out.acc_RTL_QLY += ticks2sec(end_tick - start_tick2,
-                                                 cpu_freq);
+                    out.acc_sbr += ticks2sec(end_tick,start_tick2 );
+
+                    get_ticks(start_tick2);
+
+                    copy_vec(&Ay_top[j*l*y_block_size+jj*l], &Ay[ii*p], l);
+                    copy_vec(&Ay_bot[ii*r + jj*r*a_block_size],
+                             &Ay[l+ii*p], r);
 
 
-                    //type_precision Sbr[r *  r * a_block_size];
-                    //type_precision Ay[p * a_block_size];
+                    type_precision S2[p * p];
+
+                    //! Rebuild S
+                    build_S(S2, Stl, &Str[ii*r*l], &Sbr[ii*r*r], l, r);
+                    // matlab_print_matrix("S", p, p, S);
 
 
-                    //#pragma omp for nowait  schedule(dynamic)
-                    for (int ii= 0; ii < a_block_size; ii++)
+                    get_ticks(end_tick);//5%
+                    out.acc_other += ticks2sec(end_tick,start_tick2);
+
+                    get_ticks(start_tick2);
+
+
+                    //! b = S\Ay
+                    info = LAPACKE_sposv(STORAGE_TYPE, 'U', p, 1, S2, p,
+                                         &Ay[ii*p], p);
+
+                    myassert(info == 0, "S\\Ay");
+
+
+                    get_ticks(end_tick);
+                    out.acc_solve += ticks2sec(end_tick,start_tick2 );
+
+
+                    if (params.ForceCheck)
                     {
-                        get_ticks(start_tick2);
-                        //! Generate Sbr
-                        cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
-                                    r, r, n, 1.0, &AR[aR_idx+ii*r*n], n,
-                                    &AR[aR_idx + ii * r * n], n, 0.0,
-                                    &Sbr[ii * r * r], r);
-                        get_ticks(end_tick);
-                        out.acc_gemm += ticks2sec(end_tick - start_tick2,
-                                                  cpu_freq);
-
-                        get_ticks(start_tick2);
-
-                        copy_vec(&Ay_top[j*l*y_block_size+jj*l], &Ay[ii*p], l);
-                        copy_vec(&Ay_bot[ii*r + jj*r*a_block_size],
-                                 &Ay[l+ii*p], r);
-
-
-                        //type_precision* B = Ay;
-                        //type_precision S[p * p];
-
-
-                        //! Rebuild S
-                        build_S(S, Stl, &Str[ii*r*l], &Sbr[ii*r*r], l, r);
-                        // matlab_print_matrix("S", p, p, S);
-
-                        get_ticks(end_tick);
-                        out.acc_b += ticks2sec(end_tick - start_tick2,
-                                               cpu_freq);
-
-                        get_ticks(start_tick2);
-
-                        //! b = S\Ay
-                        info = LAPACKE_sposv(STORAGE_TYPE, 'U', p, 1, S, p,
-                                             &Ay[ii*p], p);
-
-                        get_ticks(end_tick);
-                        out.acc_loadxr += ticks2sec(end_tick - start_tick2,
-                                                    cpu_freq);
-                        assert(info == 0, "POSV");
-
-                        if (params.ForceCheck)
+                        #pragma omp critical
                         {
-                            #pragma omp critical
-                            {
-                                check_result(AL, &AR[aR_idx+ii*r*n], n, p,
-                                             1, r, &Y[jj*n], &Ay[ii*p]);
-                            }
+                            check_result(AL, &AR[aR_idx+ii*r*n], n, p,
+                                         1, r, &Y[jj*n], &Ay[ii*p]);
                         }
                     }
-
-                    AIOfile.write_B(Ay, p, a_block_size);
                 }
+                }
+
+                /************statistics**************/
+//                type_precision* T;
+//                type_precision* R2;
+//                type_precision* P;
+
+                //hpc_statistics(n,A,a_block_size,Y,y_block_size,B,p,T,R2,P);
+
+                /**************************/
+
+                blas_set_num_threads(max_threads);
+
+                get_ticks(start_tick2);
+
+                AIOfile.write_B(B, p, a_block_size);
+
+                get_ticks(end_tick);
+                out.acc_storeb += ticks2sec(end_tick,start_tick2);
+
+
+
+
+
             }
+
+            get_ticks(end_tick);
+            out.acc_real_innerloops += ticks2sec(end_tick ,start_tick3);
+
+
         }
          AIOfile.reset_AR();
     }
 
     get_ticks(end_tick);
-    out.duration = ticks2sec(end_tick - start_tick, cpu_freq);
-    // out.gflops = a_amount/1000.0*(n*l*r+n*r*r+y_amount*(n*r+p*p*p)))/1000.0/1000.0;
-    out.gflops = y_amount * (gemm_flops(l, n, 1, 0) +
-                             a_amount * (gemm_flops(r, n, 1, 0) +
-                                         gemm_flops(l, n, l, 0) +
-                                         gemm_flops(l, n, r, 0) +
-                                         gemm_flops(r, n, r, 0) +
+
+    out.duration = ticks2sec(end_tick ,start_tick);
+
+
+    out.gflops = y_iters * (gemm_flops(l, n, params.tb*1, 0) +
+                             a_iters * ( gemm_flops(params.mb*r, n, params.tb*1, 0) +
+                             params.tb *(  gemm_flops(l, 1*n, l, 0) + gemm_flops(l, n, params.mb *r, 0) +
+                                    params.mb * (
+                                         gemm_flops(r, 1*n, r, 0) +
                                          (p * p * p / 3.0) /
-                                         1000.0/1000.0/1000.0));
+                                         1000.0/1000.0/1000.0 )) ));
 
     AIOfile.finalize();
 
     delete []Ay_top;
     delete []Ay_bot;
     delete []AR;
-    delete []AL;
+    //delete []AL;
+    delete []A;
     delete []Stl;
     delete []Str;
     delete []Sbr;
     delete []Ay;
     delete []S;
     delete []y_nan_idxs;
+    delete []y_residual;
+    delete []y_res_norms;
     // delete []backupAL;
     // delete []backupAR;
 }
 
+void Algorithm::hpc_statistics(list<long int>* indexs_AL,list<long int>* indexs_AR, list<long int>* indexs_Y, int n,
+                type_precision* A, int a_amount, type_precision* y, int jj, type_precision* B, int p, int l,int r, type_precision* T, type_precision* R2,type_precision* P)
+{
+        type_precision tsx;
+        type_precision tsxx;
+        //type_precision tsx2;
+
+        type_precision xb;
+        type_precision sy;
+        type_precision Syy;
+
+        type_precision sym;
+        type_precision st;
+        type_precision SST;
+
+        type_precision t;
+        type_precision t1;
+
+        type_precision* sab =  new type_precision[n];//used in res=y-y_fit
+
+
+        for (int ii= 0; ii < a_amount; ii +=r)
+        {
+
+            type_precision* b = &B[jj*p*a_amount+ii*p];
+            memset(sab,0,sizeof(type_precision)*n);
+
+
+
+            for (int h=0; h< l; h++)
+            {
+            }
+
+            list<long int> nans;//!decomment   = indexs_AR[ii].merge(indexs_Y[jj]);
+            nans.unique();
+            int n_not_nans = nans.size();
+
+            type_precision* x = 0;//!remove old and decomment  = &AR[ii*n*p+h*n];
+
+
+            for (int h=r; h< p; h++)
+            {
+                int b_idx = jj*p*a_amount+ii*p+h;
+                tsx = 0;
+                tsxx = 0;
+                Syy = 0;
+
+                for (int k=0; k < n; k++)
+                {
+                        tsx += x[k];
+                        tsxx += x[k]*x[k];
+                        xb = x[k]*b[h];
+                        sab[k] -= xb;
+                }
+
+                for (int k=0; k < n; k++)
+                {
+                    sy=y[k]-sab[k];
+                    Syy += sy*sy;
+                }
+
+                sym = 0;
+                SST = 0;
+                for (int k=0; k < n; k++)
+                {
+                    sym += y[k];
+                }
+                sym = sym/n_not_nans;
+
+                for(int k=0; k < n; k++)
+                {
+                    st = y[k] - sym;
+                    SST += st*st;
+                }
+
+                R2[b_idx] = (1-Syy)/SST;
+
+                type_precision sig_res=sqrt(Syy/n);
+                type_precision tsx2=tsx*tsx/n_not_nans;
+                type_precision var_x=sqrt(tsxx-tsx2);
+
+                t=b[h]*sig_res/var_x;
+                //T[b_idx] =t;
+
+                if(t < 1.28)
+                {
+                    t1=4.4-t;
+                    P[b_idx]=0.5-0.1*t1*t;
+                }
+                else
+                {
+                    P[b_idx]=1-erf(t);
+                }
+            }
+
+
+        }
+        delete []sab;
+
+        //t_students_cdf(y_amount,a_amount,p,T,P,n);
+
+}
+
+void Algorithm::t_students_cdf(int y_amount,int a_amount,int p, type_precision* T, type_precision* P, int deg_freedom)
+{
+
+
+}
 
 //!*************************************************!//
 

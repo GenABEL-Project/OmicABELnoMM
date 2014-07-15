@@ -3,6 +3,8 @@
 
 #include "Definitions.h"
 #include "Utility.h"
+#include <fstream>
+#include <sstream>
 
 typedef struct BufferElement type_buffElement;
 
@@ -21,7 +23,13 @@ struct fileh
     string fnameAL;
     string fnameAR;
     string fnameY;
+
+
     string fnameOutB;
+
+
+    list< pair<int,int> >* excl_List;
+
 
     bool doublefileType;
     bool fakefiles;
@@ -140,6 +148,8 @@ class AIOwrapper
 
     private:
 
+        void read_excludeList(list< pair<int,int> >* excl, int &excl_count, int max_excl, string fname_excludeList);
+
 
         void prepare_AR( int desired_blockSize, int n, int totalR, int columnsR);
         void finalize_AR();
@@ -163,7 +173,7 @@ class AIOwrapper
 
         void * fgls_malloc_impl( const char* file, long line, size_t size );
 
-        type_fileh FHandler;
+            public: type_fileh FHandler;
         type_fileh* Fhandler;
 
         FILE* fp_Ar;

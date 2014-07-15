@@ -385,7 +385,7 @@ CPP = gcc -E
 CPPFLAGS = -Wall -g -pedantic -Wunused-result -Wmaybe-uninitialized -Wformat
 CXX = g++
 CXXDEPMODE = depmode=gcc3
-CXXFLAGS = -g -O2
+CXXFLAGS = -O3
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
@@ -400,7 +400,7 @@ INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
-LDFLAGS = 
+LDFLAGS = -L/usr/lib/
 LIBOBJS = 
 LIBS = -lopenblas 
 LTLIBOBJS = 

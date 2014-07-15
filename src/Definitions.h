@@ -22,7 +22,7 @@
 #else
     //#include "mpi.h"
     //#define cpu_freq 3.0
-    #define cpu_freq 3.0
+    #define cpu_freq 3.2
     #include "cblas.h"
 #endif
 #ifdef __INTEL_MKL__
@@ -159,6 +159,7 @@ struct Settings
     string fnameAR;
     string fnameY;
     string fnameOutB;
+    string fname_excludelist;
 
     bool doublefileType;
 
@@ -168,16 +169,35 @@ struct Settings
 
 struct Outputs
 {
+
     double duration;
     double gflops;
 
-    double acc_RTL_QLY;
+    double acc_real_loady;
+    double acc_real_loadxr;
+    double acc_real_storeb;
+
+    double acc_real_innerloops;
+
     double acc_loady;
     double acc_loadxr;
-    double acc_pre;
+    double acc_storeb;
+
+    double acc_other;
+
     double acc_gemm;
-    double acc_b;
-    double firstloop;
+
+    double acc_firstAR;
+    double acc_firstY;
+
+
+    double acc_stl;
+
+    double acc_sbr;
+    double acc_str;
+    double acc_solve;
+
+
 };
 
 

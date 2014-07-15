@@ -31,12 +31,17 @@ void AIOwrapper::initialize(struct Settings &params)
     Fhandler->fakefiles = params.use_fake_files;
 
 
+
+
+
+
     if(!Fhandler->fakefiles)
     {
         Fhandler->fnameAL = params.fnameAL;
         Fhandler->fnameAR = params.fnameAR;
         Fhandler->fnameY = params.fnameY;
         Fhandler->fnameOutB = params.fnameOutB;
+
 
         Yfvi  = load_databel_fvi( (Fhandler->fnameY+".fvi").c_str() );
         ALfvi = load_databel_fvi( (Fhandler->fnameAL+".fvi").c_str() );
@@ -46,7 +51,7 @@ void AIOwrapper::initialize(struct Settings &params)
         params.t = Yfvi->fvi_header.numVariables;
         params.l = ALfvi->fvi_header.numVariables;
 
-	int opt_tb = 1000;
+        int opt_tb = 1000;
         int opt_mb = 1000;
 
         params.mb = min(params.m, opt_tb);
@@ -57,6 +62,21 @@ void AIOwrapper::initialize(struct Settings &params)
     {
 
     }
+
+    //params.fname_excludelist = "exclfile.txt";
+    int excl_count = 0;
+    Fhandler->excl_List = new list< pair<int,int> >();
+
+    if(params.fname_excludelist.size()==0)
+    {
+        (Fhandler->excl_List)->push_back( make_pair(0,params.n) );
+    }
+    else
+    {
+        read_excludeList( Fhandler->excl_List,excl_count,params.n,params.fname_excludelist);
+    }
+
+    params.n -= excl_count;
 
     params.p = params.l + params.r;
 
@@ -107,6 +127,8 @@ void AIOwrapper::finalize()
 
     pthread_mutex_destroy(&(Fhandler->m_read));
     pthread_cond_destroy(&(Fhandler->condition_read));
+
+    delete Fhandler->excl_List;
 
 
 }
@@ -188,9 +210,12 @@ void* AIOwrapper::async_io( void *ptr )
 
     }
 
+    //pthread_barrier_wait(&(Fhandler->finalize_barrier));//for testing only
+
 
     Fhandler->not_done = true;
     Fhandler->reset_wait = false;
+
 
     while(Fhandler->not_done)
     {
@@ -227,8 +252,29 @@ void* AIOwrapper::async_io( void *ptr )
             }
             else
             {
-                size_t result = fread (tobeFilled->buff,sizeof(type_precision),size_buff,fp_Y);
-                result++;
+                list< pair<int,int> >* excl_List = Fhandler->excl_List;
+
+
+                int chunk_size_buff;
+                int buff_pos=0;
+                int file_pos;
+
+                for(int i = 0; i < tmp_y_blockSize; i++)
+                {
+                    for (list<  pair<int,int>  >::iterator it=excl_List->begin(); it != excl_List->end(); ++it)
+                    {
+                        file_pos = Fhandler->n*i + it->first;
+                        fseek ( fp_Y , file_pos*sizeof(type_precision) , SEEK_SET );
+                        chunk_size_buff = it->second;
+
+                        size_t result = fread (&tobeFilled->buff[buff_pos],sizeof(type_precision),chunk_size_buff,fp_Y); result++;
+                        buff_pos += chunk_size_buff;
+
+
+                    }
+                }
+//                size_t result = fread (tobeFilled->buff,sizeof(type_precision),size_buff,fp_Y);
+//                result++;
                 if(Fhandler->y_to_readSize <= 0)
                 {
                     fseek ( fp_Y , 0 , SEEK_SET );
@@ -267,8 +313,7 @@ void* AIOwrapper::async_io( void *ptr )
             if(Fhandler->fakefiles)
             {
                 fseek ( fp_Ar , 0 , SEEK_SET );
-                size_t result = fread (tobeFilled->buff,sizeof(type_precision),size_buff,fp_Ar);
-                result++;
+                size_t result = fread (tobeFilled->buff,sizeof(type_precision),size_buff,fp_Ar); result++;
 
                 re_random_vec(tobeFilled->buff , Fhandler->n * tmp_ar_blockSize*Fhandler->r );
                 re_random_vec_nan(tobeFilled->buff , Fhandler->n * tmp_ar_blockSize*Fhandler->r );
@@ -276,8 +321,30 @@ void* AIOwrapper::async_io( void *ptr )
             }
             else
             {
-                size_t result = fread (tobeFilled->buff,sizeof(type_precision),size_buff,fp_Ar);
-                result++;
+
+                list< pair<int,int> >* excl_List = Fhandler->excl_List;
+
+                int chunk_size_buff;
+                int buff_pos=0;
+                int file_pos;
+
+                for(int i = 0; i < tmp_ar_blockSize*Fhandler->r; i++)
+                {
+                    for (list<  pair<int,int>  >::iterator it=excl_List->begin(); it != excl_List->end(); ++it)
+                    {
+                        file_pos = Fhandler->n*i + it->first;
+                        fseek ( fp_Ar , file_pos*sizeof(type_precision) , SEEK_SET );
+
+                        chunk_size_buff = it->second;
+                        size_t result = fread (&tobeFilled->buff[buff_pos],sizeof(type_precision),chunk_size_buff,fp_Ar); result++;
+                        buff_pos += chunk_size_buff;
+
+
+                    }
+                }
+
+//                size_t result = fread(tobeFilled->buff,sizeof(type_precision),size_buff,fp_Ar);
+//                result++;
                 if (Fhandler->Ar_to_readSize <= 0)
                 {
                     fseek ( fp_Ar , 0 , SEEK_SET );
@@ -307,8 +374,8 @@ void* AIOwrapper::async_io( void *ptr )
             if(Fhandler->fakefiles)
             {
                 fseek ( fp_B , 0 , SEEK_SET );
-	  }
-		fwrite (tobeWritten->buff,sizeof(type_precision),size,fp_B);
+            }
+            fwrite (tobeWritten->buff,sizeof(type_precision),size,fp_B);
 
 
             Fhandler->b_empty_buffers.push(tobeWritten);
@@ -357,6 +424,7 @@ void* AIOwrapper::async_io( void *ptr )
     //barrier
     pthread_barrier_wait(&(Fhandler->finalize_barrier));
 
+    {
     type_buffElement* tmp;
     while(!Fhandler->full_buffers.empty())
     {
@@ -404,6 +472,7 @@ void* AIOwrapper::async_io( void *ptr )
        Fhandler->b_empty_buffers.pop();
        delete []tmp->buff;
        delete tmp;
+    }
     }
 
 
@@ -544,13 +613,9 @@ void AIOwrapper::load_Yblock(type_precision** Y, int &y_blockSize)
 
 void AIOwrapper::write_B(type_precision* B, int p, int blockSize)
 {
-     //int status;
-    //int createstatus = 0;
-   // cout << " b: full" << Fhandler->b_full_buffers.size() << "; epty" << Fhandler->b_empty_buffers.size() << endl;
 
     while(Fhandler->b_empty_buffers.empty())
     {
-
         pthread_mutex_lock(&(Fhandler->m_more));
         pthread_cond_signal( &(Fhandler->condition_more ));
         pthread_mutex_unlock(&(Fhandler->m_more));
@@ -568,7 +633,7 @@ void AIOwrapper::write_B(type_precision* B, int p, int blockSize)
 
 
 
-
+        //cout << Fhandler->b_empty_buffers.size() << flush;
         Fhandler->currentWriteBuff = Fhandler->b_empty_buffers.front();
         Fhandler->b_empty_buffers.pop();
 
@@ -582,10 +647,7 @@ void AIOwrapper::write_B(type_precision* B, int p, int blockSize)
 
 
 
-    // cout << " b: full" << Fhandler->b_full_buffers.size() << "; epty" << Fhandler->b_empty_buffers.size() << endl;
-
     pthread_mutex_unlock(&(Fhandler->m_buff_upd));
-
 
 
     pthread_mutex_lock(&(Fhandler->m_more));
@@ -669,6 +731,10 @@ void AIOwrapper::prepare_B(int b_blockSize, int p)
 //            (tmp->buff)[i] = 0;
 //        }
         Fhandler->b_empty_buffers.push(tmp);
+
+//        Fhandler->currentWriteBuff = Fhandler->b_empty_buffers.front();
+//        Fhandler->b_empty_buffers.pop();
+
 
     }
 
@@ -828,8 +894,29 @@ void AIOwrapper::load_AL(type_precision** AL)
             exit(1);
         }
 
-        size_t result = fread (Fhandler->AL,sizeof(type_precision),Fhandler->l*Fhandler->n,fp);
-        result++;
+        list< pair<int,int> >* excl_List = Fhandler->excl_List;
+
+        int chunk_size_buff;
+        int buff_pos=0;
+        int file_pos;
+
+        for (int i=0; i < Fhandler->l; i++)
+        {
+            for (list<  pair<int,int>  >::iterator it=excl_List->begin(); it != excl_List->end(); ++it)
+            {
+                file_pos = i*Fhandler->n+ it->first;
+                fseek ( fp , file_pos*sizeof(type_precision) , SEEK_SET );
+                chunk_size_buff = it->second;
+
+                size_t result = fread (&(Fhandler->AL[buff_pos]),sizeof(type_precision),chunk_size_buff,fp); result++;
+                buff_pos += chunk_size_buff;
+            }
+        }
+
+
+//        size_t result = fread (Fhandler->AL,sizeof(type_precision),Fhandler->l*Fhandler->n,fp);
+//
+//        result++;
         fclose(fp);
     }
 
@@ -862,6 +949,111 @@ void AIOwrapper::finalize_AL()
 {
     delete []Fhandler->AL;
 }
+
+
+void AIOwrapper::read_excludeList(list< pair<int,int> >* excl, int &excl_count, int max_excl, string fname_excludeList)
+{
+
+    ifstream fp_exL(fname_excludeList.c_str());
+    if(fp_exL == 0)
+    {
+        cout << "Error reading exclude list file."<< endl;
+        exit(1);
+    }
+
+
+    string line;
+    excl_count = 0;
+    bool early_EOF;
+    int first,second, prev_second;
+
+     cout << "Excluding Ids: \n";
+
+    std::getline(fp_exL, line);
+    std::istringstream iss(line);
+    iss >> first;
+    early_EOF = iss.eof();
+    iss >> prev_second;
+
+    if(prev_second < first || early_EOF)
+            prev_second = first;
+
+    second = prev_second;
+
+
+    if(first > max_excl)
+    {
+        excl->push_back( make_pair(0,max_excl) );
+        cout << "\nNothing to Exclude!\n";
+    }
+    else
+    {
+        if(second > max_excl)
+        {
+                excl_count += max_excl-first+1;
+                excl->push_back( make_pair(0,first-1) );
+                cout << first << "-" << second << ", ";
+        }
+        else
+        {
+
+            cout << first << "-" << second << ", ";
+            excl->push_back( make_pair(0,first - 1) );
+            excl_count += second-(first-1);
+
+            while (std::getline(fp_exL, line) && second < max_excl )
+            {
+                std::istringstream iss(line);
+
+                iss >> first;
+                early_EOF = iss.eof();
+                iss >> second;
+                if(prev_second >= first)
+                {
+                    cout << "\nPlease give an ordered Exlusion List!\n";
+                    cout << "?? " << prev_second << "\n" << first << " ??"<< endl;
+                    exit( 1 );
+                }
+
+
+                if(second < first || early_EOF )
+                    second = first;
+
+
+                if(second > max_excl)
+                    excl_count += max_excl-first+1;
+                else if(first < max_excl)
+                    excl_count += second-(first-1);
+
+
+
+                cout << first << "-" << second << ", ";
+
+                excl->push_back( make_pair(prev_second,first - prev_second - 1) );
+
+
+                prev_second = second;
+
+
+            }
+        }
+    }
+
+
+
+
+    if(excl_count >= max_excl)
+    {
+		cout << "\nExclusion List excluded all data!\n";
+		cout << "Total Ids: " << max_excl << "\nExcluded Ids: " << excl_count << endl;
+		exit( 1 );
+	}
+	 cout << "Excluded: "  << excl_count << " Using: " << max_excl-excl_count<< endl;
+
+
+
+}
+
 
 void AIOwrapper::free_databel_fvi( struct databel_fvi **fvi )
 {

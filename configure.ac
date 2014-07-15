@@ -17,11 +17,12 @@ AM_MAINTAINER_MODE([enable])
 # Set some default compile flags
 if test -z "$CXXFLAGS"; then
    # User did not set CXXFLAGS, so we can put in our own defaults
-    CXXFLAGS="-g -O2"
+    CXXFLAGS="-O3"
 fi
 if test -z "$CPPFLAGS"; then
    # User did not set CPPFLAGS, so we can put in our own defaults
     CPPFLAGS="-Wall -g -pedantic -Wunused-result -Wmaybe-uninitialized -Wformat"
+    #CPPFLAGS="-Wall"
 fi
 # If CXXFLAGS/CPPFLAGS are already set AC_PROG_CXX will not overwrite them
 # with its own defaults
@@ -45,10 +46,15 @@ AC_SEARCH_LIBS([LAPACKE_sgeqrf], [lapack, lapacke], [], [
    AC_MSG_ERROR([Unable to find a Lapack library])
 ])
 
+#Boost
+
+
 
 # Check for openMP. If found the OPENMP_CXXFLAGS is set automatically
 AC_OPENMP
 AC_SUBST(AM_CXXFLAGS, "$OPENMP_CFLAGS")
+
+
 
 
 

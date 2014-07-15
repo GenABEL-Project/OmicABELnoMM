@@ -5,6 +5,7 @@
 #include "Utility.h"
 #include "AIOwrapper.h"
 
+
 #define FULL_NEQ 1
 #define FULL_NEQ_STR "FULL_NEQ"
 
@@ -31,7 +32,9 @@
 class Algorithm
 {
     public:
+
         Algorithm();
+
         virtual ~Algorithm();
 
         void solve(struct Settings params, struct Outputs &out, int type);
@@ -45,6 +48,10 @@ class Algorithm
 
         AIOwrapper AIOfile;
 
+        void t_students_cdf(int y_amount,int a_amount,int p, type_precision* T, type_precision* P, int deg_freedom);
+
+        void hpc_statistics(list<long int>* indexs_AL,list<long int>* indexs_AR, list<long int>* indexs_Y, int n,
+                type_precision* A, int a_amount, type_precision* y, int jj, type_precision* B, int p, int l,int r, type_precision* T, type_precision* R2,type_precision* P);
 
 
         void check_result(type_precision* AL, type_precision* AR,int rowsA,int colsA, int rhs,int colsAR,
@@ -58,7 +65,7 @@ class Algorithm
 
         void prepare_QY(type_precision* qy, type_precision* top,type_precision* bot,int dim1_QY, int dim2_QY,int dim1_qy_bot,int bot_blocks );
 
-        void prepare_Bfinal(type_precision* bfinal, type_precision* top,type_precision* bot,int dim1_b, int dim2_b,int dim1_b_bot);
+        void prepare_Bfinal(type_precision* bfinal, type_precision* bsource, int a_amount, int y_amount, int p);
 
         void extract_subMatrix(type_precision* source, type_precision* dest,int dim1_source, int dim2_source,
                                                             int dim1_ini,int dim1_end,int dim2_ini,int dim2_end);
