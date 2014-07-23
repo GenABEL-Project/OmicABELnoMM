@@ -16,3 +16,13 @@ tests_test_omicabelnomm_SOURCES =		\
 
 TESTS = $(check_PROGRAMS)
 CLEANFILES = tempAL.bin tempB.bin tempY.bin tempAR.bin
+
+
+## Stuff needed for documentation in the doc/ directory
+dist_doc_DATA = doc/howtocompile.txt
+
+## Specify where to store the examples data
+exampledir = $(pkgdatadir)/examples
+dist_example_DATA = examples/CreateData.R examples/XL.fvd	\
+	examples/XL.fvi  examples/XR.fvd  examples/XR.fvi	\
+	examples/Y.fvd  examples/Y.fvi
