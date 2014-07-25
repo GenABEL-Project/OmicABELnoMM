@@ -4,8 +4,8 @@
 AC_PREREQ([2.67])
 AC_INIT([OmicABELnoMM], [0.1.0], [genabel-devel@r-forge.wu-wien.ac.at])
 AM_INIT_AUTOMAKE([])
-#AM_INIT_AUTOMAKE([silent-rules subdir-objects])
-#AM_SILENT_RULES([yes])
+AM_INIT_AUTOMAKE([silent-rules subdir-objects])
+AM_SILENT_RULES([no])
 AC_CONFIG_SRCDIR([src/Utility.h])
 AC_CONFIG_HEADERS([src/config.h])
 
@@ -22,8 +22,8 @@ if test -z "$CXXFLAGS"; then
 fi
 if test -z "$CPPFLAGS"; then
    # User did not set CPPFLAGS, so we can put in our own defaults
-    #CPPFLAGS="-Wall -pedantic -Wunused-result -Wmaybe-uninitialized -Wformat"
-    CPPFLAGS="-O0"
+    CPPFLAGS="-Wall -pedantic -Wunused-result -Wmaybe-uninitialized -Wformat"
+    #CPPFLAGS="-O0"
 fi
 # If CXXFLAGS/CPPFLAGS are already set AC_PROG_CXX will not overwrite them
 # with its own defaults
@@ -62,15 +62,15 @@ AC_SEARCH_LIBS(dgemm, acml_mp,[found_blas=1 AM_CXXFLAGS="-D_acml_ $AM_CXXFLAGS"]
 if test "$found_blas" -eq 0
 	then
 
-# Openblas
-AC_SEARCH_LIBS([cblas_sgemm], [openblas], [AM_CXXFLAGS="$AM_CXXFLAGS -D_openblas_"], [
-   AC_MSG_ERROR([OpenBLAS  library NOT found])
-])
- #Lapack
-AC_SEARCH_LIBS([LAPACKE_sgeqrf], [lapack, lapacke], [], [
-   AC_MSG_ERROR([Unable to find a Lapack library])
-])
-AC_MSG_NOTICE([Using OpenBLAS  library])
+	# Openblas
+	AC_SEARCH_LIBS([cblas_sgemm], [openblas], [AM_CXXFLAGS="$AM_CXXFLAGS -D_openblas_"], [
+	   AC_MSG_ERROR([OpenBLAS  library NOT found])
+	])
+	 #Lapack
+	AC_SEARCH_LIBS([LAPACKE_sgeqrf], [lapack, lapacke], [], [
+	   AC_MSG_ERROR([Unable to find a Lapack library])
+	])
+	AC_MSG_NOTICE([Using OpenBLAS  library])
 fi
 
 
