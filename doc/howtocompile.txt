@@ -1,4 +1,7 @@
 
+-------------------------Install BLAS----------------------------
+#STEP 1:
+#a) Install OPENBLAS:
 mkdir GWAS_PROJECT
 cd GWAS_PROJECT
 
@@ -10,21 +13,52 @@ cd OpenBLAS
 #make sure g++ its 4.8 or above!on rwth cluster module load gcc/4.8, choose 32 or 64 also
 make all HOSTCC=g++ FC=gfortran USE_OPENMP=1
 
-sudo make install PREFIX="/usr"
+make install PREFIX="path_to_/OmicABELnoMM/libs/"
 
-sudo ldconfig
+ldconfig
+
 
 cd ..
-#BLAS END
+
+-------------------------AMD ACML Alternative Version-------------------------
+#STEP 1:
+# b)
+mkdir OmicABELnoMM/libs/
+
+cd OmicABELnoMM/libs/
+
+You can use AMD ACML. Download from:
+http://developer.amd.com/tools-and-sdks/cpu-development/amd-core-math-library-acml/acml-downloads-resources/
+
+ and copy the supplied binary 
+ libraries to "OmicABELnoMM/libs/"
+
+IF both libraries are present (Openblas + ACML), the system will use ACML.
+
+cd ../../
+
+---------------------------------#BLAS END----------------------------------------------------
+
+#STEP 2:
+
+
+ON the folder GWAS_PROJECT
 
 svn checkout svn+ssh://developername@svn.r-forge.r-project.org/svnroot/genabel/OmicABELnoMM
 
 cd OmicABELnoMM
 
-./configure LDFLAGS="-L/usr/lib/"
+autoreconf -fi
+
+./configure
 
 make
 
+make check
+
+#DONE
+
+------------------------------Example--------------------------------
 #test it
 ./omicabelnomm -c examples/XL --geno examples/XR -p examples/Y -o examples/B -n 2 -t 2
 
@@ -42,11 +76,18 @@ Optional:
 
 
 
--------------------------Alternative Version-------------------------
+-------------------------Alternative Version of BLAS-------------------------
 
-Install all required libraries for your system: 
+#Make sure autoconf is installed:
 
--Iinux ubuntu:
+sudo apt-get install autoconf
+autoreconf -fi
+autoconf
+
+#Install all required libraries for your system, 
+#but they will not work, 99% of the time, due to not having openmp support: 
+
+#Iinux ubuntu:
 
 sudo apt-get install libopenblas-dev
 sudo apt-get install libopenblas-base
@@ -56,11 +97,7 @@ sudo apt-get install liblapack-dev
 sudo apt-get install liblapacke
 sudo apt-get install liblapacke-dev
 
--Make sure autoconf is installed:
 
-sudo apt-get install autoconf
-autoreconf -fi
-autoconf
 
 
 

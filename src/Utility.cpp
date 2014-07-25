@@ -1,5 +1,6 @@
 #include "Utility.h"
 
+
 double gemm_flops(double m, double n, double k,int sum)
 {
     return  (double)((2.0*m/1000.0*n/1000.0*k/1000.0+sum*m/1000.0*k/1000.0/1000.0));

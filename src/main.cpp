@@ -10,6 +10,8 @@
 
 
 
+
+
 void print_params(struct Settings params)
 {
     cout << "Threads:" << params.threads << " ";
@@ -48,10 +50,11 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             {"geno",   required_argument, 0, 'g'},
             {"cov",    required_argument, 0, 'c'},
             {"out",    required_argument, 0, 'o'},
-            {"ngpred", required_argument, 0, 'n'},
+            {"ngpred", required_argument, 0, 'n'},//r
             {"thr",    required_argument, 0, 't'},
             {"mem",    required_argument, 0, 'm'},
             {"excl",    required_argument, 0, 'x'},
+            {"sigth",    required_argument, 0, 's'},//pvalthreashold
             {0, 0, 0, 0}
         };
 
@@ -124,13 +127,13 @@ void parse_params(int argc, char *argv[], struct Settings &params )
 
         case 'o':
             bout = !bout;
-            params.fnameOutB = string(optarg);
+            params.fnameOutFiles = string(optarg);
 
             pos = string(optarg).find(".");
             if (pos != string::npos)
-                params.fnameOutB = string(optarg).substr(0, pos);
+                params.fnameOutFiles = string(optarg).substr(0, pos);
 
-            cout << "using -o with output file " << optarg << endl;
+            cout << "using -o for output files " << optarg << endl;
             break;
 
         case 't':
@@ -143,6 +146,13 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             params.fname_excludelist = string(optarg);
 
             cout << "Excluding ids on " << params.fname_excludelist << endl;
+            break;
+
+
+         case 's':
+            params.sig_threshold = atof(optarg);
+
+            cout << "Significance will be set at P-val's below " << params.sig_threshold << endl;
             break;
 
         case '?':
@@ -206,28 +216,27 @@ int main(int argc, char *argv[] )
 
     params.use_fake_files = false;
 
+    //params.use_fake_files = true;
+    if (params.use_fake_files)
+    {
+        int multiplier = 1000;
 
-//    if (params.use_fake_files)
-//    {
-//        int multiplier = 1024;
-//
-//        params.n = 20 * multiplier;
-//        params.l = 8;
-//        params.r = 2;
-//
-//        params.t  = (16 * multiplier, 16 * multiplier);
-//        params.tb = (4 * multiplier,4 * multiplier);
-//
-//        params.m  = (4 * multiplier,4 * multiplier);
-//        params.mb = (4 * multiplier,4 * multiplier);
-//    }
+        params.n = 4 * multiplier;
+        params.l = 3;
+        params.r = 1;
+
+        params.t  = 1 * multiplier;
+        params.tb = 1 * multiplier;
+
+        params.m  = 1 * multiplier;
+        params.mb = 1 * multiplier;
+    }
 
 
     Algorithm alg;
     struct Outputs out = {0};
     if (params.use_fake_files)
     {
-        for (int i = 0; i < 100; i++)
             alg.solve(params, out, P_NEQ_B_OPT_MD);
     }
     else

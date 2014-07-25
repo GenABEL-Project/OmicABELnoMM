@@ -7,38 +7,107 @@
     #define WINDOWS
 #endif
 
+#include <unistd.h>
+#include <limits.h>
+#include <queue>
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>       /* time */
 #include <cstring>
 #include <math.h>
 #include <omp.h>
-
+#include <pthread.h>
 
 
 #ifdef WINDOWS
     #include <windows.h>
-    #include <cblas.h>
 #else
-    //#include "mpi.h"
-    //#define cpu_freq 3.0
-    #define cpu_freq 3.2
-    #include "cblas.h"
-#endif
-#ifdef __INTEL_MKL__
-    #include "mkl.h"
-    #define blas_set_num_threads(n) mkl_set_num_threads(n)
-#else
-    extern "C" void openblas_set_num_threads(int num_threads);
-    #define blas_set_num_threads(n) openblas_set_num_threads(n)
+
 #endif
 
-#include <unistd.h>
-#include <pthread.h>
-#include <limits.h>
-#include <queue>
-#include <iostream>
-#include <lapacke.h>
+//!For intel use propetary MKL, it will be preferred over others
+#ifdef __INTEL_MKL__
+    #pragma message("MKL will Probably NOT compile")
+    #include "mkl.h"
+    #include "cblas.h"
+    #include <lapacke.h>
+    #define blas_set_num_threads(n) mkl_set_num_threads(n)
+    #define STORAGE_TYPE LAPACK_COL_MAJOR
+#else
+
+    //!For AMD systems use the proper ACML library, preferred over openblas ON AMD
+    #ifdef _acml_
+        #pragma message("Compiled with AMD ACML")
+        #define blas_set_num_threads(n) omp_set_num_threads(n)
+
+        #include <acml.h>
+
+        #define lapack_int int
+
+        #define CblasTrans 'T'
+        #define CblasNoTrans 'N'
+        #define CblasUpper 'U'
+        #define CblasColMajor 1
+
+
+        #define STORAGE_TYPE CblasColMajor
+
+
+        #define cblas_snrm2 snrm2
+        #define cblas_saxpy saxpy
+
+        #ifndef BLASdefs_H_INCLUDED
+        #define BLASdefs_H_INCLUDED
+
+        inline  void cblas_sgemm(int storage, char transa, char transb, int m, int n, int k, float alpha, float *a, int lda, float *b, int ldb, float beta, float *c, int ldc)
+        {
+           sgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
+        }
+
+        inline  lapack_int LAPACKE_sposv( int matrix_order, char uplo, lapack_int n,  lapack_int nrhs, float* a, lapack_int lda, float* b, lapack_int ldb )
+        {
+            int info;
+            sposv( uplo, n,  nrhs, a, lda, b,  ldb, &info);
+            return info;
+        }
+
+        inline  void cblas_ssyrk(int Order, char uplo, char Trans,
+		 int N, int K, float alpha, float *A, int lda,  float beta, float *C, int ldc)
+        {
+            ssyrk(uplo, Trans, N, K, alpha, A, lda, beta, C, ldc);
+        }
+
+        inline  lapack_int LAPACKE_sgels( int matrix_order, char trans, lapack_int m, lapack_int n, lapack_int nrhs, float* a,  lapack_int lda, float* b, lapack_int ldb )
+        {
+            int info;
+            sgels(trans, m, n, nrhs, a, lda, b, ldb,&info);
+            return info;
+        }
+
+        #endif
+
+
+
+
+
+    #else
+
+        //!IF MKL is not present on INTEL, use openblas
+        #ifdef _openblas_
+            #pragma message("Compiled with OPENBLAS")
+            #define STORAGE_TYPE LAPACK_COL_MAJOR
+            #include "cblas.h"
+            #include <lapacke.h>
+            extern "C" void openblas_set_num_threads(int num_threads);
+            #define blas_set_num_threads(n) openblas_set_num_threads(n)
+        #endif
+
+    #endif
+
+#endif
+
+
 
 //!SETTINGS
 
@@ -47,7 +116,7 @@
 
 #define OUTPUT 0
 
-#define STORAGE_TYPE LAPACK_COL_MAJOR
+
 #define type_precision float
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
@@ -56,84 +125,6 @@
 #define _10MB 10*_1MB
 #define _1GB 1024*1024*1024
 
-//!for CPU speed!
-
-//#ifdef WIN32
-//#define WIN32_LEAN_AND_MEAN
-//#include <windows.h>
-//typedef unsigned __int64 usCount;
-//static usCount GetUsCount()
-//{
-//    static LARGE_INTEGER ticksPerSec;
-//    static double scalefactor;
-//    LARGE_INTEGER val;
-//    if (!scalefactor)
-//    {
-//        if (QueryPerformanceFrequency(&ticksPerSec))
-//            scalefactor=ticksPerSec.QuadPart/1000000000000.0;
-//        else
-//            scalefactor=1;
-//    }
-//    if (!QueryPerformanceCounter(&val))
-//        return (usCount) GetTickCount() * 1000000000;
-//    return (usCount) (val.QuadPart/scalefactor);
-//}
-//#else
-//#include <sys/time.h>
-//#include <time.h>
-//#include <sched.h>
-//typedef unsigned long long usCount;
-//static usCount GetUsCount()
-//{
-//#ifdef CLOCK_MONOTONIC
-//    struct timespec ts;
-//    clock_gettime(CLOCK_MONOTONIC, &ts);
-//    return ((usCount) ts.tv_sec*1000000000000LL)+ts.tv_nsec*1000LL;
-//#else
-//    struct timeval tv;
-//    gettimeofday(&tv, 0);
-//    return ((usCount) tv.tv_sec*1000000000000LL)+tv.tv_usec*1000000LL;
-//#endif
-//}
-//#endif
-//static usCount usCountOverhead;
-//#ifdef __GNUC__
-//#include "x86intrin.h"
-//#define __rdtsc() __builtin_ia32_rdtsc()
-//#endif
-
-//static usCount GetClockSpeed()
-//{
-//    int n;
-//    usCount start, end, start_tsc, end_tsc;
-//    if (!usCountOverhead)
-//    {
-//        usCount foo = 0;
-//        start=GetUsCount();
-//        for (n = 0; n < 1000000; n++)
-//        {
-//            foo += GetUsCount();
-//        }
-//        end = GetUsCount();
-//        usCountOverhead = (end - start)/n;
-//    }
-//
-//    start = GetUsCount();
-//    start_tsc = __rdtsc();
-//    for (n = 0; n <1000; n++)
-//    {
-//#ifdef WIN32
-//        Sleep(0);
-//#else
-//        sched_yield();
-//#endif
-//    }
-//
-//    end_tsc = __rdtsc();
-//    end = GetUsCount();
-//    return(usCount)((1000000000000.0 * (end_tsc - start_tsc)) /
-//                    (end - start - usCountOverhead));
-//}
 
 
 using namespace std;
@@ -151,6 +142,8 @@ struct Settings
     int mb;
     int id;
 
+    float sig_threshold;
+
     int threads;
 
     bool use_fake_files;
@@ -158,7 +151,7 @@ struct Settings
     string fnameAL;
     string fnameAR;
     string fnameY;
-    string fnameOutB;
+    string fnameOutFiles;
     string fname_excludelist;
 
     bool doublefileType;

@@ -25,7 +25,7 @@ struct fileh
     string fnameY;
 
 
-    string fnameOutB;
+    string fnameOutFiles;
 
 
     list< pair<int,int> >* excl_List;
@@ -46,8 +46,8 @@ struct fileh
     queue<type_buffElement*> empty_buffers;
     queue<type_buffElement*> full_buffers;
 
-    queue<type_buffElement*> b_empty_buffers;
-    queue<type_buffElement*> b_full_buffers;
+    queue<type_buffElement*> write_empty_buffers;
+    queue<type_buffElement*> write_full_buffers;
 
     queue<type_buffElement*> ar_empty_buffers;
     queue<type_buffElement*> ar_full_buffers;
@@ -68,6 +68,7 @@ struct fileh
     int y_to_readSize;
 
     int b_blockSize;
+    int max_b_blockSize;
 
     bool not_done;
     bool reset_wait;
@@ -139,7 +140,11 @@ class AIOwrapper
         void reset_Y();
         void reset_AR();
 
-        void write_B(type_precision* B, int p, int blockSize);
+        void getCurrentWriteBuffers(type_precision* &B,type_precision* &R,type_precision* &SD2,type_precision* &P);
+
+        void write_OutFiles(type_precision* &B,type_precision* &R,type_precision* &SD2,type_precision* &P,  int blockSize);
+
+        void write_significantValues(int Y, int X_R, float R, float SD2, float P);
 
         string io_overhead;
 
@@ -161,8 +166,8 @@ class AIOwrapper
         void prepare_AL( int columns, int n);
         void finalize_AL();
 
-        void prepare_B(int b_blockSize, int p);
-        void finalize_B();
+        void prepare_OutFiles(int max_b_blockSize, int p);
+        void finalize_OutFiles();
 
 
         static void* async_io(void *ptr );

@@ -621,7 +621,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
                 get_ticks(start_tick2);
 
-                AIOfile.write_B(B, p, a_block_size);
+                //AIOfile.write_B(B, p, a_block_size);
 
                 get_ticks(end_tick);
                 out.acc_storeb += ticks2sec(end_tick,start_tick2);

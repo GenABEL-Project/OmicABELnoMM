@@ -40,7 +40,7 @@ void AIOwrapper::initialize(struct Settings &params)
         Fhandler->fnameAL = params.fnameAL;
         Fhandler->fnameAR = params.fnameAR;
         Fhandler->fnameY = params.fnameY;
-        Fhandler->fnameOutB = params.fnameOutB;
+        Fhandler->fnameOutFiles = params.fnameOutFiles;
 
 
         Yfvi  = load_databel_fvi( (Fhandler->fnameY+".fvi").c_str() );
@@ -91,7 +91,7 @@ void AIOwrapper::initialize(struct Settings &params)
 
     prepare_AL(params.l,params.n);
     prepare_AR(  params.mb,  params.n,  params.m,  params.r);
-    prepare_B(params.tb, params.l+params.r);
+    prepare_OutFiles(params.mb, params.l+params.r);
     prepare_Y(params.tb, params.n, params.t);
 
 
@@ -118,7 +118,7 @@ void AIOwrapper::finalize()
     finalize_Y();
     finalize_AR();
     finalize_AL();
-    finalize_B();
+    finalize_OutFiles();
 
     pthread_attr_destroy(&(Fhandler->attr));
 
@@ -135,7 +135,7 @@ void AIOwrapper::finalize()
 
 
 
-void AIOwrapper::finalize_B()
+void AIOwrapper::finalize_OutFiles()
 {
 
 }
@@ -150,6 +150,9 @@ void* AIOwrapper::async_io( void *ptr )
     struct timespec timeToWait;
     FILE*  fp_Y;
     FILE*  fp_B;
+    FILE*  fp_R;
+    FILE*  fp_SD2;
+    FILE*  fp_P;
     FILE*  fp_Ar;
     if(!Fhandler->fakefiles)
     {
@@ -167,10 +170,28 @@ void* AIOwrapper::async_io( void *ptr )
             exit(1);
         }
 
-        fp_B = fopen((Fhandler->fnameOutB+".fvd").c_str(), "w+b");
+        fp_B = fopen((Fhandler->fnameOutFiles+"_B.fvd").c_str(), "w+b");
         if(fp_B == 0)
         {
-            cout << "Error Opening File B " << Fhandler->fnameOutB << endl;
+            cout << "Error Opening File B " << Fhandler->fnameOutFiles << "_B" << endl;
+            exit(1);
+        }
+        fp_R = fopen((Fhandler->fnameOutFiles+"_R.fvd").c_str(), "w+b");
+        if(fp_R == 0)
+        {
+            cout << "Error Opening File R " << Fhandler->fnameOutFiles << "_R" << endl;
+            exit(1);
+        }
+        fp_SD2 = fopen((Fhandler->fnameOutFiles+"_SD2.fvd").c_str(), "w+b");
+        if(fp_SD2 == 0)
+        {
+            cout << "Error Opening File SD2 " << Fhandler->fnameOutFiles << "_SD2" << endl;
+            exit(1);
+        }
+        fp_P = fopen((Fhandler->fnameOutFiles+"_P.fvd").c_str(), "w+b");
+        if(fp_P == 0)
+        {
+            cout << "Error Opening File P " << Fhandler->fnameOutFiles << "_P" << endl;
             exit(1);
         }
     }
@@ -206,6 +227,24 @@ void* AIOwrapper::async_io( void *ptr )
             cout << "Error setting up temp File B " << endl;
             exit(1);
         }
+        fp_R = fopen("tempR.bin", "w+b");
+        if(fp_R == 0)
+        {
+            cout << "Error setting up temp File R " << endl;
+            exit(1);
+        }
+        fp_SD2 = fopen("tempSD2.bin", "w+b");
+        if(fp_SD2 == 0)
+        {
+            cout << "Error setting up temp File SD2 " << endl;
+            exit(1);
+        }
+        fp_P = fopen("tempP.bin", "w+b");
+        if(fp_P == 0)
+        {
+            cout << "Error setting up temp File P " << endl;
+            exit(1);
+        }
         //cout << "\nEnd preping files\n" << flush;
 
     }
@@ -229,13 +268,15 @@ void* AIOwrapper::async_io( void *ptr )
 
             Fhandler->y_to_readSize -= tmp_y_blockSize;
             size_buff = Fhandler->n * tmp_y_blockSize;
-            //cout << Fhandler->y_to_readSize << endl;
+
+
 
             pthread_mutex_lock(&(Fhandler->m_buff_upd));
-            //cout << " pre;" << Fhandler->full_buffers.size() << ";" << Fhandler->empty_buffers.size() << endl;
+
+
             type_buffElement* tobeFilled = Fhandler->empty_buffers.front();
             Fhandler->empty_buffers.pop();
-            //pthread_mutex_unlock(&(Fhandler->m_buff_upd));
+
 
             tobeFilled->size = tmp_y_blockSize;
 
@@ -273,8 +314,8 @@ void* AIOwrapper::async_io( void *ptr )
 
                     }
                 }
-//                size_t result = fread (tobeFilled->buff,sizeof(type_precision),size_buff,fp_Y);
-//                result++;
+
+
                 if(Fhandler->y_to_readSize <= 0)
                 {
                     fseek ( fp_Y , 0 , SEEK_SET );
@@ -282,10 +323,9 @@ void* AIOwrapper::async_io( void *ptr )
             }
 
 
-            //pthread_mutex_lock(&(Fhandler->m_buff_upd));
+
             Fhandler->full_buffers.push(tobeFilled);
-            //  cout << "\nStoring " << tobeFilled << endl;
-            //cout << " post;" << Fhandler->full_buffers.size() << ";" << Fhandler->empty_buffers.size() << endl;
+
             pthread_mutex_unlock(&(Fhandler->m_buff_upd));
 
             pthread_mutex_lock(&(Fhandler->m_read));
@@ -294,8 +334,12 @@ void* AIOwrapper::async_io( void *ptr )
 
         }
 
-        while(!Fhandler->ar_empty_buffers.empty() && Fhandler->Ar_to_readSize)
+        while(!Fhandler->ar_empty_buffers.empty() && Fhandler->Ar_to_readSize )
         {
+
+
+
+
             tmp_ar_blockSize = Fhandler->Ar_blockSize;
             if(Fhandler->Ar_to_readSize < Fhandler->Ar_blockSize)
                 tmp_ar_blockSize = Fhandler->Ar_to_readSize;
@@ -343,12 +387,13 @@ void* AIOwrapper::async_io( void *ptr )
                     }
                 }
 
-//                size_t result = fread(tobeFilled->buff,sizeof(type_precision),size_buff,fp_Ar);
-//                result++;
-                if (Fhandler->Ar_to_readSize <= 0)
-                {
-                    fseek ( fp_Ar , 0 , SEEK_SET );
-                }
+
+            }
+
+            if(Fhandler->Ar_to_readSize <= 0)
+            {
+                Fhandler->Ar_to_readSize = Fhandler->Ar_Amount;
+                fseek ( fp_Ar , 0 , SEEK_SET );
             }
 
             Fhandler->ar_full_buffers.push(tobeFilled);
@@ -362,23 +407,29 @@ void* AIOwrapper::async_io( void *ptr )
         }
         //B write
 
-        while(!Fhandler->b_full_buffers.empty())
+        while(!Fhandler->write_full_buffers.empty())
         {
 
 
             pthread_mutex_lock(&(Fhandler->m_buff_upd));
-            type_buffElement* tobeWritten = Fhandler->b_full_buffers.front();
-            Fhandler->b_full_buffers.pop();
+            type_buffElement* tobeWritten = Fhandler->write_full_buffers.front();
+            Fhandler->write_full_buffers.pop();
             int size = Fhandler->p*Fhandler->b_blockSize;
 
             if(Fhandler->fakefiles)
             {
                 fseek ( fp_B , 0 , SEEK_SET );
+                fseek ( fp_R , 0 , SEEK_SET );
+                fseek ( fp_SD2 , 0 , SEEK_SET );
+                fseek ( fp_P , 0 , SEEK_SET );
             }
-            fwrite (tobeWritten->buff,sizeof(type_precision),size,fp_B);
+            fwrite (&(tobeWritten->buff[0]),sizeof(type_precision),size,fp_B);
+            fwrite (&(tobeWritten->buff[Fhandler->max_b_blockSize*Fhandler->p]),sizeof(type_precision),Fhandler->b_blockSize,fp_R);
+            fwrite (&(tobeWritten->buff[Fhandler->max_b_blockSize*(Fhandler->p+1)]),sizeof(type_precision),Fhandler->b_blockSize,fp_SD2);
+            fwrite (&(tobeWritten->buff[Fhandler->max_b_blockSize*(Fhandler->p+2)]),sizeof(type_precision),size,fp_P);
 
 
-            Fhandler->b_empty_buffers.push(tobeWritten);
+            Fhandler->write_empty_buffers.push(tobeWritten);
             //  cout << "\nStoring " << tobeWritten << endl;
             pthread_mutex_unlock(&(Fhandler->m_buff_upd));
 
@@ -411,12 +462,31 @@ void* AIOwrapper::async_io( void *ptr )
         pthread_cond_signal( &(Fhandler->condition_read ));
         pthread_mutex_unlock(&(Fhandler->m_read));
 
-        if(Fhandler->reset_wait)
-        {
-            pthread_barrier_wait(&(Fhandler->finalize_barrier));
-            //wait for main thread to reset everything
-            pthread_barrier_wait(&(Fhandler->finalize_barrier));
-        }
+//        if(Fhandler->reset_wait)
+//        {
+//            pthread_barrier_wait(&(Fhandler->finalize_barrier));
+//            //wait for main thread to reset everything
+//
+//            pthread_mutex_lock(&(Fhandler->m_buff_upd));
+//            Fhandler->Ar_to_readSize = Fhandler->Ar_Amount;
+//
+//            if(Fhandler->Ar_currentReadBuff)
+//            {
+//                Fhandler->ar_full_buffers.push(Fhandler->Ar_currentReadBuff);
+//                Fhandler->Ar_currentReadBuff=0;
+//            }
+//            while(!Fhandler->ar_full_buffers.empty())
+//            {
+//                Fhandler->ar_empty_buffers.push(Fhandler->ar_full_buffers.front());
+//                Fhandler->ar_full_buffers.pop();
+//            }
+//            pthread_mutex_unlock(&(Fhandler->m_buff_upd));
+//
+//            Fhandler->reset_wait = false;
+//
+//
+//            pthread_barrier_wait(&(Fhandler->finalize_barrier));
+//        }
 
 
     }
@@ -426,6 +496,13 @@ void* AIOwrapper::async_io( void *ptr )
 
     {
     type_buffElement* tmp;
+
+    if(Fhandler->currentReadBuff)
+    {
+        Fhandler->full_buffers.push(Fhandler->currentReadBuff);
+        Fhandler->currentReadBuff=0;
+    }
+
     while(!Fhandler->full_buffers.empty())
     {
        tmp= Fhandler->full_buffers.front();
@@ -438,8 +515,15 @@ void* AIOwrapper::async_io( void *ptr )
     {
        tmp= Fhandler->empty_buffers.front();
        Fhandler->empty_buffers.pop();
-       delete []tmp->buff;
-       delete tmp;
+        delete []tmp->buff;
+        delete tmp;
+
+    }
+
+    if(Fhandler->Ar_currentReadBuff)
+    {
+        Fhandler->ar_full_buffers.push(Fhandler->Ar_currentReadBuff);
+        Fhandler->Ar_currentReadBuff=0;
     }
 
     while(!Fhandler->ar_full_buffers.empty())
@@ -458,18 +542,18 @@ void* AIOwrapper::async_io( void *ptr )
        delete tmp;
     }
 
-    while(!Fhandler->b_full_buffers.empty())
+    while(!Fhandler->write_full_buffers.empty())
     {
-       tmp= Fhandler->b_full_buffers.front();
-       Fhandler->b_full_buffers.pop();
+       tmp= Fhandler->write_full_buffers.front();
+       Fhandler->write_full_buffers.pop();
        delete []tmp->buff;
        delete tmp;
     }
 
-    while(!Fhandler->b_empty_buffers.empty())
+    while(!Fhandler->write_empty_buffers.empty())
     {
-       tmp= Fhandler->b_empty_buffers.front();
-       Fhandler->b_empty_buffers.pop();
+       tmp= Fhandler->write_empty_buffers.front();
+       Fhandler->write_empty_buffers.pop();
        delete []tmp->buff;
        delete tmp;
     }
@@ -482,6 +566,9 @@ void* AIOwrapper::async_io( void *ptr )
         fclose(fp_Y);
         fclose(fp_Ar);
         fclose(fp_B);
+        fclose(fp_R);
+        fclose(fp_SD2);
+        fclose(fp_P);
 
         //cout << "\nexited io\n";
 
@@ -515,13 +602,14 @@ void AIOwrapper::load_ARblock(type_precision** Ar, int &Ar_blockSize)
 
     //!read new rdy buffer
     pthread_mutex_lock(&(Fhandler->m_buff_upd));
-        if(Fhandler->Ar_currentReadBuff)
-        {
-            Fhandler->ar_empty_buffers.push(Fhandler->Ar_currentReadBuff);
-        }
 
-        Fhandler->Ar_currentReadBuff = Fhandler->ar_full_buffers.front();
-        Fhandler->ar_full_buffers.pop();
+    if(Fhandler->Ar_currentReadBuff)
+    {
+        Fhandler->ar_empty_buffers.push(Fhandler->Ar_currentReadBuff);
+    }
+
+    Fhandler->Ar_currentReadBuff = Fhandler->ar_full_buffers.front();
+    Fhandler->ar_full_buffers.pop();
 
     //cout << "\nReading " << Fhandler->Ar_currentReadBuff << endl;
     Fhandler->Ar = Fhandler->Ar_currentReadBuff->buff;
@@ -580,23 +668,22 @@ void AIOwrapper::load_Yblock(type_precision** Y, int &y_blockSize)
 
     //!read new rdy buffer
     pthread_mutex_lock(&(Fhandler->m_buff_upd));
-    //cout << " pre," << Fhandler->full_buffers.size() << ";" << Fhandler->empty_buffers.size() << endl;
+
 
         if(Fhandler->currentReadBuff)
         {
-            //memset(Fhandler->currentReadBuff->buff,0,y_blockSize);
             Fhandler->empty_buffers.push(Fhandler->currentReadBuff);
         }
         Fhandler->currentReadBuff = Fhandler->full_buffers.front();
         Fhandler->full_buffers.pop();
 
-    //cout << "\nReading " << Fhandler->currentReadBuff << endl;
+
     Fhandler->Yb = Fhandler->currentReadBuff->buff;
     y_blockSize = Fhandler->currentReadBuff->size;
 
     (*Y) = Fhandler->Yb;
 
-     //cout << " post," << Fhandler->full_buffers.size() << ";" << Fhandler->empty_buffers.size() << endl;
+
 
     pthread_mutex_unlock(&(Fhandler->m_buff_upd));
 
@@ -611,49 +698,6 @@ void AIOwrapper::load_Yblock(type_precision** Y, int &y_blockSize)
 
 }
 
-void AIOwrapper::write_B(type_precision* B, int p, int blockSize)
-{
-
-    while(Fhandler->b_empty_buffers.empty())
-    {
-        pthread_mutex_lock(&(Fhandler->m_more));
-        pthread_cond_signal( &(Fhandler->condition_more ));
-        pthread_mutex_unlock(&(Fhandler->m_more));
-
-        io_overhead = "b";
-
-        pthread_mutex_lock(&(Fhandler->m_read));
-        pthread_cond_wait( &(Fhandler->condition_read), &(Fhandler->m_read ));
-        pthread_mutex_unlock(&(Fhandler->m_read));
-
-    }
-
-
-    pthread_mutex_lock(&(Fhandler->m_buff_upd));
-
-
-
-        //cout << Fhandler->b_empty_buffers.size() << flush;
-        Fhandler->currentWriteBuff = Fhandler->b_empty_buffers.front();
-        Fhandler->b_empty_buffers.pop();
-
-
-
-    Fhandler->B = Fhandler->currentWriteBuff->buff;
-    Fhandler->b_blockSize = blockSize;
-    copy_vec(B,Fhandler->B,p*blockSize);
-
-    Fhandler->b_full_buffers.push(Fhandler->currentWriteBuff);
-
-
-
-    pthread_mutex_unlock(&(Fhandler->m_buff_upd));
-
-
-    pthread_mutex_lock(&(Fhandler->m_more));
-    pthread_cond_signal( &(Fhandler->condition_more ));
-    pthread_mutex_unlock(&(Fhandler->m_more));
-}
 
 void AIOwrapper::prepare_Y(int y_blockSize, int n, int totalY)
 {
@@ -679,10 +723,6 @@ void AIOwrapper::prepare_Y(int y_blockSize, int n, int totalY)
         tmp = new type_buffElement();
         tmp->buff = new type_precision[Fhandler->n*Fhandler->y_blockSize];
         tmp->size = y_blockSize;
-//        for( int i = 0; i < Fhandler->n*Fhandler->y_blockSize; i++)
-//        {
-//            (tmp->buff)[i] = 0;
-//        }
         Fhandler->empty_buffers.push(tmp);
         Fhandler->Yb = tmp->buff;
     }
@@ -703,42 +743,88 @@ void AIOwrapper::prepare_Y(int y_blockSize, int n, int totalY)
 
 }
 
-void AIOwrapper::prepare_B(int b_blockSize, int p)
+void AIOwrapper::getCurrentWriteBuffers(type_precision* &B,type_precision* &R,type_precision* &SD2,type_precision* &P)
 {
-    //for fake files
+    B = &(Fhandler->currentWriteBuff->buff[0]);
+    R = &(Fhandler->currentWriteBuff->buff[Fhandler->max_b_blockSize*Fhandler->p]);
+    SD2 = &(Fhandler->currentWriteBuff->buff[Fhandler->max_b_blockSize*(Fhandler->p+1)]);
+    P = &(Fhandler->currentWriteBuff->buff[Fhandler->max_b_blockSize*(Fhandler->p+2)]);
+}
+
+void AIOwrapper::write_OutFiles(type_precision* &B,type_precision* &R,type_precision* &SD2,type_precision* &P,  int blockSize)
+{
+
+    while(Fhandler->write_empty_buffers.empty())
+    {
+        pthread_mutex_lock(&(Fhandler->m_more));
+        pthread_cond_signal( &(Fhandler->condition_more ));
+        pthread_mutex_unlock(&(Fhandler->m_more));
+
+        io_overhead = "W";
+
+        pthread_mutex_lock(&(Fhandler->m_read));
+        pthread_cond_wait( &(Fhandler->condition_read), &(Fhandler->m_read ));
+        pthread_mutex_unlock(&(Fhandler->m_read));
+    }
 
 
-    Fhandler->b_blockSize = b_blockSize;
+    pthread_mutex_lock(&(Fhandler->m_buff_upd));
 
+
+    Fhandler->write_full_buffers.push(Fhandler->currentWriteBuff);
+    Fhandler->b_blockSize = blockSize;
+
+
+    Fhandler->currentWriteBuff = Fhandler->write_empty_buffers.front();
+    Fhandler->write_empty_buffers.pop();
+
+    B = &(Fhandler->currentWriteBuff->buff[0]);
+    R = &(Fhandler->currentWriteBuff->buff[Fhandler->b_blockSize*Fhandler->p]);
+    SD2 = &(Fhandler->currentWriteBuff->buff[Fhandler->b_blockSize*(Fhandler->p+1)]);
+    P = &(Fhandler->currentWriteBuff->buff[Fhandler->b_blockSize*(Fhandler->p+2)]);
+
+
+    pthread_mutex_unlock(&(Fhandler->m_buff_upd));
+
+
+    pthread_mutex_lock(&(Fhandler->m_more));
+    pthread_cond_signal( &(Fhandler->condition_more ));
+    pthread_mutex_unlock(&(Fhandler->m_more));
+}
+
+
+
+
+
+void AIOwrapper::prepare_OutFiles(int max_b_blockSize, int p)
+{
+
+    Fhandler->max_b_blockSize = max_b_blockSize;
     Fhandler->p=p;
-
-
     int buff_count = 4;
-
-    Fhandler->currentWriteBuff = 0;
 
     type_buffElement* tmp;
 
 
     for(int i = 0; i< buff_count  ; i++)
     {
-
         tmp = new type_buffElement();
-        tmp->buff = new type_precision[Fhandler->p*Fhandler->b_blockSize];
-        tmp->size = b_blockSize;
-//        for( int i = 0; i < Fhandler->n*Fhandler->b_blockSize; i++)
-//        {
-//            (tmp->buff)[i] = 0;
-//        }
-        Fhandler->b_empty_buffers.push(tmp);
-
-//        Fhandler->currentWriteBuff = Fhandler->b_empty_buffers.front();
-//        Fhandler->b_empty_buffers.pop();
-
-
+        tmp->buff = new type_precision[Fhandler->max_b_blockSize*(2*Fhandler->p+2)];
+        tmp->size = max_b_blockSize;
+        Fhandler->write_empty_buffers.push(tmp);
     }
+    Fhandler->currentWriteBuff = Fhandler->write_empty_buffers.front();
+    Fhandler->write_empty_buffers.pop();
+
 
 }
+
+
+ void AIOwrapper::write_significantValues(int Y, int X_R, float R, float SD2, float P)
+ {
+
+ }
+
 
 void AIOwrapper::reset_Y()
 {
@@ -746,7 +832,7 @@ void AIOwrapper::reset_Y()
 
     Fhandler->seed = 1337;
 
-    //cout << "ry" << flush;
+    cout << "ry" << flush;
 
     Fhandler->reset_wait = true;
     pthread_barrier_wait(&(Fhandler->finalize_barrier));
@@ -789,36 +875,36 @@ void AIOwrapper::reset_AR()
 
     //cout << "ra" << flush;
 
-    Fhandler->reset_wait = true;
-    pthread_barrier_wait(&(Fhandler->finalize_barrier));
-
-    pthread_mutex_lock(&(Fhandler->m_buff_upd));
-    Fhandler->Ar_to_readSize = Fhandler->Ar_Amount;
-
-    if(Fhandler->Ar_currentReadBuff)
-    {
-        Fhandler->ar_full_buffers.push(Fhandler->Ar_currentReadBuff);
-        Fhandler->Ar_currentReadBuff=0;
-    }
-
-    while(!Fhandler->ar_full_buffers.empty())
-    {
-        Fhandler->ar_empty_buffers.push(Fhandler->ar_full_buffers.front());
-//        for( int i = 0; i < Fhandler->n*Fhandler->r*Fhandler->Ar_blockSize; i++)
-//        {
-//            ((Fhandler->ar_full_buffers.front())->buff)[i] = 0;
-//        }
-        Fhandler->ar_full_buffers.pop();
-    }
-    pthread_mutex_unlock(&(Fhandler->m_buff_upd));
-
-    Fhandler->reset_wait = false;
-
-    pthread_barrier_wait(&(Fhandler->finalize_barrier));
-
-    pthread_mutex_lock(&(Fhandler->m_more));
-    pthread_cond_signal( &(Fhandler->condition_more ));
-    pthread_mutex_unlock(&(Fhandler->m_more));
+//    Fhandler->reset_wait = true;
+//    pthread_barrier_wait(&(Fhandler->finalize_barrier));
+//
+////    pthread_mutex_lock(&(Fhandler->m_buff_upd));
+////    Fhandler->Ar_to_readSize = Fhandler->Ar_Amount;
+////
+////    if(Fhandler->Ar_currentReadBuff)
+////    {
+////        Fhandler->ar_full_buffers.push(Fhandler->Ar_currentReadBuff);
+////        Fhandler->Ar_currentReadBuff=0;
+////    }
+////
+////    while(!Fhandler->ar_full_buffers.empty())
+////    {
+////        Fhandler->ar_empty_buffers.push(Fhandler->ar_full_buffers.front());
+//////        for( int i = 0; i < Fhandler->n*Fhandler->r*Fhandler->Ar_blockSize; i++)
+//////        {
+//////            ((Fhandler->ar_full_buffers.front())->buff)[i] = 0;
+//////        }
+////        Fhandler->ar_full_buffers.pop();
+////    }
+////    pthread_mutex_unlock(&(Fhandler->m_buff_upd));
+////
+////    Fhandler->reset_wait = false;
+//
+//    pthread_barrier_wait(&(Fhandler->finalize_barrier));
+//
+//    pthread_mutex_lock(&(Fhandler->m_more));
+//    pthread_cond_signal( &(Fhandler->condition_more ));
+//    pthread_mutex_unlock(&(Fhandler->m_more));
 
 
 }
@@ -838,7 +924,7 @@ void AIOwrapper::prepare_AR( int desired_blockSize, int n, int totalR, int colum
     Fhandler->Ar_Amount = totalR;
     Fhandler->Ar_to_readSize = Fhandler->Ar_Amount;
 
-    int buff_count = min(3,(totalR+ desired_blockSize - 1)/desired_blockSize);
+    int buff_count = 4;
 
     Fhandler->Ar_currentReadBuff = 0;
     type_buffElement* tmp;

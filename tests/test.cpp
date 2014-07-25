@@ -83,13 +83,13 @@ int main(int argc, char *argv[] )
     cout << "Perfromance Test\n" << flush;
 
     double duration, gemmgflops, gemm_gflopsPsec;
-    cpu_benchmark((2*1024.0),2,duration,gemmgflops);
+    cpu_benchmark((1*1024.0),3,duration,gemmgflops);
     gemm_gflopsPsec = gemmgflops/duration;
     cout << "\nGEMM GFLOPS/s " << gemm_gflopsPsec << endl;
 
     struct Outputs out2 = {0};
-    params.n=2000; params.l=5;  params.r=1;
-    params.t=2000; params.tb=1000; params.m=2000; params.mb=100;
+    params.n=1000; params.l=3;  params.r=1;
+    params.t=1000; params.tb=1000; params.m=1000; params.mb=1000;
     alg.solve(params, out2, P_NEQ_B_OPT_MD);
 
     cout <<endl<< "Duration:"<< out2.duration << endl;
