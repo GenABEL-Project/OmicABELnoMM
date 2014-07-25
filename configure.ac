@@ -4,8 +4,8 @@
 AC_PREREQ([2.67])
 AC_INIT([OmicABELnoMM], [0.1.0], [genabel-devel@r-forge.wu-wien.ac.at])
 AM_INIT_AUTOMAKE([])
-AM_INIT_AUTOMAKE([silent-rules subdir-objects])
-AM_SILENT_RULES([no])
+#AM_INIT_AUTOMAKE([silent-rules subdir-objects])
+#AM_SILENT_RULES([yes])
 AC_CONFIG_SRCDIR([src/Utility.h])
 AC_CONFIG_HEADERS([src/config.h])
 
@@ -36,7 +36,7 @@ AC_PROG_CXX
 AC_OPENMP
 AC_SUBST(AM_CXXFLAGS, "$OPENMP_CFLAGS")
 
-AM_CXXFLAGS="-static -O3 -I../libs/include/ -I./libs/include/ $AM_CXXFLAGS"
+AM_CXXFLAGS="-O3 -I../libs/include/ -I./libs/include/ $AM_CXXFLAGS"
 
 # Checks for libraries.
 # pthread library
@@ -62,15 +62,15 @@ AC_SEARCH_LIBS(dgemm, acml_mp,[found_blas=1 AM_CXXFLAGS="-D_acml_ $AM_CXXFLAGS"]
 if test "$found_blas" -eq 0
 	then
 
-	# Openblas
-	AC_SEARCH_LIBS([cblas_sgemm], [openblas], [AM_CXXFLAGS="$AM_CXXFLAGS -D_openblas_"], [
-	   AC_MSG_ERROR([OpenBLAS  library NOT found])
-	])
-	 #Lapack
-	AC_SEARCH_LIBS([LAPACKE_sgeqrf], [lapack, lapacke], [], [
-	   AC_MSG_ERROR([Unable to find a Lapack library])
-	])
-	AC_MSG_NOTICE([Using OpenBLAS  library])
+# Openblas
+AC_SEARCH_LIBS([cblas_sgemm], [openblas], [AM_CXXFLAGS="$AM_CXXFLAGS -D_openblas_"], [
+   AC_MSG_ERROR([OpenBLAS  library NOT found])
+])
+ #Lapack
+AC_SEARCH_LIBS([LAPACKE_sgeqrf], [lapack, lapacke], [], [
+   AC_MSG_ERROR([Unable to find a Lapack library])
+])
+AC_MSG_NOTICE([Using OpenBLAS  library])
 fi
 
 
