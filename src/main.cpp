@@ -1,6 +1,9 @@
 //export MKL_NUM_THREADS=1 OMP_NUM_THREADS=1 OMP_NESTED=true
 
 #include <boost/math/special_functions/erf.hpp>
+#include <boost/math/distributions/normal.hpp>
+
+
 
 #include <unistd.h>
 #include <getopt.h>
@@ -8,6 +11,31 @@
 #include "Definitions.h"
 #include "Algorithm.h"
 
+bool help_request = false;
+
+string helpcmd = "usage: omicabelnomm -c <path/fname> --geno <path/fname> -p <path/fname> -o <path/fname> \n\
+                -x <path/fname> -n <#SNPcols> -t <#CPUs>\n \
+                        -d <0.0~1.0> -r <-10.0~1.0> -b -s <0.0~1.0>  -e <-10.0~1.0> -i -f";
+
+string helpcmd_expl =
+"Required: \n\t\
+-p --phe    \t <path/filename> to the inputs containing phenotypes \n\t\
+-g --geno   \t <path/filename> to the inputs containing genotypes \n\t\
+-c --cov    \t <path/filename> to the inputs containing covariates \n\t\
+-o --out    \t <path/filename> to store the output to (used for all .txt and .ibin & .dbin) \n\n\
+Optional: \n\t\
+-n --ngpred \t <#SNPcols> Number of columns in the geno file that represent a single SNP \n\t\
+-t --thr    \t <#CPUs> Number of computing threads to use to speed computations \n\t\
+-x --excl   \t <path/filename> file containing list of individuals to exclude from input files \n\t\
+-d --pdisp  \t <0.0~1.0> Value to use as maximum threshold for significance.\n\t\
+\t\t Results with P-values UNDER this threshold will be displayed in the putput .txt file \n\t\
+-r --rdisp  \t <-10.0~1.0> Value to use as minimum threshold for R2. \n\t\
+\t\t Results with R2-values ABOVE this threshold will be displayed in the putput .txt file \n\t\
+-b --stobin \t Flag that forces to ALSO store results in a smaller binary format (*.ibin & *.dbin) \n\t\
+-s --psto   \t <0.0~1.0>  Results with P-values UNDER this threshold will be displayed in the putput binary files \n\t\
+-e --rsto   \t <-10.0~1.0> Results with R2-values ABOVE this threshold will be stored in the putput binary files \n\t\
+-i --fdcov  \t Flag that forces to include covariates as part of the results that are stored in .txt and binary files \n\t\
+-f --fdgen  \t Flag that forces to consider all included results (causes the analisis to ignores ALL threshold values).";
 
 
 
@@ -54,23 +82,30 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             {"thr",    required_argument, 0, 't'},
             {"mem",    required_argument, 0, 'm'},
             {"excl",    required_argument, 0, 'x'},
-            {"sigth",    required_argument, 0, 's'},//pvalthreashold
+            {"stobin",    no_argument, 0, 'b'},
+            {"pdisp",    required_argument, 0, 'd'},//
+            {"psto",    required_argument, 0, 's'},//
+            {"rdisp",    required_argument, 0, 'r'},//
+            {"rsto",    required_argument, 0, 'e'},//
+            {"fdcov",    no_argument, 0, 'i'},//
+            {"fdgen",    no_argument, 0, 'f'},//
+            {"help",    no_argument, 0, 'h'},//
             {0, 0, 0, 0}
         };
 
         // getopt_long stores the option index here.
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "c:p:g:o:n:t:m:x:", long_options, &option_index);
+        c = getopt_long(argc, argv, "c:p:g:o:n:t:m:x:d:s:r:e:fibh", long_options, &option_index);
 
 
         // Detect the end of the options.
         if (c == -1)
             break;
 
-        if (!optarg)
+        if (!optarg && (c != 'f' && c != 'b' && c != 'i' && c != 'h'))
         {
-            cout << "\nerror with argument parameter " << c << endl;
+            cout << "\nerror with argument parameter " << (char)c << endl;
             exit(1);
         }
 
@@ -94,7 +129,7 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             if (pos != string::npos)
                 params.fnameY = string(optarg).substr(0, pos);
 
-            cout << "using -p with phenotypes from file " << optarg << endl;
+            cout << "-p Reading phenotypes from file " << optarg << endl;
             break;
 
         case 'g':
@@ -105,13 +140,13 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             if (pos != string::npos)
                 params.fnameAR = string(optarg).substr(0, pos);
 
-            cout << "using -g with genotype data from file " << optarg << endl;
+            cout << "-g Reading with genotype data from file " << optarg << endl;
             break;
 
          case 'n':
             params.r = atoi(optarg);
             params.r = max(params.r, 1);
-            cout << "using -n with value " << params.r << endl;
+            cout << "-n Using columns per snp as " << params.r << endl;
             break;
 
         case 'c':
@@ -122,7 +157,7 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             if (pos != string::npos)
                 params.fnameAL = string(optarg).substr(0, pos);
 
-            cout << "using -c with covariates from file " << optarg << endl;
+            cout << "-c Reading covariates from file " << optarg << endl;
             break;
 
         case 'o':
@@ -133,26 +168,71 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             if (pos != string::npos)
                 params.fnameOutFiles = string(optarg).substr(0, pos);
 
-            cout << "using -o for output files " << optarg << endl;
+            cout << "-o Writing output files to " << optarg << endl;
             break;
 
         case 't':
             params.threads = atoi(optarg);
             params.threads = min(max(params.threads, 1), 32);
-            cout << "using -t with value " << params.threads << endl;
+            cout << "-t Using " << params.threads << " CPU threads for parallelism" <<  endl;
             break;
 
          case 'x':
             params.fname_excludelist = string(optarg);
 
-            cout << "Excluding ids on " << params.fname_excludelist << endl;
+            cout << "-x Excluding ids on " << params.fname_excludelist << endl;
             break;
 
 
-         case 's':
-            params.sig_threshold = atof(optarg);
+         case 'd':
+            params.minPdisp = fabs(atof(optarg));
 
-            cout << "Significance will be set at P-val's below " << params.sig_threshold << endl;
+            cout << "-d Significance to display in .txt will be P-val's below " << params.minPdisp << endl;
+            break;
+
+        case 's':
+            params.minPstore = fabs(atof(optarg));
+
+            cout << "-s Significance to store in .bin will be P-val's below " << params.minPstore << endl;
+            break;
+
+        case 'r':
+            params.minR2disp = (atof(optarg));
+
+            cout << "-r Minimum R2 to display in .txt will be above " << params.minR2disp << endl;
+            break;
+
+        case 'e':
+            params.minR2store =  (atof(optarg));
+
+            cout << "-e Minimum R2 to store in .bin will be above " << params.minR2store << endl;
+            break;
+
+        case 'i':
+            params.disp_cov = true;
+
+            cout << "-i Covariate results will be included in results" << endl;
+            break;
+
+        case 'f':
+            params.storePInd = true;
+
+            cout << "-f Forcing all included results to be considered independently of max P-val or min R2. (SLOW!)"<< endl;
+            break;
+
+        case 'b':
+            params.storeBin = true;
+
+            cout << "-b Results will be stored in binary format too"<< endl;
+            break;
+
+        case 'h':
+
+            cout << helpcmd << endl;
+            cout << helpcmd_expl << endl;
+            help_request = true;
+             exit(1);
+
             break;
 
         case '?':
@@ -174,6 +254,7 @@ void parse_params(int argc, char *argv[], struct Settings &params )
         putchar('\n');
     }
 
+    //required arguments
     if (!bout || !phe || !cov || !snp)
     {
         cout << "Missing arguments! p:" << phe
@@ -186,23 +267,19 @@ void parse_params(int argc, char *argv[], struct Settings &params )
 }
 
 
+
+
 int main(int argc, char *argv[] )
 {
-    struct Settings params;
-    params.ForceCheck = false;
 
-//    cout << "Using Arguments: ";
-//    for (int i = 0; i < argc; i++)
-//    {
-//        cout  << argv[i] << " ";
-//    }
-//    cout << endl;
+    struct Settings params;
+    Algorithm alg;
+
 
     //!default params
-    params.r = 1;
-    params.threads = 1;
+    alg.applyDefaultParams(params);
 
-    params.fname_excludelist = "";
+
 
     parse_params(argc, argv, params);
 
@@ -214,7 +291,6 @@ int main(int argc, char *argv[] )
     omp_set_num_threads(params.threads);
     blas_set_num_threads(params.threads);
 
-    params.use_fake_files = false;
 
     //params.use_fake_files = true;
     if (params.use_fake_files)
@@ -233,15 +309,17 @@ int main(int argc, char *argv[] )
     }
 
 
-    Algorithm alg;
-    struct Outputs out = {0};
-    if (params.use_fake_files)
+    if(!help_request)
     {
+        struct Outputs out = {0};
+        if (params.use_fake_files)
+        {
+                alg.solve(params, out, P_NEQ_B_OPT_MD);
+        }
+        else
+        {
             alg.solve(params, out, P_NEQ_B_OPT_MD);
-    }
-    else
-    {
-        alg.solve(params, out, P_NEQ_B_OPT_MD);
+        }
     }
 
     cout << endl;

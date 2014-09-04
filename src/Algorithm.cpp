@@ -5,6 +5,7 @@
 Algorithm::Algorithm()
 {
     // ctor
+
 }
 
 
@@ -225,7 +226,7 @@ void Algorithm::build_S(type_precision* S, type_precision* Stl,
 
 void Algorithm::check_result(type_precision* AL, type_precision* AR,
                              int rowsA, int colsA, int rhs, int colsAR,
-                             type_precision* y, type_precision* res)
+                             type_precision* y, type_precision* res,struct Settings params,int iX,int iiX, int jY, int jjY)
 {
     type_precision* A = (type_precision*)malloc(rowsA * colsA *
                                                 sizeof(type_precision));
@@ -242,6 +243,8 @@ void Algorithm::check_result(type_precision* AL, type_precision* AR,
         ar_idx++;
     }
 
+    //matlab_print_matrix("A", rowsA, colsA, A);
+
 
     type_precision* ynew = replicate_vec(y, rowsA*rhs);
     type_precision* new_sol = (type_precision*)malloc(colsA * rhs *
@@ -252,10 +255,11 @@ void Algorithm::check_result(type_precision* AL, type_precision* AR,
     myassert(info == 0, "Error Check");
 
 
+
+
     int index = 0;
     int index_new = 0;
     for (i = 0; i < rhs; i++)
-
     {
          copy_vec(&ynew[index], &new_sol[index_new], colsA);
          index += rowsA;
@@ -263,29 +267,116 @@ void Algorithm::check_result(type_precision* AL, type_precision* AR,
     }
 
 
-//    if (PRINT)
-//        printf("\n Btop=(Rtl\\(Ql'*Y))-(Rtl\\Rtr)*(Rbr\\(Qr'*Y)); \n [Btop ; Rbr\\Qr'*Y] - bcomputed \n");
 
-    cblas_saxpy(rhs * colsA, -1.0, res, 1, new_sol, 1);
-    type_precision u_norm = cblas_snrm2(rhs * colsA, new_sol, 1);
-    //
-    if (abs(u_norm) >= 0.0001 || isnan(u_norm))
+    if(!params.use_fake_files)
     {
-        fflush(stdout);
-        matlab_print_matrix("AL", rowsA, colsA-colsAR, AL);
-        matlab_print_matrix("AR", rowsA, colsAR, AR);
-        matlab_print_matrix("Y", rowsA, rhs, y);
-        printf("\nA = [AL AR]; [Q, R] = qr(A, 0); rr = R\\(Q'*Y)\n");
-        matlab_print_matrix("bcomputed", colsA, rhs, res);
-        matlab_print_matrix("newsol", colsA, rhs, ynew);
-        printf("\n%%\tnrom: %0.2g", u_norm);
-         exit(1);
+        //cout << ".";
+        FILE* fp_Bprecomputed = fopen("examples/bpre.fvd", "rb");
+        if(fp_Bprecomputed == 0)
+        {
+            cout << "Error Reading File of precomputed B values " << endl;
+        }
+        else
+        {
+            type_precision precomp_betas[colsA];
+
+            int file_pos = jY*params.tb*params.m*colsA + jjY*params.m*colsA+iX*params.mb*colsA+iiX*colsA;
+            fseek ( fp_Bprecomputed , file_pos*sizeof(type_precision) , SEEK_SET );
+
+
+            size_t result = fread (precomp_betas,sizeof(type_precision),colsA,fp_Bprecomputed); result++;
+
+            //matlab_print_matrix("res", colsA, 1, res);
+            //matlab_print_matrix("new_sol", colsA, 1, new_sol);
+            //matlab_print_matrix("precomp_betas", colsA, 1, precomp_betas);
+
+            cblas_saxpy(colsA, -1.0, res, 1, precomp_betas, 1);
+            type_precision u_norm = cblas_snrm2(colsA, precomp_betas, 1);
+            //cout << "pa:"<< u_norm ;
+
+
+            if (fabs(u_norm) > 0.001 || isnan(u_norm))
+            {
+                fseek ( fp_Bprecomputed , file_pos*sizeof(type_precision) , SEEK_SET );
+                result = fread (precomp_betas,sizeof(type_precision),colsA,fp_Bprecomputed); result++;
+                cblas_saxpy(colsA, 1.0, res, 1, precomp_betas, 1);
+                type_precision u_norm2 = cblas_snrm2(colsA, precomp_betas, 1);
+                //cout << u_norm2 << " ";
+                //cout << file_pos <<"c "<< u_norm2 << "\n";
+
+                if(fabs(u_norm2) > 0.001 || isnan(u_norm))
+                {
+                    fseek ( fp_Bprecomputed , file_pos*sizeof(type_precision) , SEEK_SET );
+                    result = fread (precomp_betas,sizeof(type_precision),colsA,fp_Bprecomputed); result++;
+                    fflush(stdout);
+
+//                    matlab_print_matrix("AL", rowsA, colsA-colsAR, AL);
+//                    matlab_print_matrix("AR", rowsA, colsAR, AR);
+//                    matlab_print_matrix("Y", rowsA, rhs, y);
+                    matlab_print_matrix("res", colsA, 1, res);
+                    matlab_print_matrix("precomp_betas", colsA, 1, precomp_betas);
+                    cout << file_pos <<" "<< u_norm << "\n";
+                    cout << file_pos <<" "<< u_norm2 << "\n";
+                    //printf("\n%%\tBeta computed nrom: %0.2g\n", u_norm2);
+                    exit(1);
+                }
+
+            }
+
+            fseek ( fp_Bprecomputed , file_pos*sizeof(type_precision) , SEEK_SET );
+            result = fread (precomp_betas,sizeof(type_precision),colsA,fp_Bprecomputed); result++;
+            cblas_saxpy(colsA, -1.0, new_sol, 1, precomp_betas, 1);
+            u_norm = cblas_snrm2(colsA, precomp_betas, 1);
+            //cout << " pl:" << u_norm ;
+            if (fabs(u_norm) > 0.001 || isnan(u_norm))
+            {
+                cout << "lapack betas do not match!" << endl;
+                exit(1);
+            }
+        }
+
+
+        fclose(fp_Bprecomputed);
     }
-    else
+    //else
     {
-        matlab_print_matrix("bcomputed", colsA, rhs, res);
-        matlab_print_matrix("newsol", colsA, rhs, ynew);
-        //printf("\n%%\tnrom: %0.2g", u_norm);
+
+
+    //    if (PRINT)
+    //        printf("\n Btop=(Rtl\\(Ql'*Y))-(Rtl\\Rtr)*(Rbr\\(Qr'*Y)); \n [Btop ; Rbr\\Qr'*Y] - bcomputed \n");
+
+        cblas_saxpy(rhs * colsA, -1.0, res, 1, new_sol, 1);
+        type_precision u_norm = cblas_snrm2(rhs * colsA, new_sol, 1);
+        //
+        if (fabs(u_norm) >= 0.1 || isnan(u_norm))
+        {
+            fflush(stdout);
+           // matlab_print_matrix("AL", rowsA, colsA-colsAR, AL);
+            //matlab_print_matrix("AR", rowsA, colsAR, AR);
+            //matlab_print_matrix("A", rowsA, colsA, A);
+            //matlab_print_matrix("Y", rowsA, rhs, y);
+//            printf("\nA = [AL AR]; [Q, R] = qr(A, 0); rr = R\\(Q'*Y)\n");
+            matlab_print_matrix("bcomputed", colsA, rhs, res);
+            matlab_print_matrix("newsol", colsA, rhs, ynew);
+            printf("\n%%\tnrom: %0.5g\n\n", u_norm);
+             exit(1);
+        }
+        else
+        {
+            //matlab_print_matrix("bcomputed", colsA, rhs, res);
+            //matlab_print_matrix("newsol", colsA, rhs, ynew);
+           //printf("%%%0.3g \n", u_norm);
+           //matlab_print_matrix("AL", rowsA, colsA-colsAR, AL);
+//            matlab_print_matrix("AR", rowsA, colsAR, AR);
+
+            //matlab_print_matrix("Y", rowsA, rhs, y);
+
+           //cout << " la:" << u_norm << "\n";
+        }
+
+
+
+
     }
 
 
@@ -295,19 +386,40 @@ void Algorithm::check_result(type_precision* AL, type_precision* AR,
     free(A);
 }
 
+
+void Algorithm::applyDefaultParams(struct Settings &params)
+{
+
+    params.fname_excludelist = "";
+    params.ForceCheck = false;
+    params.use_fake_files = false;
+    params.disp_cov = false;
+    params.storePInd = false;
+    params.storeBin = false;
+    params.threads = 1;
+    params.r = 1;
+
+
+    params.minR2store = 0.00001;
+    params.minR2disp = 0.000001;
+
+    params.minPstore = 0.1;
+    params.minPdisp = 0.05;
+
+
+}
+
 ///////////////////////////////
 
 
 void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
                                           struct Outputs &out)
 {
-    int max_threads = params.threads;
+
 
 
     srand(time(NULL));
 
-    blas_set_num_threads(max_threads);
-    omp_set_num_threads(max_threads);
 
 
     //type_precision *Ytemp;
@@ -315,9 +427,32 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
     cputime_type start_tick, start_tick2, start_tick3, end_tick;
 
-    AIOfile.initialize(params);
 
+    if(params.minR2disp > params.minR2store || params.storeBin)
+        params.minR2store = params.minR2disp;
+
+    if(params.minPdisp > params.minPstore || params.storeBin)
+        params.minPstore = params.minPdisp;
+
+
+    AIOfile.initialize(params);//THIS HAS TO BE DONE FIRST! ALWAYS
+
+
+    //parameters read on AIOfile.initialize are then copied localy
     n = params.n; l = params.l; r = params.r; p = l+r;
+    disp_cov = params.disp_cov;
+    storePInd = params.storePInd;
+
+    minR2store = params.minR2store;
+    //params.minR2disp = params.minR2disp;//passed to AIOwrapper
+
+    minTstore = getTvalue(params.minPstore);
+
+
+    max_threads = params.threads;
+    blas_set_num_threads(max_threads);
+    omp_set_num_threads(max_threads);
+
 
     int y_amount = params.t;
     int y_block_size = params.tb;  // kk
@@ -328,6 +463,8 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
     int a_iters = (a_amount + a_block_size - 1) / a_block_size;
 
     int y_iters = (y_amount + y_block_size - 1) / y_block_size;
+
+    //cout << y_iters << " " << a_iters << endl;
 
 
     lda = n;
@@ -375,13 +512,27 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
     type_precision* y_residual = new type_precision[n * y_block_size ];
     type_precision* y_res_norms = new type_precision[a_block_size];
 
-    list<long int>* al_nan_idxs = new list<long int>[1];
+    list<long int>* al_nan_idxs = new list<long int>[l];
     list<long int>* y_nan_idxs = new list<long int>[y_block_size];
-    list<long int>* ar_nan_idxs = new list<long int>[a_block_size];
+    list<long int>* ar_nan_idxs = new list<long int>[a_block_size*r];
+    int* YxALmiss=new int[y_block_size];
 
 
     type_precision* A = new type_precision[n * p * 1];
     type_precision* AR = new type_precision[n * r * a_block_size * 1];
+
+    //Sum of squares for A parts
+    type_precision* ssAR = new type_precision[p*r*a_block_size];
+    type_precision* ssAL = new type_precision[p*l];
+    type_precision* ssY = new type_precision[y_block_size];
+
+    SYY = new type_precision[a_block_size];
+
+
+    list < resultH >* sigResults;
+
+
+
 //  type_precision* AL = new type_precision[n * l * 1];
     type_precision* AL = A;
 
@@ -395,8 +546,17 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
     //pthread_barrier_wait(&(AIOfile.Fhandler->finalize_barrier));
 
+    //matlab_print_matrix("AL", n,l,backupAL);
+
     replace_nans(al_nan_idxs,1, backupAL, n, l);
-    al_nan_idxs->push_back(1);
+    for (int i = 1; i < l; i++)
+    {
+        al_nan_idxs[i]=al_nan_idxs[0];
+    }
+
+
+    sumSquares(backupAL,l,n,ssAL,al_nan_idxs);
+
 
     //LAPACKE_dgesdd()
 
@@ -427,6 +587,20 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
         get_ticks(start_tick2);
         replace_nans(&y_nan_idxs[0],y_block_size, Y, n,1);
+        sumSquares(Y,y_block_size,n,ssY,y_nan_idxs);
+
+        for (int jj = 0; jj < y_block_size; jj++)
+        {
+            list<long int> nans = al_nan_idxs[0];
+            list<long int> nans2 = y_nan_idxs[jj];
+            nans.merge(nans2);
+            nans.sort();//!might not be needed
+            nans.unique();
+            YxALmiss[jj] = nans.size();
+        }
+
+
+        //matlab_print_matrix("Y", n, 1, Y);
         //out.acc_other += ticks2sec(end_tick,start_tick2);
 
 
@@ -459,8 +633,15 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
             get_ticks(start_tick2);
 
-            replace_nans(&ar_nan_idxs[0],a_block_size, backupAR, n, r);
+            replace_nans(ar_nan_idxs, a_block_size*r, backupAR, n , 1);
+
+            sumSquares(backupAR,a_block_size,n,ssAR,ar_nan_idxs);
+
+            replace_nans_avgs(a_block_size, backupAR, n, r, ar_nan_idxs);
+
             replace_with_zeros(al_nan_idxs, backupAR,  n, r, a_block_size);
+
+
 
             copy_vec(backupAR, AR, n *  r * a_block_size);
 
@@ -507,17 +688,11 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
                 out.acc_stl += ticks2sec(end_tick,start_tick2);
 
 
-//                get_ticks(start_tick2);
-
-                //copy_vec(backupAR,AR, n*r*a_block_size);//!10%//try to remove!
-
-
-                //replace_with_zeros(&y_nan_idxs[jj], AR,  n, r, a_block_size);
-
-
-
-//                get_ticks(end_tick);
-//                out.acc_other += ticks2sec(end_tick,start_tick2);
+                get_ticks(start_tick2);
+                copy_vec(backupAR,AR, n*r*a_block_size);//!10%//try to remove!
+                replace_with_zeros(&y_nan_idxs[jj], AR,  n, r, a_block_size);
+                get_ticks(end_tick);
+                out.acc_other += ticks2sec(end_tick,start_tick2);
 
                 get_ticks(start_tick2);
 
@@ -543,15 +718,15 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
                 #pragma omp for nowait
                 for (int ii= 0; ii < a_block_size; ii++)
                 {
-                    //cout << omp_get_thread_num() << endl << flush;
-
-                    get_ticks(start_tick2);
-
-                    copy_vec(&backupAR[ii*r*n],&AR[ii*r*n], n*r);//!10%//try to remove!
-                    replace_with_zeros(&y_nan_idxs[jj], &AR[ii*r*n],  n, r, 1);
-
-                    get_ticks(end_tick);
-                    out.acc_other += ticks2sec(end_tick,start_tick2);
+//                    //cout << omp_get_thread_num() << endl << flush;
+//
+//                    get_ticks(start_tick2);
+//
+//                    copy_vec(&backupAR[ii*r*n],&AR[ii*r*n], n*r);//!10%//try to remove!
+//                    replace_with_zeros(&y_nan_idxs[jj], &AR[ii*r*n],  n, r, 1);
+//
+//                    get_ticks(end_tick);
+//                    out.acc_other += ticks2sec(end_tick,start_tick2);
 
 
                     get_ticks(start_tick2);
@@ -601,30 +776,39 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
                     {
                         #pragma omp critical
                         {
+                            //replace_with_zeros(al_nan_idxs, &Y[jj*n],  n, 1, 1);
                             check_result(AL, &AR[ii*r*n], n, p,
-                                         1, r, &Y[jj*n], &Ay[ii*p]);
+                                         1, r, &Y[jj*n], &Ay[ii*p],params,i,ii,j,jj);
                         }
                     }
                 }
                 }
 
-                /************statistics**************/
-//                type_precision* T;
-//                type_precision* R2;
-//                type_precision* P;
+                get_ticks(start_tick2);
 
-                //hpc_statistics(n,A,a_block_size,Y,y_block_size,B,p,T,R2,P);
+                AIOfile.getCurrentWriteBuffers(sigResults);
 
+                get_ticks(end_tick);
+                out.acc_storeb += ticks2sec(end_tick,start_tick2);
+
+
+                get_ticks(start_tick2);
+                hpc_statistics( YxALmiss[jj],n,AL,AR,a_block_size,&Y[jj*n],jj,ssY[jj],B,p,l,r,ssAL,ssAR,j*params.tb, i*params.mb*r, sigResults);
+                get_ticks(end_tick);
+                out.acc_stats += ticks2sec(end_tick,start_tick2);
                 /**************************/
 
                 blas_set_num_threads(max_threads);
 
                 get_ticks(start_tick2);
 
-                //AIOfile.write_B(B, p, a_block_size);
+                AIOfile.write_OutFiles(sigResults);
+
 
                 get_ticks(end_tick);
                 out.acc_storeb += ticks2sec(end_tick,start_tick2);
+
+
 
 
 
@@ -638,6 +822,8 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
         }
          AIOfile.reset_AR();
+
+
     }
 
     get_ticks(end_tick);
@@ -651,7 +837,10 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
                                     params.mb * (
                                          gemm_flops(r, 1*n, r, 0) +
                                          (p * p * p / 3.0) /
-                                         1000.0/1000.0/1000.0 )) ));
+                                         1000.0/1000.0/1000.0 )) ))  ;
+
+     out.gflops += params.t/1000.0*params.m/1000.0*(params.n*(params.p*2+3)+12)/1000.0;//hpcstatistics
+
 
     AIOfile.finalize();
 
@@ -670,116 +859,340 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
     delete []y_res_norms;
     // delete []backupAL;
     // delete []backupAR;
+
+    delete []SYY;
+
+
 }
 
-void Algorithm::hpc_statistics(list<long int>* indexs_AL,list<long int>* indexs_AR, list<long int>* indexs_Y, int n,
-                type_precision* A, int a_amount, type_precision* y, int jj, type_precision* B, int p, int l,int r, type_precision* T, type_precision* R2,type_precision* P)
+void Algorithm::hpc_SSY(int n,int p, int l,int r, type_precision* __restrict  AL, type_precision* __restrict  AR, int a_amount, type_precision* __restrict y, type_precision* __restrict  B )
 {
-        type_precision tsx;
-        type_precision tsxx;
-        //type_precision tsx2;
 
-        type_precision xb;
-        type_precision sy;
-        type_precision Syy;
+    int a_amount_padded = 0;
 
-        type_precision sym;
-        type_precision st;
-        type_precision SST;
+    if(a_amount > 4)
+    {
+        int blk_size_k = min(1000,n);
+        int k_n_iters = (n+blk_size_k-1)/blk_size_k;
 
-        type_precision t;
-        type_precision t1;
+        int a_rest = a_amount%4;
+        a_amount_padded = a_amount-a_rest;
+        int blk_size_i = min(1000,a_amount_padded);
+        int i_a_iters = (a_amount_padded+blk_size_i-1)/blk_size_i;
+        int max_blk_size_i = blk_size_i;
 
-        type_precision* sab =  new type_precision[n];//used in res=y-y_fit
+        for (int k=0; k < k_n_iters; k++)
+        {
+            #pragma omp parallel for schedule(static) default(shared)
+            for (int i= 0; i < i_a_iters; i++)
+            {
+
+                for (int ii=0; ii < blk_size_i; ii+=4)//a_amount
+                {
+
+                    SYY[(i*max_blk_size_i)+ii+0]   = 0;
+                    SYY[(i*max_blk_size_i)+ii+1]   = 0;
+                    SYY[(i*max_blk_size_i)+ii+2]   = 0;
+                    SYY[(i*max_blk_size_i)+ii+3]   = 0;
+
+                    type_precision* b1 = &B[(i*max_blk_size_i*p)+(ii+0)*p];
+                    type_precision* b2 = &B[(i*max_blk_size_i*p)+(ii+1)*p];
+                    type_precision* b3 = &B[(i*max_blk_size_i*p)+(ii+2)*p];
+                    type_precision* b4 = &B[(i*max_blk_size_i*p)+(ii+3)*p];
+
+                    int ar_idx1 = (i*max_blk_size_i*n*r)+(ii+0)*(n*r)-l*n;
+                    int ar_idx2 = (i*max_blk_size_i*n*r)+(ii+1)*(n*r)-l*n;
+                    int ar_idx3 = (i*max_blk_size_i*n*r)+(ii+2)*(n*r)-l*n;
+                    int ar_idx4 = (i*max_blk_size_i*n*r)+(ii+3)*(n*r)-l*n;
+
+                    int next_blk_size_k = min((k+1)*blk_size_k,n);
 
 
-        for (int ii= 0; ii < a_amount; ii +=r)
+                    for (int kk=k*blk_size_k; kk < next_blk_size_k; kk++)//n???????????????????
+                    {
+                        type_precision xl;
+                        type_precision xr;
+                        type_precision sy[4];
+
+                        if(AL[kk]!=0 && y[kk] !=0)
+                        {
+                            sy[0]=y[kk]; sy[1]=y[kk]; sy[2]=y[kk]; sy[3]=y[kk];
+
+
+                            for (int h=0; h < l; h++)
+                            {
+                                xl = AL[n*h+kk];
+                                sy[0]-= xl*b1[h];
+                                sy[1]-= xl*b2[h];
+                                sy[2]-= xl*b3[h];
+                                sy[3]-= xl*b4[h];
+                            }
+                            for (int h=l; h < p; h++)
+                            {
+                                sy[0]-= AR[ar_idx1+n*h+kk]*b1[h];
+                                sy[1]-= AR[ar_idx2+n*h+kk]*b2[h];
+                                sy[2]-= AR[ar_idx3+n*h+kk]*b3[h];
+                                sy[3]-= AR[ar_idx4+n*h+kk]*b4[h];
+                            }
+
+                            SYY[(i*max_blk_size_i)+ii+0] += sy[0]*sy[0];
+                            SYY[(i*max_blk_size_i)+ii+1] += sy[1]*sy[1];
+                            SYY[(i*max_blk_size_i)+ii+2] += sy[2]*sy[2];
+                            SYY[(i*max_blk_size_i)+ii+3] += sy[3]*sy[3];
+
+                        }
+
+                    }
+
+
+
+                }
+
+                blk_size_i = min(max_blk_size_i,a_amount_padded-(i+1)*blk_size_i);
+            }
+        }
+
+
+    }
+
+
+    for (int ii= a_amount_padded; ii < a_amount; ii++)
+    {
+        //cout << ii <<  ":" <<a_amount_padded << ":" << a_amount << " ";
+        type_precision* b = &B[ii*p];
+
+        int ar_idx = ii*(n*r)-l*n;
+
+        SYY[ii] = 0;
+
+        for (int k=0;  k < n; k++)
+        {
+            type_precision* xl;
+            type_precision* xr;
+            type_precision sy;
+
+            if(AL[k]!=0 && y[k] !=0)
+            {
+                sy=y[k];
+
+                for (int h=0; h < l; h++)
+                {
+                    xl = &AL[n*h];
+                    sy-= xl[k]*b[h];
+                }
+                for (int h=l; h < p; h++)
+                {
+                    xr = &AR[ar_idx+n*h];
+                    sy-= xr[k]*b[h];
+                }
+
+                SYY[ii] += sy*sy;
+            }
+        }
+    }
+
+
+}
+
+
+void Algorithm::hpc_statistics(int YxALmiss, int n,
+                type_precision* __restrict  AL, type_precision* __restrict  AR, int a_amount, type_precision* __restrict y, int jj, float varY, type_precision* __restrict  B,
+                int p, int l,int r,type_precision* __restrict var_xL,type_precision* __restrict var_xR, int y_blck_offset, int A_blck_offset, list < resultH >* __restrict sigResults)
+{
+
+
+
+        int start_h=l;
+        if(disp_cov)
+            start_h = 1;
+
+        type_precision SST= varY;
+
+
+        sigResults->clear();
+
+        int n_not_nans = YxALmiss;
+        //cout << " " <<  nans.size() << "\t";
+        int n_corrected = n-n_not_nans-p;
+        float varFactor = (float)(n_corrected+p)/(float)n;
+
+
+        resultH res[max_threads];
+        for(int i= 0; i < max_threads; i++)
+        {
+            res[i].nUsed = n_corrected+p;
+            res[i].Y_name_idx = y_blck_offset+jj;
+            res[i].nUsedPct = varFactor;
+            res[i].ARoffset = A_blck_offset;
+        }
+
+
+        //!****************************
+
+        hpc_SSY(n,p,l,r,AL,AR,a_amount,y,B);
+
+        //!***************************
+
+        #pragma omp parallel for schedule(static) default(shared)
+        for (int ii= 0; ii < a_amount; ii++)
         {
 
-            type_precision* b = &B[jj*p*a_amount+ii*p];
-            memset(sab,0,sizeof(type_precision)*n);
+            int thread_id = omp_get_thread_num();
+
+            type_precision Syy;
+
+            long double ptemp;
+            float SE;
+
+            long double t;
+            type_precision t1;
+
+            type_precision* b = &B[ii*p];
 
 
+            Syy=SYY[ii];
 
-            for (int h=0; h< l; h++)
+            //R2[ay_idx] = 1-(Syy/(SST*varFactor));
+            res[thread_id].R2 = 1-((Syy/(n_corrected-1))/(SST*varFactor/(n-1)));
+            //R2 = SReg/(SST*varFactor);
+
+            //cout << n_corrected <<" "<< Syy/(n_corrected-p-1) << " " << SST/(n-1) << " " << R2[ay_idx] << endl;
+            type_precision sig_res=sqrt(Syy/(n_corrected));
+
+            //res.R2 = R2;
+
+            bool hasTminStorage = false;
+
+            res[thread_id].res_p.clear();
+
+            //cout << minR2store << " " << res.R2 << endl;
+
+            for (int h=start_h; h < p && ( res[thread_id].R2 > minR2store || storePInd ); h++)
             {
-            }
-
-            list<long int> nans;//!decomment   = indexs_AR[ii].merge(indexs_Y[jj]);
-            nans.unique();
-            int n_not_nans = nans.size();
-
-            type_precision* x = 0;//!remove old and decomment  = &AR[ii*n*p+h*n];
-
-
-            for (int h=r; h< p; h++)
-            {
-                int b_idx = jj*p*a_amount+ii*p+h;
-                tsx = 0;
-                tsxx = 0;
-                Syy = 0;
-
-                for (int k=0; k < n; k++)
+                //cout << " " << sig_res<< " " <<  var_xR[h] << endl;
+                if(h < l)
                 {
-                        tsx += x[k];
-                        tsxx += x[k]*x[k];
-                        xb = x[k]*b[h];
-                        sab[k] -= xb;
-                }
-
-                for (int k=0; k < n; k++)
-                {
-                    sy=y[k]-sab[k];
-                    Syy += sy*sy;
-                }
-
-                sym = 0;
-                SST = 0;
-                for (int k=0; k < n; k++)
-                {
-                    sym += y[k];
-                }
-                sym = sym/n_not_nans;
-
-                for(int k=0; k < n; k++)
-                {
-                    st = y[k] - sym;
-                    SST += st*st;
-                }
-
-                R2[b_idx] = (1-Syy)/SST;
-
-                type_precision sig_res=sqrt(Syy/n);
-                type_precision tsx2=tsx*tsx/n_not_nans;
-                type_precision var_x=sqrt(tsxx-tsx2);
-
-                t=b[h]*sig_res/var_x;
-                //T[b_idx] =t;
-
-                if(t < 1.28)
-                {
-                    t1=4.4-t;
-                    P[b_idx]=0.5-0.1*t1*t;
+                    SE = sig_res/sqrt(var_xL[h]*varFactor);
+                    //cout << " " << sig_res<< " " <<  var_xL[h] << " "<< varFactor <<  endl;
                 }
                 else
                 {
-                    P[b_idx]=1-erf(t);
+                    SE = sig_res/sqrt(var_xR[h]*varFactor);
+                    //cout << " " << sig_res<< " " <<  var_xR[h] << " "<< varFactor << endl;
+                }
+
+
+                t=fabs(b[h]/SE);
+
+
+
+                if( t > minTstore || storePInd)
+                {
+
+                    //cout << R2 << " " << Syy << " " << SST <<  "\t:\t";
+                     //cout << (Syy/(n_corrected-1)) << " " << (SST/(n-1)) << endl;
+//                     if(n>900)
+//                        cout << jj<< ":" << ii << " " << b[h] << " " <<  R2 << " " <<  SReg <<  " " << SST*varFactor <<" " << 1.0-((Syy/(n_corrected-1))/(SST*varFactor/(n-1))) <<  " "<< Syy << " " << t << endl;
+
+                    hasTminStorage = true;
+
+                    if( t < 1.6)
+                    {
+                        t1=4.4-t;
+                        ptemp=0.5-0.1*t1*t;
+                    }
+                    else
+                    {
+                        ptemp=erfc(t*one_oversqrt2);
+                    }
+
+                    result rdata;
+
+                    rdata.B = b[h];
+                    rdata.T = t;
+                    rdata.P = ptemp;
+                    rdata.SE = SE;
+
+
+                    rdata.AR_name_idx = ii*r;
+                    rdata.AL_name_idx = h;
+
+                    if(h >= l)
+                    {
+                        rdata.AR_name_idx += h-l;
+                        rdata.AL_name_idx = -1;
+                    }
+
+
+                    res[thread_id].res_p.push_back(rdata);
+
                 }
             }
 
+            if(hasTminStorage)
+            {
+                #pragma omp critical
+                {
+                    sigResults->push_back(res[thread_id]);
+                }
+            }
 
         }
-        delete []sab;
 
-        //t_students_cdf(y_amount,a_amount,p,T,P,n);
+
+
+
 
 }
 
-void Algorithm::t_students_cdf(int y_amount,int a_amount,int p, type_precision* T, type_precision* P, int deg_freedom)
+void Algorithm::sumSquares(type_precision* Data, int cols, int rows, type_precision* ssData, list<long int>* indexs_Data)
 {
 
+    for (int h=0; h< cols; h++)
+    {
+        double sx = 0;
+        double sxx = 0;
+        type_precision* x = &Data[h*rows];
+
+        int n = rows;
+//        if(indexs_Data)
+//            n =n-indexs_Data[h].size();
+
+        for (int k=0; k < rows; k++)
+        {
+                sx += x[k];
+                sxx += x[k]*x[k];
+        }
+        ssData[h] = (type_precision)(sxx - sx*sx/n);
+    }
 
 }
+
+//void Algorithm::mean(type_precision* Data, int block, int cols, int rows, type_precision* ssData, list<long int>* indexs_Data)
+//{
+//    for (int b=0; b< block; b++)
+//    {
+//        for (int h=0; h< cols; h++)
+//        {
+//            double sx = 0;
+//            double sxx = 0;
+//            type_precision* x = &Data[h*rows];
+//
+//            int n = rows;
+//            if(indexs_Data)
+//                n =n-indexs_A[b].size();
+//
+//            for (int k=0; k < rows; k++)
+//            {
+//                    sx += x[k];
+//            }
+//            ssData[h] = (type_precision)(sxx - sx*sx/n);
+//        }
+//    }
+//}
+
+
+
 
 //!*************************************************!//
 

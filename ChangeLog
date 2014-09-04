@@ -1,0 +1,31 @@
+
+TODO
+---------
+Features:
+-Add exclusion lists for single sets of elements of phenotypes
+-Add exclusion lists for single sets of elements of genotypes
+-Compare ID lists of all dvi files to assure correct ordering
+-Allow for runtime dosage models
+
+Optimizations:
+-Remove individuals with covariates missing
+-Reduce memcpy overhead of XR and XR XL factors
+-Reduce computation time of XR and XR XL factors (do GEMMS)
+
+
+
+
+Changes
+-------------
+4 -9 - 2014
+
+First user usable version.
+Several Bug-fixes.
+Added parameters to control thresholds of significance.
+Storing output as readable .txt and binary data.
+Both .txt and binary have different parametrization thresholds.
+Text-files should always store less results.
+Thresholds for text-files cannot include more results than the ones for binary files.
+Added bigger test files.
+Added program to transform binary result files  to text files with parametrized thresholds.
+Added HPC functions for sum of squares calculations.

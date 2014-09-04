@@ -18,7 +18,8 @@ AM_MAINTAINER_MODE([enable])
 # Set some default compile flags
 if test -z "$CXXFLAGS"; then
    # User did not set CXXFLAGS, so we can put in our own defaults
-    CXXFLAGS=""
+   CXXFLAGS=" -O3"
+  #CXXFLAGS="-g -ggdb"
 fi
 if test -z "$CPPFLAGS"; then
    # User did not set CPPFLAGS, so we can put in our own defaults
@@ -36,8 +37,8 @@ AC_PROG_CXX
 AC_OPENMP
 AC_SUBST(AM_CXXFLAGS, "$OPENMP_CFLAGS")
 
-AM_CXXFLAGS="-O3 -I../libs/include/ -I./libs/include/ $AM_CXXFLAGS"
-
+AM_CXXFLAGS="-static -O3 -I../libs/include/ -I./libs/include/ $AM_CXXFLAGS"
+#AM_CXXFLAGS="-static  -I../libs/include/ -I./libs/include/ $AM_CXXFLAGS"
 # Checks for libraries.
 # pthread library
 AC_SEARCH_LIBS([pthread_mutex_init], [pthread], [], [

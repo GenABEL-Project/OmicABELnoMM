@@ -32,8 +32,7 @@ void AIOwrapper::initialize(struct Settings &params)
 
 
 
-
-
+    Fhandler->not_done = true;
 
     if(!Fhandler->fakefiles)
     {
@@ -42,6 +41,13 @@ void AIOwrapper::initialize(struct Settings &params)
         Fhandler->fnameY = params.fnameY;
         Fhandler->fnameOutFiles = params.fnameOutFiles;
 
+        Fhandler->storeBin = params.storeBin;
+
+        Fhandler->disp_cov = params.disp_cov;
+        Fhandler->storePInd = params.storePInd;
+
+        Fhandler->min_p_disp = params.minPdisp;
+        Fhandler->min_R2_disp = params.minR2disp;
 
         Yfvi  = load_databel_fvi( (Fhandler->fnameY+".fvi").c_str() );
         ALfvi = load_databel_fvi( (Fhandler->fnameAL+".fvi").c_str() );
@@ -51,11 +57,52 @@ void AIOwrapper::initialize(struct Settings &params)
         params.t = Yfvi->fvi_header.numVariables;
         params.l = ALfvi->fvi_header.numVariables;
 
+        int yname_idx=0;//starting idx for names on ALfvi->data
+        for(int i = 0; i < params.n; i++)
+        {
+            //Nnames.push_back(string(&(Yfvi->fvi_data[yname_idx])));
+            yname_idx += Yfvi->fvi_header.namelength;
+
+            //cout << i << ": " << string(&(Yfvi->fvi_data[yname_idx])) << "\t";
+            //cout << i << ": " << Ynames[i] << "\t";
+        }
+
+
+        for(int i = 0; i < params.t; i++)
+        {
+            Fhandler->Ynames.push_back(string(&(Yfvi->fvi_data[yname_idx])));
+            yname_idx += Yfvi->fvi_header.namelength;
+        }
+
+
+
+        int Aname_idx=params.n*ARfvi->fvi_header.namelength;//skip the names of the rows
+        for(int i = 0; i < params.m*params.r; i++)
+        {
+            Fhandler->ARnames.push_back(string(&(ARfvi->fvi_data[Aname_idx])));
+            Aname_idx += ARfvi->fvi_header.namelength;
+        }
+
+        Aname_idx=params.n*ALfvi->fvi_header.namelength;
+        for(int i = 0; i < params.l; i++)
+        {
+            Fhandler->ALnames.push_back(string(&(ALfvi->fvi_data[Aname_idx])));
+            Aname_idx += ALfvi->fvi_header.namelength;
+
+//            cout << i << ": " << string(&(ARfvi->fvi_data[Aname_idx])) << "\t";
+//            cout << i << ": " << ALnames[i] << "\t";
+        }
+
+
+
         int opt_tb = 1000;
         int opt_mb = 1000;
 
         params.mb = min(params.m, opt_tb);
         params.tb = min(params.t, opt_mb);
+
+
+
 
     }
     else
@@ -80,6 +127,49 @@ void AIOwrapper::initialize(struct Settings &params)
 
     params.p = params.l + params.r;
 
+    if(!Fhandler->fakefiles)
+    {
+
+        if(params.l > 255 || params.p > 255 || params.n > 65535)//can remove if fixed for output files
+        {
+            cout << "Warning, output binary format does not yet support current problem sizes for the provided p, l, r and n." << endl;
+            cout << "Omitting outputfile." << endl;
+        }
+
+
+        //!write info file for results
+        ofstream fp_InfoResults;
+
+        fp_InfoResults.open((Fhandler->fnameOutFiles + "_sto.ibin").c_str(),ios::out | ios::binary | ios::trunc);
+        if(fp_InfoResults == 0)
+        {
+            cout << "Error Creating File InfoResults.bin" << endl;
+            exit(1);
+        }
+        fp_InfoResults.write( (char*)&params.n,sizeof(int));
+        fp_InfoResults.write( (char*)&params.l,sizeof(int));
+        fp_InfoResults.write( (char*)&params.r,sizeof(int));
+        fp_InfoResults.write( (char*)&params.t,sizeof(int));
+        fp_InfoResults.write( (char*)&params.m,sizeof(int));
+        fp_InfoResults.write( (char*)&(ARfvi->fvi_header.namelength),sizeof(int));
+        fp_InfoResults.write( (char*)&params.disp_cov,sizeof(bool));
+        fp_InfoResults.write( (char*)&params.storePInd,sizeof(bool));
+
+
+        int Aname_idx=(params.n+1)*ALfvi->fvi_header.namelength;//skip the names of the rows + intercept
+        fp_InfoResults.write( (char*)&ALfvi->fvi_data[Aname_idx],ALfvi->fvi_header.namelength*(params.l-1)*sizeof(char));
+
+        Aname_idx=params.n*ARfvi->fvi_header.namelength;//skip the names of the rows
+        fp_InfoResults.write( (char*)&ARfvi->fvi_data[Aname_idx],ARfvi->fvi_header.namelength*params.r*params.m*sizeof(char));
+
+        int Yname_idx=params.n*Yfvi->fvi_header.namelength;//skip the names of the rows
+        fp_InfoResults.write( (char*)&Yfvi->fvi_data[Yname_idx],Yfvi->fvi_header.namelength*params.t*sizeof(char));
+
+
+    }
+
+
+
 
     //block size to keep mem under 1 gigabyte
 //    int opt_block = params.n/(4*1000^3)*(1/(2*params.r));
@@ -103,8 +193,6 @@ void AIOwrapper::initialize(struct Settings &params)
 
 void AIOwrapper::finalize()
 {
-    //cout << "f";
-    //void *status;
 
     Fhandler->not_done = false;
     pthread_mutex_lock(&(Fhandler->m_more));
@@ -131,7 +219,10 @@ void AIOwrapper::finalize()
     delete Fhandler->excl_List;
 
 
+
+
 }
+
 
 
 
@@ -149,11 +240,10 @@ void* AIOwrapper::async_io( void *ptr )
 
     struct timespec timeToWait;
     FILE*  fp_Y;
-    FILE*  fp_B;
-    FILE*  fp_R;
-    FILE*  fp_SD2;
-    FILE*  fp_P;
     FILE*  fp_Ar;
+    ofstream fp_sigResults;
+    ofstream fp_allResults;
+
     if(!Fhandler->fakefiles)
     {
         fp_Y = fopen((Fhandler->fnameY+".fvd").c_str(), "rb");
@@ -170,30 +260,32 @@ void* AIOwrapper::async_io( void *ptr )
             exit(1);
         }
 
-        fp_B = fopen((Fhandler->fnameOutFiles+"_B.fvd").c_str(), "w+b");
-        if(fp_B == 0)
+
+        fp_sigResults.open((Fhandler->fnameOutFiles + "_dis.txt").c_str(),ios::out | ios::trunc);
+        if(fp_sigResults == 0)
         {
-            cout << "Error Opening File B " << Fhandler->fnameOutFiles << "_B" << endl;
+            cout << "Error Creating File " << (Fhandler->fnameOutFiles + "_dis.txt") << endl;
             exit(1);
         }
-        fp_R = fopen((Fhandler->fnameOutFiles+"_R.fvd").c_str(), "w+b");
-        if(fp_R == 0)
+
+        fp_sigResults << "Phe\tSNP\tn\tnPct\tB\tR2\tSE\tT\tP" << endl;
+
+        //!*************************************************
+
+        if(Fhandler->storeBin)
         {
-            cout << "Error Opening File R " << Fhandler->fnameOutFiles << "_R" << endl;
-            exit(1);
+
+            fp_allResults.open((Fhandler->fnameOutFiles + "_sto.dbin").c_str(),ios::out | ios::binary | ios::trunc);
+            if(fp_allResults == 0)
+            {
+                cout << "Error Creating File "<< (Fhandler->fnameOutFiles + "_sto.bin") << endl;
+                exit(1);
+            }
+
         }
-        fp_SD2 = fopen((Fhandler->fnameOutFiles+"_SD2.fvd").c_str(), "w+b");
-        if(fp_SD2 == 0)
-        {
-            cout << "Error Opening File SD2 " << Fhandler->fnameOutFiles << "_SD2" << endl;
-            exit(1);
-        }
-        fp_P = fopen((Fhandler->fnameOutFiles+"_P.fvd").c_str(), "w+b");
-        if(fp_P == 0)
-        {
-            cout << "Error Opening File P " << Fhandler->fnameOutFiles << "_P" << endl;
-            exit(1);
-        }
+
+
+
     }
     else
     {
@@ -221,30 +313,7 @@ void* AIOwrapper::async_io( void *ptr )
         //fclose(fp_Ar);
         delete []tempbuff2;
 
-        fp_B = fopen("tempB.bin", "w+b");
-        if(fp_B == 0)
-        {
-            cout << "Error setting up temp File B " << endl;
-            exit(1);
-        }
-        fp_R = fopen("tempR.bin", "w+b");
-        if(fp_R == 0)
-        {
-            cout << "Error setting up temp File R " << endl;
-            exit(1);
-        }
-        fp_SD2 = fopen("tempSD2.bin", "w+b");
-        if(fp_SD2 == 0)
-        {
-            cout << "Error setting up temp File SD2 " << endl;
-            exit(1);
-        }
-        fp_P = fopen("tempP.bin", "w+b");
-        if(fp_P == 0)
-        {
-            cout << "Error setting up temp File P " << endl;
-            exit(1);
-        }
+
         //cout << "\nEnd preping files\n" << flush;
 
     }
@@ -252,14 +321,14 @@ void* AIOwrapper::async_io( void *ptr )
     //pthread_barrier_wait(&(Fhandler->finalize_barrier));//for testing only
 
 
-    Fhandler->not_done = true;
+    bool Local_not_done = true;
     Fhandler->reset_wait = false;
 
 
-    while(Fhandler->not_done)
+    while(Local_not_done)
     {
 
-        while(!Fhandler->empty_buffers.empty() && Fhandler->y_to_readSize)
+        while(!Fhandler->empty_buffers.empty() && Fhandler->y_to_readSize && Fhandler->not_done)
         {
 
             tmp_y_blockSize = Fhandler->y_blockSize;
@@ -334,7 +403,7 @@ void* AIOwrapper::async_io( void *ptr )
 
         }
 
-        while(!Fhandler->ar_empty_buffers.empty() && Fhandler->Ar_to_readSize )
+        while(!Fhandler->ar_empty_buffers.empty() && Fhandler->Ar_to_readSize && Fhandler->not_done)
         {
 
 
@@ -407,31 +476,117 @@ void* AIOwrapper::async_io( void *ptr )
         }
         //B write
 
-        while(!Fhandler->write_full_buffers.empty())
+        while(!Fhandler->write_full_buffers.empty() && Local_not_done)
         {
 
-
             pthread_mutex_lock(&(Fhandler->m_buff_upd));
-            type_buffElement* tobeWritten = Fhandler->write_full_buffers.front();
+            list < resultH >* tobeWritten = Fhandler->write_full_buffers.front();
             Fhandler->write_full_buffers.pop();
-            int size = Fhandler->p*Fhandler->b_blockSize;
+
 
             if(Fhandler->fakefiles)
             {
-                fseek ( fp_B , 0 , SEEK_SET );
-                fseek ( fp_R , 0 , SEEK_SET );
-                fseek ( fp_SD2 , 0 , SEEK_SET );
-                fseek ( fp_P , 0 , SEEK_SET );
+
             }
-            fwrite (&(tobeWritten->buff[0]),sizeof(type_precision),size,fp_B);
-            fwrite (&(tobeWritten->buff[Fhandler->max_b_blockSize*Fhandler->p]),sizeof(type_precision),Fhandler->b_blockSize,fp_R);
-            fwrite (&(tobeWritten->buff[Fhandler->max_b_blockSize*(Fhandler->p+1)]),sizeof(type_precision),Fhandler->b_blockSize,fp_SD2);
-            fwrite (&(tobeWritten->buff[Fhandler->max_b_blockSize*(Fhandler->p+2)]),sizeof(type_precision),size,fp_P);
+
+            if(!Fhandler->fakefiles && !tobeWritten->empty())
+            {
+
+                if(!Fhandler->storePInd && Fhandler->storeBin)
+                {
+                    resultH first = tobeWritten->front();
+                    fp_allResults.write( (char*)&first.Y_name_idx,sizeof(int));
+
+                    int size_block = tobeWritten->size();
+                    fp_allResults.write( (char*)&size_block,sizeof(int));
+                    fp_allResults.write( (char*)&first.ARoffset,sizeof(int));
+                }
+
+
+                for (list<  resultH  >::iterator it=tobeWritten->begin(); it != tobeWritten->end(); ++it)
+                {
+                    resultH current = *it;
+                    uint8_t size_p = current.res_p.size();
+
+                    uint16_t R2=-166;
+                    float16(R2, current.R2);
+
+                    //cout << current.R2 << ":";
+//                    current.R2=-1.0;
+//
+//                    float32(&(current.R2),R2);
+                    //cout << current.R2 << "\t";
+
+
+                    if(Fhandler->storeBin)
+                    {
+                        fp_allResults.write( (char*)&current.nUsed,sizeof(uint16_t));
+                        fp_allResults.write( (char*)&R2,sizeof(uint16_t));
+                    }
+
+                    if(!Fhandler->storePInd && Fhandler->storeBin)
+                    {
+                        fp_allResults.write( (char*)&size_p,sizeof(uint8_t));
+                    }
+
+                    for (list<  result  >::iterator it2=current.res_p.begin(); it2 != current.res_p.end(); ++it2)
+                    {
+                        result res_p = *it2;
+                        if(res_p.P <= Fhandler->min_p_disp && current.R2 >= Fhandler->min_R2_disp)
+                        {
+                            string Aname = " ";
+
+                            if(res_p.AL_name_idx < Fhandler->l)
+                            {
+                                //cout << (int)res_p.AL_name_idx << " " << Fhandler->l << flush;
+                                Aname = Fhandler->ALnames[res_p.AL_name_idx] + ":";
+                            }
+
+                            Aname += Fhandler->ARnames[res_p.AR_name_idx+current.ARoffset];
+
+                            //cout << Aname << " " <<flush;
+                            fp_sigResults << Fhandler->Ynames[current.Y_name_idx] << "\t" << Aname << "\t" << current.nUsed << "\t" <<   std::fixed << std::setprecision(2) << current.nUsedPct << std::setprecision(std :: numeric_limits<float> :: digits10 + 1)
+                                    << "\t" << res_p.B  << "\t" << std::setprecision(4) << current.R2 << std::setprecision(std :: numeric_limits<float> :: digits10 + 1)
+                                          << "\t" << res_p.SE   << "\t" << res_p.T   << "\t" << std::scientific  << res_p.P <<  std::fixed << std::setprecision(std :: numeric_limits<float> :: digits10 + 1)  << endl;
+//                                     cout <<  std::setprecision(std :: numeric_limits<float> :: digits10 + 1) << Fhandler->Ynames[current.Y_name_idx] << "\t" << Aname << "\t" << current.nUsed << "\t" << current.nUsedPct
+//                                    << "\t" << res_p.B  << "\t" << current.R2
+//                                          << "\t" << res_p.SE   << "\t" << res_p.T   << "\t" << std::scientific  << res_p.P << std::fixed  << endl;
+
+
+                        }
+
+                        if(Fhandler->storeBin)
+                        {
+                            if(Fhandler->disp_cov && !Fhandler->storePInd)
+                            {
+                                fp_allResults.write( (char*)&res_p.AL_name_idx,sizeof(uint8_t));
+                            }
+                            if(!Fhandler->storePInd)
+                            {
+                                fp_allResults.write( (char*)&res_p.AR_name_idx,sizeof(uint16_t));
+                            }
+                            fp_allResults.write( (char*)&res_p.B,sizeof(float));
+                            fp_allResults.write( (char*)&res_p.SE,sizeof(float));
+                        }
+
+                    }
+
+
+                }
+            }
+
 
 
             Fhandler->write_empty_buffers.push(tobeWritten);
             //  cout << "\nStoring " << tobeWritten << endl;
+
+
+
+
+
             pthread_mutex_unlock(&(Fhandler->m_buff_upd));
+
+
 
             pthread_mutex_lock(&(Fhandler->m_read));
             pthread_cond_signal( &(Fhandler->condition_read ));
@@ -440,6 +595,8 @@ void* AIOwrapper::async_io( void *ptr )
         }
 
 
+        if(!Fhandler->not_done && Fhandler->write_full_buffers.empty())
+                {Local_not_done = false;}
 
 
 #ifdef WINDOWS
@@ -462,35 +619,11 @@ void* AIOwrapper::async_io( void *ptr )
         pthread_cond_signal( &(Fhandler->condition_read ));
         pthread_mutex_unlock(&(Fhandler->m_read));
 
-//        if(Fhandler->reset_wait)
-//        {
-//            pthread_barrier_wait(&(Fhandler->finalize_barrier));
-//            //wait for main thread to reset everything
-//
-//            pthread_mutex_lock(&(Fhandler->m_buff_upd));
-//            Fhandler->Ar_to_readSize = Fhandler->Ar_Amount;
-//
-//            if(Fhandler->Ar_currentReadBuff)
-//            {
-//                Fhandler->ar_full_buffers.push(Fhandler->Ar_currentReadBuff);
-//                Fhandler->Ar_currentReadBuff=0;
-//            }
-//            while(!Fhandler->ar_full_buffers.empty())
-//            {
-//                Fhandler->ar_empty_buffers.push(Fhandler->ar_full_buffers.front());
-//                Fhandler->ar_full_buffers.pop();
-//            }
-//            pthread_mutex_unlock(&(Fhandler->m_buff_upd));
-//
-//            Fhandler->reset_wait = false;
-//
-//
-//            pthread_barrier_wait(&(Fhandler->finalize_barrier));
-//        }
-
 
     }
-    //cout << "k" << flush;
+
+
+
     //barrier
     pthread_barrier_wait(&(Fhandler->finalize_barrier));
 
@@ -544,18 +677,16 @@ void* AIOwrapper::async_io( void *ptr )
 
     while(!Fhandler->write_full_buffers.empty())
     {
-       tmp= Fhandler->write_full_buffers.front();
+       list < resultH >* tmp2= Fhandler->write_full_buffers.front();
        Fhandler->write_full_buffers.pop();
-       delete []tmp->buff;
-       delete tmp;
+       delete tmp2;
     }
 
     while(!Fhandler->write_empty_buffers.empty())
     {
-       tmp= Fhandler->write_empty_buffers.front();
+       list < resultH >* tmp2= Fhandler->write_empty_buffers.front();
        Fhandler->write_empty_buffers.pop();
-       delete []tmp->buff;
-       delete tmp;
+       delete tmp2;
     }
     }
 
@@ -565,10 +696,8 @@ void* AIOwrapper::async_io( void *ptr )
     //pthread_exit(NULL);
         fclose(fp_Y);
         fclose(fp_Ar);
-        fclose(fp_B);
-        fclose(fp_R);
-        fclose(fp_SD2);
-        fclose(fp_P);
+        fp_sigResults.close();
+        fp_allResults.close();
 
         //cout << "\nexited io\n";
 
@@ -743,17 +872,8 @@ void AIOwrapper::prepare_Y(int y_blockSize, int n, int totalY)
 
 }
 
-void AIOwrapper::getCurrentWriteBuffers(type_precision* &B,type_precision* &R,type_precision* &SD2,type_precision* &P)
+void AIOwrapper::getCurrentWriteBuffers(list < resultH >* &sigResults)
 {
-    B = &(Fhandler->currentWriteBuff->buff[0]);
-    R = &(Fhandler->currentWriteBuff->buff[Fhandler->max_b_blockSize*Fhandler->p]);
-    SD2 = &(Fhandler->currentWriteBuff->buff[Fhandler->max_b_blockSize*(Fhandler->p+1)]);
-    P = &(Fhandler->currentWriteBuff->buff[Fhandler->max_b_blockSize*(Fhandler->p+2)]);
-}
-
-void AIOwrapper::write_OutFiles(type_precision* &B,type_precision* &R,type_precision* &SD2,type_precision* &P,  int blockSize)
-{
-
     while(Fhandler->write_empty_buffers.empty())
     {
         pthread_mutex_lock(&(Fhandler->m_more));
@@ -766,23 +886,28 @@ void AIOwrapper::write_OutFiles(type_precision* &B,type_precision* &R,type_preci
         pthread_cond_wait( &(Fhandler->condition_read), &(Fhandler->m_read ));
         pthread_mutex_unlock(&(Fhandler->m_read));
     }
+    pthread_mutex_lock(&(Fhandler->m_buff_upd));
 
+    sigResults = Fhandler->write_empty_buffers.front();
+    Fhandler->write_empty_buffers.pop();
+
+    pthread_mutex_unlock(&(Fhandler->m_buff_upd));
+
+
+    pthread_mutex_lock(&(Fhandler->m_more));
+    pthread_cond_signal( &(Fhandler->condition_more ));
+    pthread_mutex_unlock(&(Fhandler->m_more));
+}
+
+void AIOwrapper::write_OutFiles(list < resultH >* &sigResults)
+{
 
     pthread_mutex_lock(&(Fhandler->m_buff_upd));
 
 
-    Fhandler->write_full_buffers.push(Fhandler->currentWriteBuff);
-    Fhandler->b_blockSize = blockSize;
-
-
-    Fhandler->currentWriteBuff = Fhandler->write_empty_buffers.front();
-    Fhandler->write_empty_buffers.pop();
-
-    B = &(Fhandler->currentWriteBuff->buff[0]);
-    R = &(Fhandler->currentWriteBuff->buff[Fhandler->b_blockSize*Fhandler->p]);
-    SD2 = &(Fhandler->currentWriteBuff->buff[Fhandler->b_blockSize*(Fhandler->p+1)]);
-    P = &(Fhandler->currentWriteBuff->buff[Fhandler->b_blockSize*(Fhandler->p+2)]);
-
+    Fhandler->write_full_buffers.push(sigResults);
+    sigResults = 0;
+    //cout << Fhandler->write_full_buffers.size() << endl;
 
     pthread_mutex_unlock(&(Fhandler->m_buff_upd));
 
@@ -799,18 +924,16 @@ void AIOwrapper::write_OutFiles(type_precision* &B,type_precision* &R,type_preci
 void AIOwrapper::prepare_OutFiles(int max_b_blockSize, int p)
 {
 
-    Fhandler->max_b_blockSize = max_b_blockSize;
-    Fhandler->p=p;
+    Fhandler->max_b_blockSize = max_b_blockSize;//useless?
+    Fhandler->p=p;//useless?
     int buff_count = 4;
 
-    type_buffElement* tmp;
+    list < resultH >* tmp;
 
 
     for(int i = 0; i< buff_count  ; i++)
     {
-        tmp = new type_buffElement();
-        tmp->buff = new type_precision[Fhandler->max_b_blockSize*(2*Fhandler->p+2)];
-        tmp->size = max_b_blockSize;
+        tmp = new list < resultH >();
         Fhandler->write_empty_buffers.push(tmp);
     }
     Fhandler->currentWriteBuff = Fhandler->write_empty_buffers.front();
@@ -820,10 +943,7 @@ void AIOwrapper::prepare_OutFiles(int max_b_blockSize, int p)
 }
 
 
- void AIOwrapper::write_significantValues(int Y, int X_R, float R, float SD2, float P)
- {
 
- }
 
 
 void AIOwrapper::reset_Y()
@@ -870,42 +990,6 @@ void AIOwrapper::reset_Y()
 
 void AIOwrapper::reset_AR()
 {
-    //void *status;
-
-
-    //cout << "ra" << flush;
-
-//    Fhandler->reset_wait = true;
-//    pthread_barrier_wait(&(Fhandler->finalize_barrier));
-//
-////    pthread_mutex_lock(&(Fhandler->m_buff_upd));
-////    Fhandler->Ar_to_readSize = Fhandler->Ar_Amount;
-////
-////    if(Fhandler->Ar_currentReadBuff)
-////    {
-////        Fhandler->ar_full_buffers.push(Fhandler->Ar_currentReadBuff);
-////        Fhandler->Ar_currentReadBuff=0;
-////    }
-////
-////    while(!Fhandler->ar_full_buffers.empty())
-////    {
-////        Fhandler->ar_empty_buffers.push(Fhandler->ar_full_buffers.front());
-//////        for( int i = 0; i < Fhandler->n*Fhandler->r*Fhandler->Ar_blockSize; i++)
-//////        {
-//////            ((Fhandler->ar_full_buffers.front())->buff)[i] = 0;
-//////        }
-////        Fhandler->ar_full_buffers.pop();
-////    }
-////    pthread_mutex_unlock(&(Fhandler->m_buff_upd));
-////
-////    Fhandler->reset_wait = false;
-//
-//    pthread_barrier_wait(&(Fhandler->finalize_barrier));
-//
-//    pthread_mutex_lock(&(Fhandler->m_more));
-//    pthread_cond_signal( &(Fhandler->condition_more ));
-//    pthread_mutex_unlock(&(Fhandler->m_more));
-
 
 }
 

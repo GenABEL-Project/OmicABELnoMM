@@ -93,10 +93,41 @@ type_precision* replicate_vec(type_precision*old, int size)
     return vec;
 }
 
+void replace_nans_avgs(int vec_blocksize, type_precision* vec, int rows , int cols,list<long int>* ar_nan_idxs)
+{
+    type_precision* ones = new type_precision[rows];
+
+
+    for( int i = 0; i < rows; i++)
+        ones[i] = 1.0;
+
+
+    for( int i = 0; i < vec_blocksize*cols; i++)
+    {
+        type_precision sum = cblas_sdot(rows, ones, 1, &vec[i*rows], 1);
+        type_precision avg = sum/(rows-ar_nan_idxs[i].size());
+        for (list<long int>::iterator it = ar_nan_idxs[i].begin(); it != ar_nan_idxs[i].end(); it++)
+        {
+            int idx = i*rows+(*it);
+            vec[idx] = avg;
+        }
+    }
+
+    delete []ones;
+
+}
+
 void replace_nans(list<long int>* indexs_vec, int vec_blocksize, type_precision* vec, int rows , int cols)
 {
 
     //#pragma omp parallel default(shared)
+    if(indexs_vec)
+    {
+        for( int k = 0; k < vec_blocksize; k++)
+        {
+            indexs_vec[k].clear();
+        }
+    }
 
     for( int k = 0; k < vec_blocksize; k++)
     {
@@ -107,9 +138,13 @@ void replace_nans(list<long int>* indexs_vec, int vec_blocksize, type_precision*
              for( int j = 0; j < rows; j++)//move over the rows of this column
              {
 
-                int idx = i*rows+j;
-                if(isnan( vec[idx] ))
+                int idx = k*cols*rows+i*rows+j;
+
+                //cout << idx;
+
+                if(/*idx < rows*cols*vec_blocksize &&*/ isnan( vec[idx] ))
                 {
+
                     vec[idx] = 0;
                     if(indexs_vec)
                     {
@@ -121,9 +156,21 @@ void replace_nans(list<long int>* indexs_vec, int vec_blocksize, type_precision*
 
              }
 
+
+
         }
+        if(indexs_vec)
+        {
+            indexs_vec[k].sort();
+            indexs_vec[k].unique();
+        }
+
+
+
     }
-    if(cols)
+
+
+    if(cols > 1)
     {
         replace_with_zeros(indexs_vec,vec,rows,cols,vec_blocksize);
     }
@@ -167,7 +214,7 @@ void matlab_print_matrix(string name,int m,int n,type_precision* A)
                 printf(",\t");
                 index = j+i*m;
 
-             printf("%.6g",A[index]);
+             printf(" %.5g",A[index]);
           }
           cout << " ; \n";
         }
@@ -217,5 +264,30 @@ void cpu_benchmark(int n,int samples, double &duration, double &GFLOPS)
     delete []B;
     delete []C;
 
+}
+
+float getTvalue(float pval)
+{
+//    cout << pval << endl;
+    float T = boost::math::erf_inv((long double)(1.0-pval))*sqrt(2.0);
+//    cout << T << endl;
+    return T;
+}
+
+void float32(float* out, const uint16_t in)
+{
+    uint32_t t1 = in;
+    t1 <<= 16;//convert to float again
+    t1 &= 0xffff0000;//keep sign and exponent only
+    *((uint32_t*)out) =  t1;
+}
+
+
+void float16(uint16_t &out, const float in)
+{
+    uint32_t* intp = (uint32_t*)&(in);
+    uint32_t inu = *(intp);
+    inu >>= 16; //left most 16 are kept after next truncation
+    out = inu;//truncates zeroes away
 }
 

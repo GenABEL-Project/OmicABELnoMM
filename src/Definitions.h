@@ -1,12 +1,19 @@
 #ifndef defs_H_INCLUDED
 #define defs_H_INCLUDED
 
+#include <boost/math/distributions/normal.hpp>
+
+#include <limits>
+#include <list>
+
+
 #ifdef __linux__
     #define LINUX
 #else
     #define WINDOWS
 #endif
 
+#include <stdint.h>
 #include <unistd.h>
 #include <limits.h>
 #include <queue>
@@ -53,7 +60,7 @@
 
         #define STORAGE_TYPE CblasColMajor
 
-
+         #define cblas_sdot sdot
         #define cblas_snrm2 snrm2
         #define cblas_saxpy saxpy
 
@@ -112,7 +119,7 @@
 //!SETTINGS
 
 #define EXTENDEDTEST 0
-#define PRINT 0 //&& 1EXTENDEDTEST
+#define PRINT 1 //&& 1EXTENDEDTEST
 
 #define OUTPUT 0
 
@@ -124,6 +131,8 @@
 #define _1MB 1024*1024
 #define _10MB 10*_1MB
 #define _1GB 1024*1024*1024
+
+#define one_oversqrt2 0.7071067811865475244008443621048490392848359376884740
 
 
 
@@ -142,11 +151,20 @@ struct Settings
     int mb;
     int id;
 
-    float sig_threshold;
-
     int threads;
 
     bool use_fake_files;
+
+
+
+    bool storeBin;
+
+    float minPdisp;
+    float minPstore;
+    float minR2disp;
+    float minR2store;
+    bool storePInd;
+    bool disp_cov;
 
     string fnameAL;
     string fnameAR;
@@ -190,8 +208,35 @@ struct Outputs
     double acc_str;
     double acc_solve;
 
+    double acc_stats;
+
 
 };
+
+
+
+struct result
+{
+    float T;
+    long double P;
+    float SE;
+    float B;
+    uint8_t AL_name_idx;
+    int AR_name_idx;
+};
+
+class resultH
+{
+    public:
+    int Y_name_idx;
+    int ARoffset;
+    uint16_t nUsed;
+    float nUsedPct;
+    float R2;
+    list< result > res_p;
+};
+
+
 
 
 #endif // UTILITY_H_INCLUDED

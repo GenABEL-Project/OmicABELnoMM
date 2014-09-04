@@ -71,7 +71,7 @@ Must be included:
 -o --out filename		file where betas will be written in fv (no need for the .fvd/.fvi, both should have the same name!)
 
 Optional:
--n --ngred                     if the file in snp has a different model like direct data genotipic (2 columns per snp) specify -n 2, default is 1
+-n --ngpred                     if the file in snp has a different model like direct data genotipic (2 columns per snp) specify -n 2, default is 1
 -t --thr			amount of threads to use, use = as the amount of physical processors in the system (max)
 
 
@@ -98,6 +98,21 @@ sudo apt-get install liblapacke
 sudo apt-get install liblapacke-dev
 
 
+---------------------------Sample Usage-----------------------------
+
+./omicabelnomm -c examples/XL --geno examples/XR -p examples/Y -o examples/B -n 2 -t 2 -b -i -d 0.09 -r -10 -e -10 -s 0.2
+-c Reading covariates from file examples/XL
+-g Reading with genotype data from file examples/XR
+-p Reading phenotypes from file examples/Y
+-o Writing output files to examples/B
+-n Using columns per snp as 2
+-t Using 2 CPU threads for parallelism
+-b Results will be stored in binary format too
+-i Covariate results will be included in results
+-d Significance to display in .txt will be P-val's below 0.09
+-r Minimum R2 to display in .txt will be above -10
+-e Minimum R2 to store in .bin will be above -10
+-s Significance to store in .bin will be P-val's below 0.2
 
 
 

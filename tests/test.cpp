@@ -1,4 +1,3 @@
-//export MKL_NUM_THREADS=1 OMP_NUM_THREADS=1 OMP_NESTED=true
 #include <unistd.h>
 #include <getopt.h>
 
@@ -7,7 +6,7 @@
 #include "../src/Definitions.h"
 #include "../src/Algorithm.h"
 
-void print_output(struct Outputs out)
+void print_output(struct Outputs out, float gemm_gflopsPsec)
 {
     std::cout << std::fixed;
 
@@ -19,19 +18,20 @@ void print_output(struct Outputs out)
 
     cout << "Missing Sec:\t\t" << missing <<" \t"<<  missing/out.duration*100 << "\n";
 
-    missing = (out.acc_real_innerloops - (out.acc_solve+out.acc_sbr +out.acc_stl+out.acc_str+out.acc_other));
+    missing = (out.acc_real_innerloops - (out.acc_solve+out.acc_sbr +out.acc_stl+out.acc_str+out.acc_other+out.acc_stats+out.acc_storeb));
 
     cout << endl;
 
     cout << "GEMM Sec:\t\t" << out.acc_gemm <<" \t"<<  out.acc_gemm/out.duration*100 << "\n";
 
     cout << "InnerLoops  Sec:\t" << out.acc_real_innerloops <<" \t"<<  out.acc_real_innerloops/out.duration*100 << "\n";
-    cout << "\tStl Sec:\t" << out.acc_stl <<" \t"<<  out.acc_stl/out.duration*100 << "\n";
-    cout << "\tStr Sec:\t" << out.acc_str <<"\t"<<  out.acc_str/out.duration*100 << "\n";
-    cout << "\tSbr Sec:\t" << out.acc_sbr <<"\t"<<  out.acc_sbr/out.duration*100 << "\n";
-    cout << "\tSolve Sec:\t" << out.acc_solve <<" \t"<<  out.acc_solve/out.duration*100 << "\n";
-    cout << "\tOther Sec:\t" << out.acc_other <<" \t"<<  out.acc_other/out.duration*100 << "\n";
-    cout << "\tMissing Sec:\t" << missing <<"\t"<<  missing/out.duration*100 << "\n";
+    cout << "Stl Sec:\t\t" << out.acc_stl <<" \t"<<  out.acc_stl/out.duration*100 << "\n";
+    cout << "Str Sec:\t\t" << out.acc_str <<"\t"<<  out.acc_str/out.duration*100 << "\n";
+    cout << "Sbr Sec:\t\t" << out.acc_sbr <<"\t"<<  out.acc_sbr/out.duration*100 << "\n";
+    cout << "Solve Sec:\t\t" << out.acc_solve <<" \t"<<  out.acc_solve/out.duration*100 << "\n";
+    cout << "Other Sec:\t\t" << out.acc_other <<" \t"<<  out.acc_other/out.duration*100 << "\n";
+    cout << "Stats Sec:\t\t" <<  out.acc_stats <<"\t"<<  out.acc_stats/out.duration*100 << "\n";
+    cout << "Missing Sec:\t\t" << missing <<"\t"<<  missing/out.duration*100 << "\n";
 
     //cout << "RQy Sec:\t" << out.acc_real_innerloops-out.acc_gemm <<" \t"<<  (out.acc_real_innerloops-out.acc_gemm)/out.duration*100 << "\n";
     cout << endl;
@@ -48,6 +48,11 @@ void print_output(struct Outputs out)
 //    cout << "Real LoadXR Sec:\t" << out.acc_real_loadxr <<" \t"<<  out.acc_real_loadxr/out.duration*100 << "\n";
 //    cout << "Real LoadY  Sec:\t" << out.acc_real_loady <<" \t"<<  out.acc_real_loady/out.duration*100 << "\n";
 
+    cout << endl<< "Duration:"<< out.duration << endl;
+    cout << endl<< "GFLOPS:"<< out.gflops << endl;
+    cout << "GFLOPS/s: " << (out.gflops/out.duration) << endl;
+    cout  <<"Perf: " << (out.gflops/out.duration)/gemm_gflopsPsec << endl ;
+
 
 
 
@@ -58,21 +63,20 @@ int main(int argc, char *argv[] )
     struct Settings params;
 
 
-    params.ForceCheck = false;
-
-    //!default params
-    params.r = 1;
-    params.threads = 1;
-
-
 
     omp_set_nested(false);
     omp_set_dynamic(false);
 
     Algorithm alg;
 
+
+    //!default params
+    alg.applyDefaultParams(params);
+
     params.use_fake_files = true;
-    int iters = 10;
+
+
+
     int max_threads = 2;
 
     params.threads = max_threads;
@@ -88,30 +92,52 @@ int main(int argc, char *argv[] )
     cout << "\nGEMM GFLOPS/s " << gemm_gflopsPsec << endl;
 
     struct Outputs out2 = {0};
-    params.n=1000; params.l=3;  params.r=1;
-    params.t=1000; params.tb=1000; params.m=1000; params.mb=1000;
+    int factor = 10;
+    params.n=4000; params.l=5;  params.r=1;
+    params.t=100*factor; params.tb=min(1000,100*factor); params.m=100*factor; params.mb=min(200,100*factor);
     alg.solve(params, out2, P_NEQ_B_OPT_MD);
 
-    cout <<endl<< "Duration:"<< out2.duration << endl;
-    cout <<endl<< "GFLOPS:"<< out2.gflops << endl;
-    cout << "GFLOPS/s: " << (out2.gflops/out2.duration) << endl;
-    cout  <<"Perf: " << (out2.gflops/out2.duration)/gemm_gflopsPsec << endl ;
-
-    print_output(out2);
+    print_output(out2, gemm_gflopsPsec);
 
 
     cout << "\nDone\n";
     cout << "\nMisc Tests\n" << flush;
-    params.ForceCheck = true;
+
+    //!default params
+    alg.applyDefaultParams(params);
+
+    params.minPstore = 0.1;
+    params.minPdisp = 0.05;
+    params.minR2store = 0.001;
+    params.minR2disp = 0.001;
+
+
+    params.r = 2;
+    params.fnameAL="examples/XL";
+    params.fnameAR="examples/XR";
+    params.fnameY="examples/Y";
+    params.fnameOutFiles="resultsSig";
+
 
     for(int th = 0; th < max_threads; th++)
     {
         cout << "****" << flush;
     }
+    struct Outputs out23 = {0};
+    cout << "**\n*" << flush;
+    alg.solve(params, out23, P_NEQ_B_OPT_MD);
 
-    cout << "*\n*" << flush;
+    print_output(out23, gemm_gflopsPsec);
+
+
+    cout << "*" << flush;
+
+    alg.applyDefaultParams(params);
+    params.use_fake_files = true;
+    params.ForceCheck = true;
 
     max_threads = 2;
+    int iters = 10;
 
     for (int th = 1; th < max_threads+1; th++)
     {
@@ -143,7 +169,7 @@ int main(int argc, char *argv[] )
         cout << "*" << flush;
         /******************************/
         params.n=10; params.l=4;  params.r=2;
-        params.t=16; params.tb=5; params.m=16; params.mb=3;
+        params.t=16; params.tb=3; params.m=16; params.mb=5;
 
 
         for (int i = 0; i < iters; i++)

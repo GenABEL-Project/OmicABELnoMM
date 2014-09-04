@@ -5,6 +5,9 @@
 #include "Utility.h"
 #include <fstream>
 #include <sstream>
+#include <iomanip>
+#include <limits>
+#include <bitset>
 
 typedef struct BufferElement type_buffElement;
 
@@ -33,6 +36,16 @@ struct fileh
 
     bool doublefileType;
     bool fakefiles;
+    bool storeBin;
+
+    long double min_p_disp;
+    float min_R2_disp;
+    bool disp_cov;
+    bool storePInd;
+
+    vector< string > ARnames;
+    vector< string > Ynames;
+    vector< string > ALnames;
 
     type_precision* Yb;
     type_precision* Ar;
@@ -40,14 +53,14 @@ struct fileh
     type_precision* B;
     type_buffElement* currentReadBuff;
     type_buffElement* Ar_currentReadBuff;
-    type_buffElement* currentWriteBuff;
+    list < resultH >* currentWriteBuff;
     int buff_count;
 
     queue<type_buffElement*> empty_buffers;
     queue<type_buffElement*> full_buffers;
 
-    queue<type_buffElement*> write_empty_buffers;
-    queue<type_buffElement*> write_full_buffers;
+    queue<list < resultH > *> write_empty_buffers;
+    queue<list < resultH > *> write_full_buffers;
 
     queue<type_buffElement*> ar_empty_buffers;
     queue<type_buffElement*> ar_full_buffers;
@@ -140,11 +153,10 @@ class AIOwrapper
         void reset_Y();
         void reset_AR();
 
-        void getCurrentWriteBuffers(type_precision* &B,type_precision* &R,type_precision* &SD2,type_precision* &P);
+        void getCurrentWriteBuffers(list < resultH >* &sigResults);
 
-        void write_OutFiles(type_precision* &B,type_precision* &R,type_precision* &SD2,type_precision* &P,  int blockSize);
-
-        void write_significantValues(int Y, int X_R, float R, float SD2, float P);
+        void write_OutFiles(list < resultH >* &sigResults);
+        void write_OutSignificant(list < resultH >* sigResults, int min_p_disp, bool disp_cov);
 
         string io_overhead;
 
@@ -181,18 +193,12 @@ class AIOwrapper
         type_fileh FHandler;
         type_fileh* Fhandler;
 
-        FILE* fp_Ar;
-        FILE* fp_B;
+
 
 
         databel_fvi* Yfvi;
         databel_fvi* ALfvi;
         databel_fvi* ARfvi;
-
-
-
-
-
 
 
 
