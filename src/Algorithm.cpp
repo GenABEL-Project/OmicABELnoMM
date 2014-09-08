@@ -437,7 +437,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
     AIOfile.initialize(params);//THIS HAS TO BE DONE FIRST! ALWAYS
 
-
+    //cout << params.n <<  "\n";
     //parameters read on AIOfile.initialize are then copied localy
     n = params.n; l = params.l; r = params.r; p = l+r;
     disp_cov = params.disp_cov;
@@ -515,7 +515,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
     list<long int>* al_nan_idxs = new list<long int>[l];
     list<long int>* y_nan_idxs = new list<long int>[y_block_size];
     list<long int>* ar_nan_idxs = new list<long int>[a_block_size*r];
-    int* YxALmiss=new int[y_block_size];
+    int* Ymiss=new int[y_block_size];
 
 
     type_precision* A = new type_precision[n * p * 1];
@@ -548,14 +548,14 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
     //matlab_print_matrix("AL", n,l,backupAL);
 
-    replace_nans(al_nan_idxs,1, backupAL, n, l);
-    for (int i = 1; i < l; i++)
-    {
-        al_nan_idxs[i]=al_nan_idxs[0];
-    }
+//    replace_nans(al_nan_idxs,1, backupAL, n, l);
+//    for (int i = 1; i < l; i++)
+//    {
+//        al_nan_idxs[i]=al_nan_idxs[0];
+//    }
 
 
-    sumSquares(backupAL,l,n,ssAL,al_nan_idxs);
+    sumSquares(backupAL,l,n,ssAL,0);
 
 
     //LAPACKE_dgesdd()
@@ -591,12 +591,12 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
         for (int jj = 0; jj < y_block_size; jj++)
         {
-            list<long int> nans = al_nan_idxs[0];
-            list<long int> nans2 = y_nan_idxs[jj];
-            nans.merge(nans2);
-            nans.sort();//!might not be needed
-            nans.unique();
-            YxALmiss[jj] = nans.size();
+//            list<long int> nans = al_nan_idxs[0];
+//            list<long int> nans2 = y_nan_idxs[jj];
+//            nans.merge(nans2);
+//            nans.sort();//!might not be needed
+//            nans.unique();
+            Ymiss[jj] = y_nan_idxs[jj].size();
         }
 
 
@@ -639,7 +639,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
             replace_nans_avgs(a_block_size, backupAR, n, r, ar_nan_idxs);
 
-            replace_with_zeros(al_nan_idxs, backupAR,  n, r, a_block_size);
+            //replace_with_zeros(al_nan_idxs, backupAR,  n, r, a_block_size);
 
 
 
@@ -793,7 +793,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
 
                 get_ticks(start_tick2);
-                hpc_statistics( YxALmiss[jj],n,AL,AR,a_block_size,&Y[jj*n],jj,ssY[jj],B,p,l,r,ssAL,ssAR,j*params.tb, i*params.mb*r, sigResults);
+                hpc_statistics( Ymiss[jj],n,AL,AR,a_block_size,&Y[jj*n],jj,ssY[jj],B,p,l,r,ssAL,ssAR,j*params.tb, i*params.mb*r, sigResults);
                 get_ticks(end_tick);
                 out.acc_stats += ticks2sec(end_tick,start_tick2);
                 /**************************/
@@ -831,15 +831,16 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
     out.duration = ticks2sec(end_tick ,start_tick);
 
 
-    out.gflops = y_iters * (gemm_flops(l, n, params.tb*1, 0) +
-                             a_iters * ( gemm_flops(params.mb*r, n, params.tb*1, 0) +
-                             params.tb *(  gemm_flops(l, 1*n, l, 0) + gemm_flops(l, n, params.mb *r, 0) +
-                                    params.mb * (
+    out.gflops = gemm_flops(l, n, params.t*1, 0) + gemm_flops(params.m*r, n, params.t*1, 0)+
+                             params.t *(  gemm_flops(l, 1*n, l, 0) + gemm_flops(l, n, params.m *r, 0) +
+                                    params.m * (
                                          gemm_flops(r, 1*n, r, 0) +
                                          (p * p * p / 3.0) /
-                                         1000.0/1000.0/1000.0 )) ))  ;
+                                         1000.0/1000.0/1000.0 ))   ;
 
-     out.gflops += params.t/1000.0*params.m/1000.0*(params.n*(params.p*2+3)+12)/1000.0;//hpcstatistics
+     out.gflops += params.t/1000.0*params.m/1000.0*((params.n)*(params.p*2+2))/1000.0;//hpcstatistics
+
+     //cout << (params.t/1000.0*params.m/1000.0*(params.n*(params.p*2+2))/1000.0)/out.acc_stats;
 
 
     AIOfile.finalize();
@@ -868,134 +869,116 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 void Algorithm::hpc_SSY(int n,int p, int l,int r, type_precision* __restrict  AL, type_precision* __restrict  AR, int a_amount, type_precision* __restrict y, type_precision* __restrict  B )
 {
 
-    int a_amount_padded = 0;
 
-    if(a_amount > 4)
+    float* __restrict xl;
+
+    float Xl_n[l*n];
+    float yred[n];
+    int n_idx = 0;
+    int xl_n_idx = 0;
+    for (int h=0; h < l; h++)
     {
-        int blk_size_k = min(1000,n);
-        int k_n_iters = (n+blk_size_k-1)/blk_size_k;
-
-        int a_rest = a_amount%4;
-        a_amount_padded = a_amount-a_rest;
-        int blk_size_i = min(1000,a_amount_padded);
-        int i_a_iters = (a_amount_padded+blk_size_i-1)/blk_size_i;
-        int max_blk_size_i = blk_size_i;
-
-        for (int k=0; k < k_n_iters; k++)
+        for (int k=0; k < n; k++)
         {
-            #pragma omp parallel for schedule(static) default(shared)
-            for (int i= 0; i < i_a_iters; i++)
+            xl = &AL[n*h];
+            if(AL[k]!=0 && y[k] !=0)
             {
-
-                for (int ii=0; ii < blk_size_i; ii+=4)//a_amount
+                if(h==0)
                 {
-
-                    SYY[(i*max_blk_size_i)+ii+0]   = 0;
-                    SYY[(i*max_blk_size_i)+ii+1]   = 0;
-                    SYY[(i*max_blk_size_i)+ii+2]   = 0;
-                    SYY[(i*max_blk_size_i)+ii+3]   = 0;
-
-                    type_precision* b1 = &B[(i*max_blk_size_i*p)+(ii+0)*p];
-                    type_precision* b2 = &B[(i*max_blk_size_i*p)+(ii+1)*p];
-                    type_precision* b3 = &B[(i*max_blk_size_i*p)+(ii+2)*p];
-                    type_precision* b4 = &B[(i*max_blk_size_i*p)+(ii+3)*p];
-
-                    int ar_idx1 = (i*max_blk_size_i*n*r)+(ii+0)*(n*r)-l*n;
-                    int ar_idx2 = (i*max_blk_size_i*n*r)+(ii+1)*(n*r)-l*n;
-                    int ar_idx3 = (i*max_blk_size_i*n*r)+(ii+2)*(n*r)-l*n;
-                    int ar_idx4 = (i*max_blk_size_i*n*r)+(ii+3)*(n*r)-l*n;
-
-                    int next_blk_size_k = min((k+1)*blk_size_k,n);
-
-
-                    for (int kk=k*blk_size_k; kk < next_blk_size_k; kk++)//n???????????????????
-                    {
-                        type_precision xl;
-                        type_precision xr;
-                        type_precision sy[4];
-
-                        if(AL[kk]!=0 && y[kk] !=0)
-                        {
-                            sy[0]=y[kk]; sy[1]=y[kk]; sy[2]=y[kk]; sy[3]=y[kk];
-
-
-                            for (int h=0; h < l; h++)
-                            {
-                                xl = AL[n*h+kk];
-                                sy[0]-= xl*b1[h];
-                                sy[1]-= xl*b2[h];
-                                sy[2]-= xl*b3[h];
-                                sy[3]-= xl*b4[h];
-                            }
-                            for (int h=l; h < p; h++)
-                            {
-                                sy[0]-= AR[ar_idx1+n*h+kk]*b1[h];
-                                sy[1]-= AR[ar_idx2+n*h+kk]*b2[h];
-                                sy[2]-= AR[ar_idx3+n*h+kk]*b3[h];
-                                sy[3]-= AR[ar_idx4+n*h+kk]*b4[h];
-                            }
-
-                            SYY[(i*max_blk_size_i)+ii+0] += sy[0]*sy[0];
-                            SYY[(i*max_blk_size_i)+ii+1] += sy[1]*sy[1];
-                            SYY[(i*max_blk_size_i)+ii+2] += sy[2]*sy[2];
-                            SYY[(i*max_blk_size_i)+ii+3] += sy[3]*sy[3];
-
-                        }
-
-                    }
-
-
-
+                    yred[n_idx] =  y[k];
+                    n_idx++;
                 }
+                Xl_n[xl_n_idx] = xl[k];
+                xl_n_idx++;
+            }
+        }
+    }
 
-                blk_size_i = min(max_blk_size_i,a_amount_padded-(i+1)*blk_size_i);
+//        matlab_print_matrix("yred",1,n_idx,yred);
+//        matlab_print_matrix("Y",1,n,y);
+
+//    matlab_print_matrix("Xl",1,n-n/2,&AL[n/2*(l-1)]);
+//    matlab_print_matrix("Xl_n",1,n_idx-n_idx/2,&Xl_n[n_idx/2*(l-1)]);
+
+    //cout << n_idx << " ";
+
+    //#pragma omp parallel for schedule(static) default(shared)
+    for (int ii= 0; ii < a_amount; ii++)
+    {
+        int ar_idx = ii*(n*r);
+
+        float* __restrict b = &B[ii*p];
+
+        float* __restrict xr;
+        float syvec[n_idx];
+        float* __restrict sy = syvec;
+
+
+
+        float XR_n[r*n_idx];
+
+        int xr_idx=0;
+        for (int h=0; h < r; h++)
+        {
+            xr = &AR[ar_idx+n*h];
+            for (int k=0; k < n; k++)
+            {
+                if(AL[k]!=0 && y[k] !=0)
+                {
+                    XR_n[xr_idx] = xr[k];
+                    xr_idx++;
+                }
             }
         }
 
+//
+//    matlab_print_matrix("XR",1,n,&AR[ar_idx+n*(r-1)]);
+//
+//    matlab_print_matrix("XR_n",1,n_idx,&XR_n[n_idx*(r-1)]);
 
-    }
+//        for (int k=0; k < n_idx; k++)
+//        {
+//            sy[k] = yred[k];
+//        }
+        memcpy(sy,yred,n_idx*sizeof(float));
+//        matlab_print_matrix("yred",1,n_idx,yred);
+//        matlab_print_matrix("SY",1,n_idx,sy);
 
-
-    for (int ii= a_amount_padded; ii < a_amount; ii++)
-    {
-        //cout << ii <<  ":" <<a_amount_padded << ":" << a_amount << " ";
-        type_precision* b = &B[ii*p];
-
-        int ar_idx = ii*(n*r)-l*n;
 
         SYY[ii] = 0;
 
-        for (int k=0;  k < n; k++)
+        for (int h=0; h < l; h++)
         {
-            type_precision* xl;
-            type_precision* xr;
-            type_precision sy;
+            xl = &Xl_n[n_idx*h];
 
-            if(AL[k]!=0 && y[k] !=0)
+            for (int k=0; k < n_idx; k++)
             {
-                sy=y[k];
-
-                for (int h=0; h < l; h++)
-                {
-                    xl = &AL[n*h];
-                    sy-= xl[k]*b[h];
-                }
-                for (int h=l; h < p; h++)
-                {
-                    xr = &AR[ar_idx+n*h];
-                    sy-= xr[k]*b[h];
-                }
-
-                SYY[ii] += sy*sy;
+                sy[k] -= xl[k]*b[h];
             }
         }
-    }
 
+        for (int h=l; h < p; h++)
+        {
+            xr = &XR_n[n_idx*(h-l)];
+
+            for (int k=0; k < n_idx; k++)
+            {
+                sy[k] -= xr[k]*b[h];
+            }
+        }
+
+
+        for (int k=0; k < n_idx; k++)
+        {
+            SYY[ii] += sy[k]*sy[k];
+        }
+
+    }
 
 }
 
 
-void Algorithm::hpc_statistics(int YxALmiss, int n,
+void Algorithm::hpc_statistics(int Ymiss, int n,
                 type_precision* __restrict  AL, type_precision* __restrict  AR, int a_amount, type_precision* __restrict y, int jj, float varY, type_precision* __restrict  B,
                 int p, int l,int r,type_precision* __restrict var_xL,type_precision* __restrict var_xR, int y_blck_offset, int A_blck_offset, list < resultH >* __restrict sigResults)
 {
@@ -1011,7 +994,7 @@ void Algorithm::hpc_statistics(int YxALmiss, int n,
 
         sigResults->clear();
 
-        int n_not_nans = YxALmiss;
+        int n_not_nans = Ymiss;
         //cout << " " <<  nans.size() << "\t";
         int n_corrected = n-n_not_nans-p;
         float varFactor = (float)(n_corrected+p)/(float)n;
@@ -1051,9 +1034,10 @@ void Algorithm::hpc_statistics(int YxALmiss, int n,
 
 
             Syy=SYY[ii];
+            //cout << Syy << " ";
 
             //R2[ay_idx] = 1-(Syy/(SST*varFactor));
-            res[thread_id].R2 = 1-((Syy/(n_corrected-1))/(SST*varFactor/(n-1)));
+            res[thread_id].R2 = 1-((Syy/(n_corrected-1))/(SST/(n-1)));
             //R2 = SReg/(SST*varFactor);
 
             //cout << n_corrected <<" "<< Syy/(n_corrected-p-1) << " " << SST/(n-1) << " " << R2[ay_idx] << endl;
@@ -1083,6 +1067,7 @@ void Algorithm::hpc_statistics(int YxALmiss, int n,
 
 
                 t=fabs(b[h]/SE);
+                //cout << t << " ";
 
 
 
@@ -1155,8 +1140,8 @@ void Algorithm::sumSquares(type_precision* Data, int cols, int rows, type_precis
         type_precision* x = &Data[h*rows];
 
         int n = rows;
-//        if(indexs_Data)
-//            n =n-indexs_Data[h].size();
+        if(indexs_Data)
+            n =n-indexs_Data[h].size();
 
         for (int k=0; k < rows; k++)
         {

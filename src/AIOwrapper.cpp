@@ -52,7 +52,11 @@ void AIOwrapper::initialize(struct Settings &params)
         Yfvi  = load_databel_fvi( (Fhandler->fnameY+".fvi").c_str() );
         ALfvi = load_databel_fvi( (Fhandler->fnameAL+".fvi").c_str() );
         ARfvi = load_databel_fvi( (Fhandler->fnameAR+".fvi").c_str() );
+
+
+
         params.n = ALfvi->fvi_header.numObservations;
+        Fhandler->fileN = params.n;
         params.m = ARfvi->fvi_header.numVariables/params.r;
         params.t = Yfvi->fvi_header.numVariables;
         params.l = ALfvi->fvi_header.numVariables;
@@ -112,7 +116,10 @@ void AIOwrapper::initialize(struct Settings &params)
 
     //params.fname_excludelist = "exclfile.txt";
     int excl_count = 0;
+    int Almissings = 0;
     Fhandler->excl_List = new list< pair<int,int> >();
+
+
 
     if(params.fname_excludelist.size()==0)
     {
@@ -123,7 +130,14 @@ void AIOwrapper::initialize(struct Settings &params)
         read_excludeList( Fhandler->excl_List,excl_count,params.n,params.fname_excludelist);
     }
 
-    params.n -= excl_count;
+    if(!Fhandler->fakefiles)
+    {
+
+        removeALmissings(Fhandler->excl_List,params,Almissings);
+
+    }
+
+    params.n -= (excl_count + Almissings);
 
     params.p = params.l + params.r;
 
@@ -373,7 +387,7 @@ void* AIOwrapper::async_io( void *ptr )
                 {
                     for (list<  pair<int,int>  >::iterator it=excl_List->begin(); it != excl_List->end(); ++it)
                     {
-                        file_pos = Fhandler->n*i + it->first;
+                        file_pos = Fhandler->fileN*i + it->first;
                         fseek ( fp_Y , file_pos*sizeof(type_precision) , SEEK_SET );
                         chunk_size_buff = it->second;
 
@@ -445,7 +459,7 @@ void* AIOwrapper::async_io( void *ptr )
                 {
                     for (list<  pair<int,int>  >::iterator it=excl_List->begin(); it != excl_List->end(); ++it)
                     {
-                        file_pos = Fhandler->n*i + it->first;
+                        file_pos = Fhandler->fileN*i + it->first;
                         fseek ( fp_Ar , file_pos*sizeof(type_precision) , SEEK_SET );
 
                         chunk_size_buff = it->second;
@@ -1033,9 +1047,120 @@ void AIOwrapper::finalize_AR()
 
 }
 
+void AIOwrapper::removeALmissings(list< pair<int,int> >* excl_List,struct Settings params, int &Almissings)
+{
+    float* tempAL = new float[params.n*params.l];
+
+    FILE *fp;
+    fp = fopen((Fhandler->fnameAL+".fvd").c_str(), "rb");
+    if(fp == 0)
+    {
+        cout << "Error Reading File " << Fhandler->fnameAL << endl;
+        exit(1);
+    }
+    size_t result = fread (tempAL,sizeof(type_precision),params.n*params.l,fp); result++;
+    fclose(fp);
+
+    int prev=0;
+    list <int> missings;
+
+    for (int h=0; h < params.l; h++)
+    {
+        for (int i=0; i < params.n; i++)
+        {
+            if(isnan(tempAL[h*params.n+i]))
+            {
+                splitpair(i,excl_List,params );
+                missings.push_back(i);
+            }
+        }
+    }
+
+    missings.sort();
+    missings.unique();
+    Almissings = missings.size();
+
+    delete tempAL;
+
+
+}
+
+void AIOwrapper::splitpair(int value, list< pair<int,int> >* excl_List,struct Settings params)
+{
+
+
+    int buffsize = 0;
+
+    for (list<  pair<int,int>  >::iterator it=excl_List->begin(); it != excl_List->end(); ++it)
+    {
+        int inipos = it->first;
+        int endpos = it->first+it->second-1;
+        int origbuffsize = it->second;
+
+        if(value <=  endpos)
+        {
+           // cout << "(" << inipos<< ":" << endpos << ") ";
+
+            if(value > inipos && value < endpos)
+            {
+                buffsize = value-inipos;
+                excl_List->insert (it,make_pair(inipos,buffsize));
+                buffsize = origbuffsize-buffsize-1;
+                excl_List->insert (it,make_pair(value+1,buffsize));
+//                cout << inipos<< ":" << endpos << " ";
+//                it--;it--;
+//                cout << it->first<< ":" << it->second << " ";
+//                 it++;
+//                cout << it->first<< ":" << it->second << " | ";
+//                it++;
+
+                excl_List->remove((*it));
+
+                it = excl_List->end();
+            }
+            else
+            {
+                if(value == inipos && inipos != endpos)
+                {
+                    excl_List->insert (it,make_pair(min(inipos+1,params.n),origbuffsize-1));
+//                    cout << inipos<< ":" << endpos << " ";
+//                    it--;
+//                    cout << it->first<< ":" << it->second << " | ";
+//                    it++;
+
+                    excl_List->remove((*it));
+                    it = excl_List->end();
+                }
+                else
+                {
+                     if(value == endpos && endpos != inipos)
+                     {
+                        excl_List->insert (it,make_pair(inipos,origbuffsize-1));
+//                        cout << inipos<< ":" << endpos << " ";
+//                        it--;
+//                        cout << it->first<< ":" << it->second << " | ";
+//                        it++;
+
+                        excl_List->remove((*it));
+                        it = excl_List->end();
+                     }
+                     else
+                     {
+                        if(value == inipos && value == endpos && endpos == inipos)
+                        {
+                            excl_List->remove((*it));
+                            it = excl_List->end();
+                        }
+                     }
+                }
+            }
+        }
+    }
+}
 
 void AIOwrapper::load_AL(type_precision** AL)
 {
+
     if(Fhandler->fakefiles)
     {
         FILE *fp;
@@ -1074,7 +1199,8 @@ void AIOwrapper::load_AL(type_precision** AL)
         {
             for (list<  pair<int,int>  >::iterator it=excl_List->begin(); it != excl_List->end(); ++it)
             {
-                file_pos = i*Fhandler->n+ it->first;
+
+                file_pos = i*Fhandler->fileN+ it->first;
                 fseek ( fp , file_pos*sizeof(type_precision) , SEEK_SET );
                 chunk_size_buff = it->second;
 
@@ -1082,6 +1208,8 @@ void AIOwrapper::load_AL(type_precision** AL)
                 buff_pos += chunk_size_buff;
             }
         }
+
+        //cout << Fhandler->n;
 
 
 //        size_t result = fread (Fhandler->AL,sizeof(type_precision),Fhandler->l*Fhandler->n,fp);

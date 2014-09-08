@@ -8,7 +8,7 @@ Features:
 -Allow for runtime dosage models
 
 Optimizations:
--Remove individuals with covariates missing
+
 -Reduce memcpy overhead of XR and XR XL factors
 -Reduce computation time of XR and XR XL factors (do GEMMS)
 
@@ -17,8 +17,17 @@ Optimizations:
 
 Changes
 -------------
-4 -9 - 2014
+-------------
 
+8-9-2014
+--------------
+Removed individuals with covariates missing
+Fixed SST Bug
+Fixed Individuals Exclude list Bug
+Added faster SST calculation
+
+4-9-2014
+--------------
 First user usable version.
 Several Bug-fixes.
 Added parameters to control thresholds of significance.

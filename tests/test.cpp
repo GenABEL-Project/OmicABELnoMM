@@ -87,14 +87,14 @@ int main(int argc, char *argv[] )
     cout << "Perfromance Test\n" << flush;
 
     double duration, gemmgflops, gemm_gflopsPsec;
-    cpu_benchmark((1*1024.0),3,duration,gemmgflops);
+    cpu_benchmark((1024.0),5,duration,gemmgflops);
     gemm_gflopsPsec = gemmgflops/duration;
     cout << "\nGEMM GFLOPS/s " << gemm_gflopsPsec << endl;
 
     struct Outputs out2 = {0};
-    int factor = 10;
-    params.n=4000; params.l=5;  params.r=1;
-    params.t=100*factor; params.tb=min(1000,100*factor); params.m=100*factor; params.mb=min(200,100*factor);
+    int factor = 0;
+    params.n=2000; params.l=3;  params.r=1;
+    params.t=800; params.tb=min(800,params.t); params.m=1600; params.mb=min(1600,params.m);
     alg.solve(params, out2, P_NEQ_B_OPT_MD);
 
     print_output(out2, gemm_gflopsPsec);

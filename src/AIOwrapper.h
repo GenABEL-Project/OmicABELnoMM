@@ -66,7 +66,7 @@ struct fileh
     queue<type_buffElement*> ar_full_buffers;
 
     int index;
-
+    int fileN;
     int n;
     int r;
     int l;
@@ -180,6 +180,10 @@ class AIOwrapper
 
         void prepare_OutFiles(int max_b_blockSize, int p);
         void finalize_OutFiles();
+
+
+        void removeALmissings(list< pair<int,int> >* excl_List,struct Settings params,int &Almissings);
+        void splitpair(int value, list< pair<int,int> >* excl_List,struct Settings params);
 
 
         static void* async_io(void *ptr );

@@ -44,10 +44,10 @@ cd ../../
 
 ON the folder GWAS_PROJECT
 
-svn checkout svn+ssh://developername@svn.r-forge.r-project.org/svnroot/genabel/OmicABELnoMM
+svn checkout svn://svn.r-forge.r-project.org/svnroot/genabel/pkg/OmicABELnoMM/
 
 cd OmicABELnoMM
-
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:path_to_/OmicABELnoMM/libs/lib
 autoreconf -fi
 
 ./configure
@@ -114,7 +114,9 @@ sudo apt-get install liblapacke-dev
 -e Minimum R2 to store in .bin will be above -10
 -s Significance to store in .bin will be P-val's below 0.2
 
+----------------------------------------getcpu info
 
+lscpu
 
 
 
