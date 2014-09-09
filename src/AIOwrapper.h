@@ -78,6 +78,7 @@ struct fileh
 
     int model;
 
+
     int Ar_Amount;
     int Ar_blockSize;
     int Ar_to_readSize;
@@ -93,6 +94,7 @@ struct fileh
     bool reset_wait;
     bool use_dosages;
     bool add_dosages;
+    int dosage_skip;
 
     int seed;
     int Aseed;

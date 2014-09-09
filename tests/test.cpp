@@ -117,9 +117,9 @@ int main(int argc, char *argv[] )
     params.fnameAR="examples/XR";
     params.fnameY="examples/Y";
     params.fnameOutFiles="resultsSig";
-//    params.dosages = true;
-//    params.model = 4;
-//    params.fname_dosages = "examples/dosages_2.txt";
+    params.dosages = true;
+    params.model = 0;
+    params.fname_dosages = "examples/dosages_2.txt";
 
 
     for(int th = 0; th < max_threads; th++)

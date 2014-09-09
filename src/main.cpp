@@ -236,35 +236,35 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             break;
 
         case 'j':
-            params.model = 1;
+            params.model = 0;
             params.dosages = true;
 
             cout << "-j Using Additive Model with (2*AA,1*AB,0*BB) effects"<< endl;
             break;
 
         case 'k':
-            params.model = 2;
+            params.model = 1;
             params.dosages = true;
 
             cout << "-j Using Dominant Model with (1*AA,1*AB,0*BB) effects"<< endl;
             break;
 
         case 'l':
-            params.model = 3;
+            params.model = 2;
             params.dosages = true;
 
-            cout << "-j Using Recessive Model with (0*AA,0*AB,1*BB) effects"<< endl;
+            cout << "-j Using Recessive Model with (1*AA,0*AB,0*BB) effects"<< endl;
             break;
 
         case 'z':
-            params.model = 4;
+            params.model = 3;
             params.dosages = true;
 
             cout << "-z Using Custom Linear Model with parameters read from the file "<< params.fname_dosages << endl;
             break;
 
         case 'y':
-            params.model = 5;
+            params.model = 4;
             params.dosages = true;
 
             cout << "-z Using Custom Additive Model with parameters read from the file "<< params.fname_dosages << endl;

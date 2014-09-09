@@ -32,7 +32,7 @@ void AIOwrapper::initialize(struct Settings &params)
 
 
     Fhandler->use_dosages = params.dosages;
-    if(params.dosages && Fhandler->model ==-1)
+    if(params.dosages && params.model ==-1)
     {
         cout << "Requested dosages model wihtout a valid model!" << endl;
         exit(1);
@@ -40,6 +40,9 @@ void AIOwrapper::initialize(struct Settings &params)
     Fhandler->not_done = true;
     Fhandler->model = params.model;
     Fhandler->fname_dosages = params.fname_dosages;
+    Fhandler->dosage_skip = 0;
+    Fhandler->fileR = 0;
+    Fhandler->add_dosages = false;
 
 
 
@@ -91,26 +94,10 @@ void AIOwrapper::initialize(struct Settings &params)
 
 
 
-        int Aname_idx=params.n*ARfvi->fvi_header.namelength;//skip the names of the rows
-        if(Fhandler->use_dosages)
-        {
-            for(int i = 0; i < params.m; i++)
-            {
-                Fhandler->ARnames.push_back(string(&(ARfvi->fvi_data[Aname_idx])));
-                Aname_idx += ARfvi->fvi_header.namelength*Fhandler->fileR;
-            }
-        }
-        else
-        {
-            for(int i = 0; i < params.m*params.r; i++)
-            {
-                Fhandler->ARnames.push_back(string(&(ARfvi->fvi_data[Aname_idx])));
-                Aname_idx += ARfvi->fvi_header.namelength;
-            }
-        }
 
 
-        Aname_idx=params.n*ALfvi->fvi_header.namelength;
+
+        int Aname_idx=params.n*ALfvi->fvi_header.namelength;
         for(int i = 0; i < params.l; i++)
         {
             Fhandler->ALnames.push_back(string(&(ALfvi->fvi_data[Aname_idx])));
@@ -174,37 +161,47 @@ void AIOwrapper::initialize(struct Settings &params)
 
         break;
         case 0://add
-            if(Fhandler->fileR != 3)
+            if(Fhandler->fileR != 3 && Fhandler->fileR != 2)
             {
-                cout << "The amount of columns per Independent Variable (--ngpred) is not 3 for a valid Additive Model!" << endl;
+                cout << "The amount of columns per Independent Variable (--ngpred) is not 2 or 3 for a valid Additive Model!" << endl;
                 exit(1);
             }
-            Fhandler->dosages[0] = 2;Fhandler->dosages[1] = 1;Fhandler->dosages[2] = 0;
+            Fhandler->dosages[0] = 2;Fhandler->dosages[1] = 1;//Fhandler->dosages[2] = 0;
+            if(Fhandler->fileR == 3)
+                Fhandler->dosage_skip = 1;//last columns is irrelevant
             params.r = 1;
             Fhandler->add_dosages = true;
         break;
         case 1://dom
-            if(Fhandler->fileR != 3)
+            if(Fhandler->fileR != 3 && Fhandler->fileR != 2)
             {
-                cout << "The amount of columns per Independent Variable (--ngpred) is not 3 for a valid Dominant Model!" << endl;
+                cout << "The amount of columns per Independent Variable (--ngpred) is not 2 or 3 for a valid Dominant Model!" << endl;
                 exit(1);
             }
-            Fhandler->dosages[0] = 1;Fhandler->dosages[1] = 1;Fhandler->dosages[2] = 0;
+            Fhandler->dosages[0] = 1;Fhandler->dosages[1] = 1;//Fhandler->dosages[2] = 0;
+            if(Fhandler->fileR == 3)
+                Fhandler->dosage_skip = 1;//last columns is irrelevant
             params.r = 1;
             Fhandler->add_dosages = true;
         break;
         case 2://rec
-            if(Fhandler->fileR != 3)
+            if(Fhandler->fileR != 3 && Fhandler->fileR != 2)
             {
-                cout << "The amount of columns per Independent Variable (--ngpred) is not 3 for a valid Recessive Model!" << endl;
+                cout << "The amount of columns per Independent Variable (--ngpred) is not 2 or 3 for a valid Recessive Model!" << endl;
                 exit(1);
             }
-            Fhandler->dosages[0] = 1;Fhandler->dosages[1] = 0;Fhandler->dosages[2] = 0;
+            Fhandler->dosages[0] = 1;//Fhandler->dosages[1] = 0;Fhandler->dosages[2] = 0;
+            Fhandler->dosage_skip = 2;
+            if(Fhandler->fileR == 3)
+                (Fhandler->dosage_skip)--;//last 2 columns is irrelevant
             params.r = 1;
             Fhandler->add_dosages = true;
         break;
         case 3://linear
+
             read_dosages(params.fname_dosages,Fhandler->fileR,Fhandler->dosages);
+            Fhandler->add_dosages = false;
+            Fhandler->dosage_skip = 0 ;
         break;
         case 4://additive
             read_dosages(params.fname_dosages,Fhandler->fileR,Fhandler->dosages);
@@ -214,10 +211,32 @@ void AIOwrapper::initialize(struct Settings &params)
         }
     }
 
+
+
+
+
     params.p = params.l + params.r;
 
     if(!Fhandler->fakefiles)
     {
+
+        int Aname_idx=params.n*ARfvi->fvi_header.namelength;//skip the names of the rows
+        if(Fhandler->use_dosages && Fhandler->add_dosages)
+        {
+            for(int i = 0; i < params.m; i++)
+            {
+                Fhandler->ARnames.push_back(string(&(ARfvi->fvi_data[Aname_idx])));
+                Aname_idx += ARfvi->fvi_header.namelength*Fhandler->fileR;
+            }
+        }
+        else
+        {
+            for(int i = 0; i < params.m*params.r; i++)
+            {
+                Fhandler->ARnames.push_back(string(&(ARfvi->fvi_data[Aname_idx])));
+                Aname_idx += ARfvi->fvi_header.namelength;
+            }
+        }
 
         if(params.l > 255 || params.p > 255 || params.n > 65535)//can remove if fixed for output files
         {
@@ -245,11 +264,11 @@ void AIOwrapper::initialize(struct Settings &params)
         fp_InfoResults.write( (char*)&params.storePInd,sizeof(bool));
 
 
-        int Aname_idx=(params.n+1)*ALfvi->fvi_header.namelength;//skip the names of the rows + intercept
+        Aname_idx=(params.n+1)*ALfvi->fvi_header.namelength;//skip the names of the rows + intercept
         fp_InfoResults.write( (char*)&ALfvi->fvi_data[Aname_idx],ALfvi->fvi_header.namelength*(params.l-1)*sizeof(char));
 
         Aname_idx=params.n*ARfvi->fvi_header.namelength;//skip the names of the rows
-        if(Fhandler->use_dosages)
+        if(Fhandler->use_dosages && Fhandler->add_dosages)
         {
             for(int i = 0; i < params.m; i++)
             {
@@ -286,8 +305,7 @@ void AIOwrapper::initialize(struct Settings &params)
 
 
 
-
-
+    //
 
 }
 
@@ -540,52 +558,53 @@ void* AIOwrapper::async_io( void *ptr )
             }
             else
             {
+                //cout << " "<< Fhandler->use_dosages << " " <<  Fhandler->add_dosages <<" " <<  Fhandler->model << " " << Fhandler->fileR << " " << Fhandler->dosage_skip << endl;
+
 
                 list< pair<int,int> >* excl_List = Fhandler->excl_List;
 
                 int chunk_size_buff;
-                int buff_pos=0;
+
                 int file_pos;
-                float* destination = Fhandler->ArDosage;
+                int buff_pos = 0;
 
                 if(Fhandler->use_dosages)
                 {
 
-                    if(!Fhandler->add_dosages)
-                    {
-                        destination = tobeFilled->buff;//no need to use temp variable
-                    }
 
                     for(int i = 0; i < tmp_ar_blockSize; i++)
                     {
                         buff_pos=0;
-                        for(int ii = 0; ii < Fhandler->fileR; ii++)
+                        for(int ii = 0; ii < (Fhandler->fileR-Fhandler->dosage_skip); ii++)
                         {
+
                             for (list<  pair<int,int>  >::iterator it=excl_List->begin(); it != excl_List->end(); ++it)
                             {
-                                file_pos = Fhandler->fileN*i + it->first;
+                                file_pos = i*(Fhandler->fileN*Fhandler->fileR)+ ii*Fhandler->fileN + it->first;
                                 fseek ( fp_Ar , file_pos*sizeof(type_precision) , SEEK_SET );
 
                                 chunk_size_buff = it->second;
 
-                                size_t result = fread (&(destination[buff_pos]),sizeof(type_precision),chunk_size_buff,fp_Ar); result++;
+                                size_t result = fread (&(Fhandler->ArDosage[buff_pos]),sizeof(type_precision),chunk_size_buff,fp_Ar); result++;
                                 buff_pos += chunk_size_buff;
                             }
                         }
 
                         if(Fhandler->add_dosages)
                         {
+                            //cout << "adding ";
                             cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
-                                Fhandler->n, 1, Fhandler->fileR, 1.0, Fhandler->ArDosage, Fhandler->n, Fhandler->dosages,Fhandler->fileR ,
+                                Fhandler->n, 1, Fhandler->fileR-Fhandler->dosage_skip, 1.0, Fhandler->ArDosage, Fhandler->n, Fhandler->dosages,Fhandler->fileR-Fhandler->dosage_skip ,
                                     0.0, &(tobeFilled->buff[i*Fhandler->n]), Fhandler->n);
                         }
                         else
                         {
+                            //cout << "mult ";
                             for(int ii = 0; ii < Fhandler->fileR; ii++)
                             {
                                 for(int k=0; k < Fhandler->n; k++)
                                 {
-                                    destination[Fhandler->n*ii+k] *= Fhandler->dosages[ii];
+                                   tobeFilled->buff[i*Fhandler->n*Fhandler->r + ii*Fhandler->n+k] = Fhandler->ArDosage[Fhandler->n*ii+k] * Fhandler->dosages[ii];
                                 }
                             }
                         }
@@ -607,7 +626,6 @@ void* AIOwrapper::async_io( void *ptr )
                             chunk_size_buff = it->second;
                             size_t result = fread (&tobeFilled->buff[buff_pos],sizeof(type_precision),chunk_size_buff,fp_Ar); result++;
                             buff_pos += chunk_size_buff;
-
 
                         }
                     }
