@@ -29,6 +29,8 @@ struct fileh
 
 
     string fnameOutFiles;
+    string fname_dosages;
+
 
 
     list< pair<int,int> >* excl_List;
@@ -49,6 +51,7 @@ struct fileh
 
     type_precision* Yb;
     type_precision* Ar;
+    type_precision* ArDosage;
     type_precision* AL;
     type_precision* B;
     type_buffElement* currentReadBuff;
@@ -67,10 +70,13 @@ struct fileh
 
     int index;
     int fileN;
+    int fileR;
     int n;
     int r;
     int l;
     int p;
+
+    int model;
 
     int Ar_Amount;
     int Ar_blockSize;
@@ -85,9 +91,16 @@ struct fileh
 
     bool not_done;
     bool reset_wait;
+    bool use_dosages;
+    bool add_dosages;
 
     int seed;
     int Aseed;
+
+    float* dosages;
+    vector< vector <float> > cov_2_Terms;
+    vector< vector <float> > x_Terms;
+    vector< vector <float> > xcov_2_Terms;
 
     pthread_mutex_t m_more     ;
     pthread_cond_t  condition_more   ;
@@ -166,6 +179,7 @@ class AIOwrapper
     private:
 
         void read_excludeList(list< pair<int,int> >* excl, int &excl_count, int max_excl, string fname_excludeList);
+        void read_dosages(string fname_dosages, int expected_count, float* vec);
 
 
         void prepare_AR( int desired_blockSize, int n, int totalR, int columnsR);

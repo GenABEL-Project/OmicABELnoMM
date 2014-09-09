@@ -396,8 +396,10 @@ void Algorithm::applyDefaultParams(struct Settings &params)
     params.disp_cov = false;
     params.storePInd = false;
     params.storeBin = false;
+    params.dosages = false;
     params.threads = 1;
     params.r = 1;
+    params.model = -1;
 
 
     params.minR2store = 0.00001;
@@ -434,7 +436,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
     if(params.minPdisp > params.minPstore || params.storeBin)
         params.minPstore = params.minPdisp;
 
-
+    AIOwrapper AIOfile;//leave here to avoid memory errors of reusing old threads
     AIOfile.initialize(params);//THIS HAS TO BE DONE FIRST! ALWAYS
 
     //cout << params.n <<  "\n";
@@ -456,6 +458,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
     int y_amount = params.t;
     int y_block_size = params.tb;  // kk
+    //cout << "yt:"<< y_amount << " oybz:"<<y_block_size << flush;
 
     int a_amount = params.m;
     int a_block_size = params.mb;
@@ -464,7 +467,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
     int y_iters = (y_amount + y_block_size - 1) / y_block_size;
 
-    //cout << y_iters << " " << a_iters << endl;
+    //cout << "yiters:" <<  y_iters << " aiters:" << a_iters << endl;
 
 
     lda = n;
@@ -581,11 +584,13 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
         get_ticks(start_tick2);
 
         AIOfile.load_Yblock(&Y, y_block_size);
+        //cout << "ybz:"<< y_block_size << " " << flush;
 
         get_ticks(end_tick);
         out.acc_loady += ticks2sec(end_tick,start_tick2);
 
         get_ticks(start_tick2);
+
         replace_nans(&y_nan_idxs[0],y_block_size, Y, n,1);
         sumSquares(Y,y_block_size,n,ssY,y_nan_idxs);
 

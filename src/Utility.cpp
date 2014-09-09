@@ -141,10 +141,12 @@ void replace_nans(list<long int>* indexs_vec, int vec_blocksize, type_precision*
                 int idx = k*cols*rows+i*rows+j;
 
                 //cout << idx;
+                if(idx >= rows*cols*vec_blocksize)
+                    exit(1);
 
-                if(/*idx < rows*cols*vec_blocksize &&*/ isnan( vec[idx] ))
+
+                if(isnan( vec[idx] ))
                 {
-
                     vec[idx] = 0;
                     if(indexs_vec)
                     {

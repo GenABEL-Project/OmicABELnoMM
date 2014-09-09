@@ -26,7 +26,7 @@ string helpcmd_expl =
 Optional: \n\t\
 -n --ngpred \t <#SNPcols> Number of columns in the geno file that represent a single SNP \n\t\
 -t --thr    \t <#CPUs> Number of computing threads to use to speed computations \n\t\
--x --excl   \t <path/filename> file containing list of individuals to exclude from input files \n\t\
+-x --excl   \t <path/filename> file containing list of individuals to exclude from input files, (see example file) \n\t\
 -d --pdisp  \t <0.0~1.0> Value to use as maximum threshold for significance.\n\t\
 \t\t Results with P-values UNDER this threshold will be displayed in the putput .txt file \n\t\
 -r --rdisp  \t <-10.0~1.0> Value to use as minimum threshold for R2. \n\t\
@@ -35,7 +35,17 @@ Optional: \n\t\
 -s --psto   \t <0.0~1.0>  Results with P-values UNDER this threshold will be displayed in the putput binary files \n\t\
 -e --rsto   \t <-10.0~1.0> Results with R2-values ABOVE this threshold will be stored in the putput binary files \n\t\
 -i --fdcov  \t Flag that forces to include covariates as part of the results that are stored in .txt and binary files \n\t\
--f --fdgen  \t Flag that forces to consider all included results (causes the analisis to ignores ALL threshold values).";
+-f --fdgen  \t Flag that forces to consider all included results (causes the analisis to ignores ALL threshold values). \n\t\
+-j --additive  \t Flag that runs the analisis with an Additive Model with (2*AA,1*AB,0*BB) effects \n\t\
+-k --dominant  \t Flag that runs the analisis with an Dominant Model with (1*AA,1*AB,0*BB) effects \n\t\
+-l --recessive \t Flag that runs the analisis with an Recessive Model with (1*AA,0*AB,0*BB) effects \n\t\
+-z --mylinear \t <path/filename> to read Factors 'f_i' for a Custom Linear Model with f1*X1,f2*X2,f3*X3...fn*X_ngpred as effects,\n\t\
+              \t each column of each independent variable will be multiplied with the specified factors. \n\t\
+              \t Formula: y~alpha*cov + beta_1*f1*X1 + beta_2*f2*X2 +...+ beta_n*fn*Xn, (see example files!) \n\t\
+-y --myaddit  \t <path/filename> to read Factors 'f_i' for a Custom Additive Model with (f1*X1,f2*X2,f3*X3...fn*X_ngpred) as effects,\n\t\
+              \t each column of each independent variable will be multiplied with the specified factors and then added together. \n\t\
+              \t Formula: y~alpha*cov + beta*(f1*X1 + f2*X2 +...+ fn*Xn), (see example files!) \n\t\
+";
 
 
 
@@ -89,6 +99,11 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             {"rsto",    required_argument, 0, 'e'},//
             {"fdcov",    no_argument, 0, 'i'},//
             {"fdgen",    no_argument, 0, 'f'},//
+            {"additive",    no_argument, 0, 'j'},//
+            {"dominant",   no_argument, 0, 'k'},//
+            {"recessive",    no_argument, 0, 'l'},//
+            {"mylinear",    required_argument, 0, 'z'},//
+            {"myaddit",    required_argument, 0, 'y'},//
             {"help",    no_argument, 0, 'h'},//
             {0, 0, 0, 0}
         };
@@ -96,7 +111,7 @@ void parse_params(int argc, char *argv[], struct Settings &params )
         // getopt_long stores the option index here.
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "c:p:g:o:n:t:m:x:d:s:r:e:fibh", long_options, &option_index);
+        c = getopt_long(argc, argv, "c:p:g:o:n:t:m:x:d:s:r:e:z:y:fibhjkl", long_options, &option_index);
 
 
         // Detect the end of the options.
@@ -220,8 +235,44 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             cout << "-f Forcing all included results to be considered independently of max P-val or min R2. (SLOW!)"<< endl;
             break;
 
+        case 'j':
+            params.model = 1;
+            params.dosages = true;
+
+            cout << "-j Using Additive Model with (2*AA,1*AB,0*BB) effects"<< endl;
+            break;
+
+        case 'k':
+            params.model = 2;
+            params.dosages = true;
+
+            cout << "-j Using Dominant Model with (1*AA,1*AB,0*BB) effects"<< endl;
+            break;
+
+        case 'l':
+            params.model = 3;
+            params.dosages = true;
+
+            cout << "-j Using Recessive Model with (0*AA,0*AB,1*BB) effects"<< endl;
+            break;
+
+        case 'z':
+            params.model = 4;
+            params.dosages = true;
+
+            cout << "-z Using Custom Linear Model with parameters read from the file "<< params.fname_dosages << endl;
+            break;
+
+        case 'y':
+            params.model = 5;
+            params.dosages = true;
+
+            cout << "-z Using Custom Additive Model with parameters read from the file "<< params.fname_dosages << endl;
+            break;
+
         case 'b':
             params.storeBin = true;
+
 
             cout << "-b Results will be stored in binary format too"<< endl;
             break;

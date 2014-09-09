@@ -95,9 +95,9 @@ int main(int argc, char *argv[] )
     int factor = 0;
     params.n=2000; params.l=3;  params.r=1;
     params.t=800; params.tb=min(800,params.t); params.m=1600; params.mb=min(1600,params.m);
-    alg.solve(params, out2, P_NEQ_B_OPT_MD);
+    //alg.solve(params, out2, P_NEQ_B_OPT_MD);
 
-    print_output(out2, gemm_gflopsPsec);
+    //print_output(out2, gemm_gflopsPsec);
 
 
     cout << "\nDone\n";
@@ -117,6 +117,9 @@ int main(int argc, char *argv[] )
     params.fnameAR="examples/XR";
     params.fnameY="examples/Y";
     params.fnameOutFiles="resultsSig";
+//    params.dosages = true;
+//    params.model = 4;
+//    params.fname_dosages = "examples/dosages_2.txt";
 
 
     for(int th = 0; th < max_threads; th++)
@@ -138,6 +141,8 @@ int main(int argc, char *argv[] )
 
     max_threads = 2;
     int iters = 10;
+
+    //cout << "misc tests" << endl;
 
     for (int th = 1; th < max_threads+1; th++)
     {

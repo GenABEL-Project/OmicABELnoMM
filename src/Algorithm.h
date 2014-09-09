@@ -50,7 +50,7 @@ class Algorithm
     protected:
     private:
 
-        AIOwrapper AIOfile;
+
 
         list < resultH > sigResults;
 

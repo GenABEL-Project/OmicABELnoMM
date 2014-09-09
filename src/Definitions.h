@@ -165,12 +165,15 @@ struct Settings
     float minR2store;
     bool storePInd;
     bool disp_cov;
+    bool dosages;
+    int model;//recessive additive dominant etc
 
     string fnameAL;
     string fnameAR;
     string fnameY;
     string fnameOutFiles;
     string fname_excludelist;
+    string fname_dosages;
 
     bool doublefileType;
 

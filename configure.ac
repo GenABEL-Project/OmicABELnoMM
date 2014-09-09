@@ -18,8 +18,8 @@ AM_MAINTAINER_MODE([enable])
 # Set some default compile flags
 if test -z "$CXXFLAGS"; then
    # User did not set CXXFLAGS, so we can put in our own defaults
-   CXXFLAGS=" -O3  -march=corei7 -mfpmath=sse -mtune=corei7 -flto -funroll-loops"
-  #CXXFLAGS="-g -ggdb"
+   #CXXFLAGS=" -O3  -march=corei7 -mfpmath=sse -mtune=corei7 -flto -funroll-loops"
+  CXXFLAGS="-g -ggdb"
 fi
 if test -z "$CPPFLAGS"; then
    # User did not set CPPFLAGS, so we can put in our own defaults
@@ -37,7 +37,7 @@ AC_PROG_CXX
 AC_OPENMP
 AC_SUBST(AM_CXXFLAGS, "$OPENMP_CFLAGS")
 
-AM_CXXFLAGS="-static -O3  -march=corei7 -mfpmath=sse -mtune=corei7 -flto -funroll-loops -I../libs/include -I./libs/include $AM_CXXFLAGS"
+AM_CXXFLAGS="-static  -g -ggdb -I../libs/include -I./libs/include $AM_CXXFLAGS"
 #AM_CXXFLAGS="-static  -I../libs/include -I./libs/include $AM_CXXFLAGS"
 # Checks for libraries.
 # pthread library

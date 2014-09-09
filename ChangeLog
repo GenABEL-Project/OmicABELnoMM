@@ -5,19 +5,23 @@ Features:
 -Add exclusion lists for single sets of elements of phenotypes
 -Add exclusion lists for single sets of elements of genotypes
 -Compare ID lists of all dvi files to assure correct ordering
--Allow for runtime dosage models
 
 Optimizations:
 
 -Reduce memcpy overhead of XR and XR XL factors
--Reduce computation time of XR and XR XL factors (do GEMMS)
-
 
 
 
 Changes
 -------------
 -------------
+
+9-9-2014
+--------------
+Fixed bug related to reusing the same instance  of the solver. AIOwrapper is now recreated on every call.
+Added Additive,Recessive, Dominant models.
+Added option for Custom Models. Custom Additive Model uses custom factors.
+Custom Linear Model uses custom models with beta coefficients for each column of the independent variable.
 
 8-9-2014
 --------------
