@@ -4,10 +4,13 @@
 #include "Definitions.h"
 #include "Utility.h"
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <iomanip>
 #include <limits>
 #include <bitset>
+
+using namespace std;
 
 typedef struct BufferElement type_buffElement;
 
@@ -53,6 +56,7 @@ struct fileh
     type_precision* Ar;
     type_precision* ArDosage;
     type_precision* AL;
+    type_precision* Int;//interaction data for I*X
     type_precision* B;
     type_buffElement* currentReadBuff;
     type_buffElement* Ar_currentReadBuff;
@@ -95,6 +99,12 @@ struct fileh
     bool use_dosages;
     bool add_dosages;
     int dosage_skip;
+
+    bool use_interactions ;
+    bool keep_depVar;
+    bool expand_depVar;
+    string fname_interactions;
+    int numInter;
 
     int seed;
     int Aseed;
@@ -180,6 +190,9 @@ class AIOwrapper
 
     private:
 
+        void generate_multinteraction_singleset(float* interaction_data, int cols_data, float* AR, int ar_block_size, int n, float* dest );
+        void generate_singleinteraction_multset(float* interaction_data, int cols_indp_data, float* AR, int ar_block_size, int n, float* dest );
+
         void read_excludeList(list< pair<int,int> >* excl, int &excl_count, int max_excl, string fname_excludeList);
         void read_dosages(string fname_dosages, int expected_count, float* vec);
 
@@ -219,6 +232,7 @@ class AIOwrapper
         databel_fvi* Yfvi;
         databel_fvi* ALfvi;
         databel_fvi* ARfvi;
+        databel_fvi* Ifvi;
 
 
 

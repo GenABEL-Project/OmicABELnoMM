@@ -66,12 +66,22 @@ void AIOwrapper::initialize(struct Settings &params)
         ALfvi = load_databel_fvi( (Fhandler->fnameAL+".fvi").c_str() );
         ARfvi = load_databel_fvi( (Fhandler->fnameAR+".fvi").c_str() );
 
-
+        if(ALfvi->fvi_header.numObservations !=  ARfvi->fvi_header.numObservations &&  ARfvi->fvi_header.numObservations != Yfvi->fvi_header.numObservations
+              &&  ARfvi->fvi_header.numObservations != Yfvi->fvi_header.numObservations   )
+        {
+            cout << "The number of elements/individuals from the input files do not coincide with each other! See:" << endl;
+            cout << Fhandler->fnameY << ":" <<  Yfvi->fvi_header.numObservations << endl;
+            cout << Fhandler->fnameAL << ":" << ALfvi->fvi_header.numObservations  << endl;
+            cout << Fhandler->fnameAR << ":" << ARfvi->fvi_header.numObservations << endl;
+            exit(1);
+        }
 
         params.n = ALfvi->fvi_header.numObservations;
         Fhandler->fileN = params.n;
-        Fhandler->fileR = params.r;
+
         params.m = ARfvi->fvi_header.numVariables/params.r;
+        Fhandler->fileR = params.r;
+
         params.t = Yfvi->fvi_header.numVariables;
         params.l = ALfvi->fvi_header.numVariables;
 
@@ -109,11 +119,13 @@ void AIOwrapper::initialize(struct Settings &params)
 
 
 
-        int opt_tb = 1000;
-        int opt_mb = 100;
+        int opt_tb = 500;
+        int opt_mb = 500;
 
         params.mb = min(params.m, opt_mb);
         params.tb = min(params.t, opt_tb);
+
+        //cout << params.m << ":" << params.mb << endl;
 
 
 
@@ -122,6 +134,54 @@ void AIOwrapper::initialize(struct Settings &params)
     {
         //other params come from outside
     }
+
+    Fhandler->use_interactions = params.use_interactions;
+    Fhandler->keep_depVar = params.keep_depVar;
+    Fhandler->expand_depVar = params.expand_depVar;
+
+    if(params.use_interactions && params.r != 1)
+    {
+        cout << "Interactions can be only of the form y~cov+V1*X+...+Vi*X, (only with --ngpred=1 or models excluding(--mylinear)) !" << endl;
+        exit(1);
+    }
+    else
+    {
+        if( Fhandler->use_interactions)
+        {
+            Ifvi  = load_databel_fvi( (Fhandler->fname_interactions+".fvi").c_str() );
+
+
+            if(Ifvi->fvi_header.numObservations !=  ARfvi->fvi_header.numObservations  )
+            {
+                cout << "The number of elements/individuals from the input files do not coincide with each other! See:" << endl;
+                cout << Fhandler->fnameY << ":" <<  Ifvi->fvi_header.numObservations << endl;
+                cout << Fhandler->fnameAR << ":" << ARfvi->fvi_header.numObservations << endl;
+                exit(1);
+            }
+
+            Fhandler->numInter = Ifvi->fvi_header.numVariables;
+
+            if(Fhandler->expand_depVar)
+            {
+                //params.m = ???
+            }
+            else
+            {
+                params.r += Fhandler->numInter;
+            }
+
+            if(Fhandler->keep_depVar)
+            {
+                params.r += 1;
+            }
+            else
+            {
+
+            }
+
+        }
+    }
+
 
     //params.fname_excludelist = "exclfile.txt";
     int excl_count = 0;
@@ -220,7 +280,7 @@ void AIOwrapper::initialize(struct Settings &params)
     if(!Fhandler->fakefiles)
     {
 
-        int Aname_idx=params.n*ARfvi->fvi_header.namelength;//skip the names of the rows
+        int Aname_idx=Fhandler->fileN*ARfvi->fvi_header.namelength;//skip the names of the rows
         if(Fhandler->use_dosages && Fhandler->add_dosages)
         {
             for(int i = 0; i < params.m; i++)
@@ -264,10 +324,10 @@ void AIOwrapper::initialize(struct Settings &params)
         fp_InfoResults.write( (char*)&params.storePInd,sizeof(bool));
 
 
-        Aname_idx=(params.n+1)*ALfvi->fvi_header.namelength;//skip the names of the rows + intercept
+        Aname_idx=(Fhandler->fileN+1)*ALfvi->fvi_header.namelength;//skip the names of the rows + intercept(+1)
         fp_InfoResults.write( (char*)&ALfvi->fvi_data[Aname_idx],ALfvi->fvi_header.namelength*(params.l-1)*sizeof(char));
 
-        Aname_idx=params.n*ARfvi->fvi_header.namelength;//skip the names of the rows
+        Aname_idx=Fhandler->fileN*ARfvi->fvi_header.namelength;//skip the names of the rows
         if(Fhandler->use_dosages && Fhandler->add_dosages)
         {
             for(int i = 0; i < params.m; i++)
@@ -281,14 +341,19 @@ void AIOwrapper::initialize(struct Settings &params)
             fp_InfoResults.write( (char*)&ARfvi->fvi_data[Aname_idx],Fhandler->fileR*params.m*ARfvi->fvi_header.namelength*sizeof(char));
         }
 
-        int Yname_idx=params.n*Yfvi->fvi_header.namelength;//skip the names of the rows
+        int Yname_idx=Fhandler->fileN*Yfvi->fvi_header.namelength;//skip the names of the rows
         fp_InfoResults.write( (char*)&Yfvi->fvi_data[Yname_idx],Yfvi->fvi_header.namelength*params.t*sizeof(char));
 
 
     }
 
 
-
+    //check p < n!!!!
+    if(params.p >= params.n)
+     {
+        cout << "Error! The amount of unknows (individuals|elements) must be greater than total of variables (#covariates+#ind.variables)!" << endl;
+        exit(1);
+    }
 
     //block size to keep mem under 1 gigabyte
 //    int opt_block = params.n/(4*1000^3)*(1/(2*params.r));
@@ -307,6 +372,35 @@ void AIOwrapper::initialize(struct Settings &params)
 
     //
 
+}
+
+void AIOwrapper::generate_singleinteraction_multset(float* interaction_data, int cols_indp_data, float* AR, int ar_block_size, int n, float* dest )
+{
+    for(int h = 0; h < cols_indp_data; h++)
+    {
+        for(int i = 0; i < ar_block_size; i++)
+        {
+            for(int k = 0; k < n; k++)
+            {
+                dest[h*n*ar_block_size+i*n+k] = interaction_data[h*n+k]*AR[i*n+k];
+            }
+        }
+    }
+}
+
+void AIOwrapper::generate_multinteraction_singleset(float* interaction_data, int cols_data, float* AR, int ar_block_size, int n, float* dest )
+{//colsdata =1  and dest
+
+    for(int i = 0; i < ar_block_size; i++)
+    {
+        for(int h = 0; h < cols_data; h++)
+        {
+            for(int k = 0; k < n; k++)
+            {
+                dest[i*cols_data*n+h*n+k] = interaction_data[h*n+k]*AR[i*n+k];
+            }
+        }
+    }
 }
 
 void AIOwrapper::finalize()
@@ -363,9 +457,14 @@ void* AIOwrapper::async_io( void *ptr )
 
     struct timespec timeToWait;
     FILE*  fp_Y;
-    FILE*  fp_Ar;
+    ifstream fp_Ar;
+
     ofstream fp_sigResults;
     ofstream fp_allResults;
+
+    int y_file_pos = 0;
+    int ar_file_pos = 0;
+
 
     if(!Fhandler->fakefiles)
     {
@@ -375,9 +474,9 @@ void* AIOwrapper::async_io( void *ptr )
             cout << "Error Reading File Y " << Fhandler->fnameY << endl;
             exit(1);
         }
+        fp_Ar.open ((Fhandler->fnameAR+".fvd").c_str(), ios::in | ios::binary);
 
-        fp_Ar = fopen((Fhandler->fnameAR+".fvd").c_str(), "rb");
-        if(fp_Ar == 0)
+        if(!fp_Ar.is_open())
         {
             cout << "Error Reading File Xr " << Fhandler->fnameAR << endl;
             exit(1);
@@ -421,19 +520,22 @@ void* AIOwrapper::async_io( void *ptr )
         }
         type_precision* tempbuff1 = new type_precision[Fhandler->n*Fhandler->y_blockSize];
         fwrite(tempbuff1, sizeof(type_precision), Fhandler->n*Fhandler->y_blockSize, fp_Y);
-        //fclose(fp_Y);
+
         delete []tempbuff1;
 
 
-        fp_Ar = fopen("tempAR.bin", "w+b");
-        if(fp_Ar == 0)
+        ofstream fp_Art;
+        fp_Art.open ("tempAR.bin",ios::out | ios::binary );
+        if(!fp_Art.is_open())
         {
             cout << "Error creating temp File AR "  << endl;
             exit(1);
         }
         type_precision* tempbuff2 = new type_precision[Fhandler->n*Fhandler->Ar_blockSize*Fhandler->r];
-        fwrite(tempbuff2, sizeof(type_precision), Fhandler->n*Fhandler->Ar_blockSize*Fhandler->r, fp_Ar);
-        //fclose(fp_Ar);
+        fp_Art.write((char*)tempbuff2, sizeof(type_precision)*Fhandler->n*Fhandler->Ar_blockSize*Fhandler->r);
+        fp_Art.close();
+        fp_Ar.open ("tempAR.bin",ios::in | ios::binary );
+
         delete []tempbuff2;
 
 
@@ -491,14 +593,15 @@ void* AIOwrapper::async_io( void *ptr )
 
                 int chunk_size_buff;
                 int buff_pos=0;
-                int file_pos;
+                int file_block_offset;
+
 
                 for(int i = 0; i < tmp_y_blockSize; i++)
                 {
                     for (list<  pair<int,int>  >::iterator it=excl_List->begin(); it != excl_List->end(); ++it)
                     {
-                        file_pos = Fhandler->fileN*i + it->first;
-                        fseek ( fp_Y , file_pos*sizeof(type_precision) , SEEK_SET );
+                        file_block_offset = Fhandler->fileN*i + it->first;
+                        fseek ( fp_Y , (y_file_pos+file_block_offset)*sizeof(type_precision) , SEEK_SET );
                         chunk_size_buff = it->second;
 
                         size_t result = fread (&tobeFilled->buff[buff_pos],sizeof(type_precision),chunk_size_buff,fp_Y); result++;
@@ -508,10 +611,13 @@ void* AIOwrapper::async_io( void *ptr )
                     }
                 }
 
+                y_file_pos += tmp_y_blockSize*Fhandler->fileN;
+
 
                 if(Fhandler->y_to_readSize <= 0)
                 {
                     fseek ( fp_Y , 0 , SEEK_SET );
+                    //cout << "resetY" << endl;
                 }
             }
 
@@ -530,9 +636,6 @@ void* AIOwrapper::async_io( void *ptr )
         while(!Fhandler->ar_empty_buffers.empty() && Fhandler->Ar_to_readSize && Fhandler->not_done)
         {
 
-
-
-
             tmp_ar_blockSize = Fhandler->Ar_blockSize;
             if(Fhandler->Ar_to_readSize < Fhandler->Ar_blockSize)
                 tmp_ar_blockSize = Fhandler->Ar_to_readSize;
@@ -549,8 +652,8 @@ void* AIOwrapper::async_io( void *ptr )
 
             if(Fhandler->fakefiles)
             {
-                fseek ( fp_Ar , 0 , SEEK_SET );
-                size_t result = fread (tobeFilled->buff,sizeof(type_precision),size_buff,fp_Ar); result++;
+                fp_Ar.seekg ( 0 ,  ios::beg  );
+                fp_Ar.read ((char*)tobeFilled->buff,sizeof(type_precision)*size_buff);
 
                 re_random_vec(tobeFilled->buff , Fhandler->n * tmp_ar_blockSize*Fhandler->r );
                 re_random_vec_nan(tobeFilled->buff , Fhandler->n * tmp_ar_blockSize*Fhandler->r );
@@ -564,28 +667,39 @@ void* AIOwrapper::async_io( void *ptr )
                 list< pair<int,int> >* excl_List = Fhandler->excl_List;
 
                 int chunk_size_buff;
-
-                int file_pos;
                 int buff_pos = 0;
+
+                int file_block_offset = 0;
+
+                //cout << "loading " << flush;
 
                 if(Fhandler->use_dosages)
                 {
-
-
                     for(int i = 0; i < tmp_ar_blockSize; i++)
                     {
-                        buff_pos=0;
+                        buff_pos = 0;
                         for(int ii = 0; ii < (Fhandler->fileR-Fhandler->dosage_skip); ii++)
                         {
 
                             for (list<  pair<int,int>  >::iterator it=excl_List->begin(); it != excl_List->end(); ++it)
                             {
-                                file_pos = i*(Fhandler->fileN*Fhandler->fileR)+ ii*Fhandler->fileN + it->first;
-                                fseek ( fp_Ar , file_pos*sizeof(type_precision) , SEEK_SET );
+                                file_block_offset = i*(Fhandler->fileN*Fhandler->fileR)+ ii*Fhandler->fileN + it->first;
+                                fp_Ar.seekg(  (ar_file_pos+file_block_offset)*sizeof(type_precision) , ios::beg );
+                                if(fp_Ar.fail())
+                                {
+                                    cout << "Error reading AR File while positioning! " <<  (ar_file_pos+file_block_offset) << endl;
+                                    exit(1);
+                                }
 
                                 chunk_size_buff = it->second;
 
-                                size_t result = fread (&(Fhandler->ArDosage[buff_pos]),sizeof(type_precision),chunk_size_buff,fp_Ar); result++;
+                                fp_Ar.read ((char*)&(Fhandler->ArDosage[buff_pos]),sizeof(type_precision)*chunk_size_buff);
+                                if(fp_Ar.fail())
+                                {
+                                    cout << "Error reading AR File! " <<  (ar_file_pos+file_block_offset) << endl;
+                                    exit(1);
+                                }
+
                                 buff_pos += chunk_size_buff;
                             }
                         }
@@ -609,7 +723,10 @@ void* AIOwrapper::async_io( void *ptr )
                             }
                         }
 
+
                     }
+                    ar_file_pos += tmp_ar_blockSize*Fhandler->fileN*Fhandler->fileR;
+
 
 
 
@@ -620,16 +737,32 @@ void* AIOwrapper::async_io( void *ptr )
                     {
                         for (list<  pair<int,int>  >::iterator it=excl_List->begin(); it != excl_List->end(); ++it)
                         {
-                            file_pos = Fhandler->fileN*i + it->first;
-                            fseek ( fp_Ar , file_pos*sizeof(type_precision) , SEEK_SET );
+                            //cout << "r" << flush;
+                            file_block_offset = Fhandler->fileN*i + it->first;
+
+                            fp_Ar.seekg((ar_file_pos+file_block_offset)*sizeof(type_precision), ios::beg);
+                            if(fp_Ar.fail())
+                            {
+                                cout << "Error reading AR File while positioning! " <<  (ar_file_pos+file_block_offset) << endl;
+                                exit(1);
+                            }
 
                             chunk_size_buff = it->second;
-                            size_t result = fread (&tobeFilled->buff[buff_pos],sizeof(type_precision),chunk_size_buff,fp_Ar); result++;
+                            fp_Ar.read ((char*)&tobeFilled->buff[buff_pos],sizeof(type_precision)*chunk_size_buff);// result++;
+                            if(fp_Ar.fail())
+                            {
+                                cout << "Error reading AR File! " <<  (ar_file_pos+file_block_offset) << endl;
+                                exit(1);
+                            }
                             buff_pos += chunk_size_buff;
 
                         }
                     }
+                    ar_file_pos += tmp_ar_blockSize*Fhandler->fileN*Fhandler->r;
                 }
+
+
+
 
 
 
@@ -639,7 +772,15 @@ void* AIOwrapper::async_io( void *ptr )
             if(Fhandler->Ar_to_readSize <= 0)
             {
                 Fhandler->Ar_to_readSize = Fhandler->Ar_Amount;
-                fseek ( fp_Ar , 0 , SEEK_SET );
+                ar_file_pos = 0;
+                fp_Ar.seekg(0, ios::beg);
+
+                if(fp_Ar.fail())
+                {
+                    cout << "Error reading AR file again!" << endl;
+                    exit(1);
+                }
+                //cout << "reseting ar\n" << flush;
             }
 
             Fhandler->ar_full_buffers.push(tobeFilled);
@@ -655,6 +796,8 @@ void* AIOwrapper::async_io( void *ptr )
 
         while(!Fhandler->write_full_buffers.empty() && Local_not_done)
         {
+
+            //cout << "S" << " ";
 
             pthread_mutex_lock(&(Fhandler->m_buff_upd));
             list < resultH >* tobeWritten = Fhandler->write_full_buffers.front();
@@ -756,6 +899,8 @@ void* AIOwrapper::async_io( void *ptr )
 
             Fhandler->write_empty_buffers.push(tobeWritten);
             //  cout << "\nStoring " << tobeWritten << endl;
+
+            //cout << "Done Storing" << endl;
 
 
 
@@ -873,7 +1018,7 @@ void* AIOwrapper::async_io( void *ptr )
 
     //pthread_exit(NULL);
         fclose(fp_Y);
-        fclose(fp_Ar);
+        fp_Ar.close();
         fp_sigResults.close();
         fp_allResults.close();
 
@@ -1104,7 +1249,7 @@ void AIOwrapper::prepare_OutFiles(int max_b_blockSize, int p)
 
     Fhandler->max_b_blockSize = max_b_blockSize;//useless?
     Fhandler->p=p;//useless?
-    int buff_count = 4;
+    int buff_count = 10;
 
     list < resultH >* tmp;
 
@@ -1187,7 +1332,9 @@ void AIOwrapper::prepare_AR( int desired_blockSize, int n, int totalR, int colum
     Fhandler->Ar_Amount = totalR;
     Fhandler->Ar_to_readSize = Fhandler->Ar_Amount;
 
-    int buff_count = 4;
+
+
+    int buff_count = min(10,(Fhandler->Ar_Amount+desired_blockSize-1)/desired_blockSize);
 
     Fhandler->Ar_currentReadBuff = 0;
     type_buffElement* tmp;

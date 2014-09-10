@@ -4,17 +4,24 @@ TODO
 Features:
 -Add exclusion lists for single sets of elements of phenotypes
 -Add exclusion lists for single sets of elements of genotypes
--Compare ID lists of all dvi files to assure correct ordering
+-Add nonlinear interactions
 
 Optimizations:
 
 -Reduce memcpy overhead of XR and XR XL factors
 
 
-
 Changes
 -------------
 -------------
+
+10-9-2014
+--------------
+Fixed bug related to naming of results.
+Changed file reading of XR from c to c++ for stability.
+Added check of dimension required by OLS math.
+Basis for non linear interaction added.
+Stable user usable version.
 
 9-9-2014
 --------------

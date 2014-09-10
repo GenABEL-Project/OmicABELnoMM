@@ -401,6 +401,10 @@ void Algorithm::applyDefaultParams(struct Settings &params)
     params.r = 1;
     params.model = -1;
 
+    params.use_interactions = false;
+    params.keep_depVar = true;
+    params.expand_depVar = false;
+    params.fname_interactions = "";
 
     params.minR2store = 0.00001;
     params.minR2disp = 0.000001;

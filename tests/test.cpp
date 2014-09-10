@@ -117,8 +117,8 @@ int main(int argc, char *argv[] )
     params.fnameAR="examples/XR";
     params.fnameY="examples/Y";
     params.fnameOutFiles="resultsSig";
-    params.dosages = true;
-    params.model = 0;
+    params.dosages = false;
+    params.model = 2;
     params.fname_dosages = "examples/dosages_2.txt";
 
 

@@ -175,6 +175,11 @@ struct Settings
     string fname_excludelist;
     string fname_dosages;
 
+    bool use_interactions;
+    bool keep_depVar;
+    bool expand_depVar;
+    string fname_interactions;
+
     bool doublefileType;
 
     bool ForceCheck;
