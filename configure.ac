@@ -41,9 +41,9 @@ AC_SUBST(AM_CXXFLAGS, "$OPENMP_CFLAGS")
 AM_CXXFLAGS="-static -O3 -I../libs/include -I./libs/include $AM_CXXFLAGS"
 # Checks for libraries.
 # pthread library
-AC_SEARCH_LIBS([pthread_mutex_init], [pthread], [], [
-   AC_MSG_ERROR([Make sure pthread is available on the system])
-])
+AC_SEARCH_LIBS([pthread_mutex_init], [pthread], [],
+   [AC_MSG_ERROR([Make sure pthread is available on the system])]
+)
 
 if test -z "$LDFLAGS"; then
    LDFLAGS="-L./libs/lib -L../libs/lib"
@@ -63,13 +63,15 @@ AC_SEARCH_LIBS(dgemm, acml_mp,
 
 if test "$found_blas" -eq 0; then
    # Openblas
-   AC_SEARCH_LIBS([cblas_sgemm], [openblas], [AM_CXXFLAGS="$AM_CXXFLAGS -D_openblas_"], [
-      AC_MSG_ERROR([OpenBLAS library NOT found])
-   ])
+   AC_SEARCH_LIBS([cblas_sgemm], [openblas],
+      [AM_CXXFLAGS="$AM_CXXFLAGS -D_openblas_"],
+      [AC_MSG_ERROR([OpenBLAS library NOT found])]
+   )
    #Lapack
-   AC_SEARCH_LIBS([LAPACKE_sgeqrf], [lapack, lapacke], [], [
-      AC_MSG_ERROR([Unable to find a Lapack library])
-   ])
+   AC_SEARCH_LIBS([LAPACKE_sgeqrf], [lapack, lapacke],
+      [],
+      [AC_MSG_ERROR([Unable to find a Lapack library])]
+   )
    AC_MSG_NOTICE([Using OpenBLAS library])
 fi
 
