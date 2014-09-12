@@ -54,21 +54,23 @@ found_blas=0
 AC_SEARCH_LIBS([__iso_c_binding_c_f_pointer_l4],[gfortran])
 
 # ACML
-AC_SEARCH_LIBS(dgemm, acml_mp,[found_blas=1 AM_CXXFLAGS="-D_acml_ $AM_CXXFLAGS"], [
-   AC_MSG_NOTICE([NOT using AMD the ACML  library],[-lgfortran])
-])
+AC_SEARCH_LIBS(dgemm, acml_mp,
+   [found_blas=1 AM_CXXFLAGS="-D_acml_ $AM_CXXFLAGS"],
+   [AC_MSG_NOTICE([NOT using AMD the ACML  library])],
+   [-lgfortran]
+)
 
 
 if test "$found_blas" -eq 0; then
    # Openblas
    AC_SEARCH_LIBS([cblas_sgemm], [openblas], [AM_CXXFLAGS="$AM_CXXFLAGS -D_openblas_"], [
-      AC_MSG_ERROR([OpenBLAS  library NOT found])
+      AC_MSG_ERROR([OpenBLAS library NOT found])
    ])
    #Lapack
    AC_SEARCH_LIBS([LAPACKE_sgeqrf], [lapack, lapacke], [], [
       AC_MSG_ERROR([Unable to find a Lapack library])
    ])
-   AC_MSG_NOTICE([Using OpenBLAS  library])
+   AC_MSG_NOTICE([Using OpenBLAS library])
 fi
 
 
