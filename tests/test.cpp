@@ -121,6 +121,7 @@ int main(int argc, char *argv[] )
     //!-------------------------------------
     //!default params
     alg.applyDefaultParams(params);
+    params.threads = max_threads;
 
     params.minPstore = 0.1;
     params.minPdisp = 0.0005;

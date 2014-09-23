@@ -21,6 +21,7 @@ void AIOwrapper::initialize(struct Settings &params)
     pthread_mutex_init( &(FHandler.m_more), NULL);
     pthread_mutex_init( &(FHandler.m_read), NULL);
     pthread_mutex_init( &(FHandler.m_buff_upd), NULL);
+    pthread_mutex_init( &(FHandler.out_buff_upd), NULL);
 
     pthread_cond_init(&(FHandler.condition_more), NULL);
     pthread_cond_init(&(FHandler.condition_read), NULL);
@@ -1204,7 +1205,7 @@ void* AIOwrapper::async_io( void *ptr )
 
             //cout << "S" << " ";
 
-            pthread_mutex_lock(&(Fhandler->m_buff_upd));
+            pthread_mutex_lock(&(Fhandler->out_buff_upd));
             list < resultH >* tobeWritten = Fhandler->write_full_buffers.front();
             Fhandler->write_full_buffers.pop();
 
@@ -1312,7 +1313,7 @@ void* AIOwrapper::async_io( void *ptr )
 
 
 
-            pthread_mutex_unlock(&(Fhandler->m_buff_upd));
+            pthread_mutex_unlock(&(Fhandler->out_buff_upd));
 
 
 
@@ -1336,7 +1337,7 @@ void* AIOwrapper::async_io( void *ptr )
         timeToWait.tv_nsec = time.wMilliseconds*1000 + morenanos ;
 #else
         clock_gettime(CLOCK_REALTIME, &timeToWait);
-        timeToWait.tv_nsec += 150;
+        timeToWait.tv_nsec += 10000000;
 #endif
 
         pthread_mutex_lock(&(Fhandler->m_more));
@@ -1583,6 +1584,7 @@ void AIOwrapper::prepare_Y(int y_blockSize, int n, int totalY)
 
 
     pthread_mutex_init(&(Fhandler->m_buff_upd), NULL);
+    pthread_mutex_init(&(Fhandler->out_buff_upd), NULL);
     pthread_mutex_init(&(Fhandler->m_more), NULL);
     pthread_mutex_init(&(Fhandler->m_read), NULL);
 
@@ -1609,12 +1611,12 @@ void AIOwrapper::getCurrentWriteBuffers(list < resultH >* &sigResults)
         pthread_cond_wait( &(Fhandler->condition_read), &(Fhandler->m_read ));
         pthread_mutex_unlock(&(Fhandler->m_read));
     }
-    pthread_mutex_lock(&(Fhandler->m_buff_upd));
+    pthread_mutex_lock(&(Fhandler->out_buff_upd));
 
     sigResults = Fhandler->write_empty_buffers.front();
     Fhandler->write_empty_buffers.pop();
 
-    pthread_mutex_unlock(&(Fhandler->m_buff_upd));
+    pthread_mutex_unlock(&(Fhandler->out_buff_upd));
 
 
     pthread_mutex_lock(&(Fhandler->m_more));
@@ -1625,14 +1627,14 @@ void AIOwrapper::getCurrentWriteBuffers(list < resultH >* &sigResults)
 void AIOwrapper::write_OutFiles(list < resultH >* &sigResults)
 {
 
-    pthread_mutex_lock(&(Fhandler->m_buff_upd));
+    pthread_mutex_lock(&(Fhandler->out_buff_upd));
 
 
     Fhandler->write_full_buffers.push(sigResults);
     sigResults = 0;
     //cout << Fhandler->write_full_buffers.size() << endl;
 
-    pthread_mutex_unlock(&(Fhandler->m_buff_upd));
+    pthread_mutex_unlock(&(Fhandler->out_buff_upd));
 
 
     pthread_mutex_lock(&(Fhandler->m_more));
@@ -1648,7 +1650,7 @@ void AIOwrapper::prepare_OutFiles()
 {
 
 
-    int buff_count = 10;
+    int buff_count = 500000;
 
     list < resultH >* tmp;
 

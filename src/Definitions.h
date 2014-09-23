@@ -1,7 +1,7 @@
 #ifndef defs_H_INCLUDED
 #define defs_H_INCLUDED
 
-#include <boost/math/distributions/normal.hpp>
+
 
 #include <limits>
 #include <list>
@@ -26,7 +26,7 @@
 #include <omp.h>
 #include <pthread.h>
 #include <utility>
-
+#include <iomanip>
 
 #ifdef WINDOWS
     #include <windows.h>
@@ -36,6 +36,7 @@
 
 //!For intel use propetary MKL, it will be preferred over others
 #ifdef __INTEL_MKL__
+    #include <boost/math/distributions/normal.hpp>
     #pragma message("MKL will Probably NOT compile")
     #include "mkl.h"
     #include "cblas.h"
@@ -97,12 +98,13 @@
 
 
 
-
+        #include <boost/math/distributions/normal.hpp>
 
     #else
 
         //!IF MKL is not present on INTEL, use openblas
         #ifdef _openblas_
+            #include <boost/math/distributions/normal.hpp>
             #pragma message("Compiled with OPENBLAS")
             #define STORAGE_TYPE LAPACK_COL_MAJOR
             #include "cblas.h"

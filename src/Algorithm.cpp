@@ -938,6 +938,7 @@ void Algorithm::hpc_SSY(int n,int p, int l,int r, type_precision* __restrict  AL
     int xl_n_idx = 0;
     for (int h=0; h < l; h++)
     {
+        //#pragma omp parallel for schedule(dynamic) default(shared) private(xlp)
         for (int k=0; k < n; k++)
         {
             xlp = &AL[n*h];
@@ -962,87 +963,99 @@ void Algorithm::hpc_SSY(int n,int p, int l,int r, type_precision* __restrict  AL
 
     //cout << n_idx << " ";
 
-    float* __restrict XR_n = new float[r*n_idx];
+    float* __restrict XR_n = new float[r*n_idx*max_threads];
     float* __restrict syvec = new float[n_idx*max_threads];
 
-    #pragma omp parallel for schedule(static) default(shared)
+    omp_set_num_threads(max_threads);
+
+        //cout << max_threads << endl;
+
+
+    #pragma omp parallel default(shared)
+    {
+    #pragma omp for  schedule(static,1) nowait
     for (int ii= 0; ii < a_amount; ii++)
     {
+        int thead_id = omp_get_thread_num();
+
+            //cout << thead_id << ":" << max_threads << " ";
         int ar_idx = ii*(n*r);
 
         float* __restrict b = &B[ii*p];
 
         float* __restrict xr;
 
-        float* __restrict sy = &syvec[omp_get_thread_num()*n_idx];
+        float* __restrict sy = &syvec[thead_id*n_idx];
 
 
 
-
-
-        int xr_idx=0;
-        for (int h=0; h < r; h++)
-        {
-            xr = &AR[ar_idx+n*h];
-            for (int k=0; k < n; k++)
+            int xr_idx=0;
+            for (int h=0; h < r; h++)
             {
-                if(AL[k]!=0 && y[k] !=0)
+                xr = &AR[ar_idx+n*h];
+
+                for (int k=0; k < n; k++)
                 {
-                    XR_n[xr_idx] = xr[k];
-                    xr_idx++;
+                    thead_id = omp_get_thread_num();
+                    if(AL[k]!=0 && y[k] !=0)
+                    {
+                        XR_n[xr_idx+thead_id*r*n_idx] = xr[k];
+                        xr_idx++;
+                    }
                 }
             }
-        }
 
-//
-    //matlab_print_matrix("XR",1,n/10,&AR[ar_idx+n*(r-1)]);
-//
-//    matlab_print_matrix("XR_n",1,n_idx,&XR_n[n_idx*(r-1)]);
+    //
+        //matlab_print_matrix("XR",1,n/10,&AR[ar_idx+n*(r-1)]);
+    //
+    //    matlab_print_matrix("XR_n",1,n_idx,&XR_n[n_idx*(r-1)]);
 
-//        for (int k=0; k < n_idx; k++)
-//        {
-//            sy[k] = yred[k];
-//        }
         memcpy(sy,yred,n_idx*sizeof(float));
-//        matlab_print_matrix("yred",1,n_idx,yred);
-//        matlab_print_matrix("SY",1,n_idx,sy);
-        float* __restrict xl;
+    //        matlab_print_matrix("yred",1,n_idx,yred);
+    //        matlab_print_matrix("SY",1,n_idx,sy);
+            float* __restrict xl;
 
-        SYY[ii] = 0;
+            SYY[ii] = 0;
 
-        for (int h=0; h < l; h++)
-        {
-            xl = &Xl_n[n_idx*h];
+            for (int h=0; h < l; h++)
+            {
+                xl = &Xl_n[n_idx*h];
+
+                for (int k=0; k < n_idx; k++)
+                {
+                    sy[k] -= xl[k]*b[h];
+                }
+            }
+
+            for (int h=l; h < p; h++)
+            {
+                xr = &XR_n[n_idx*(h-l)+thead_id*r*n_idx];
+
+                for (int k=0; k < n_idx; k++)
+                {
+                    sy[k] -= xr[k]*b[h];
+                }
+            }
+
 
             for (int k=0; k < n_idx; k++)
             {
-                sy[k] -= xl[k]*b[h];
+                SYY[ii] += sy[k]*sy[k];
             }
-        }
-
-        for (int h=l; h < p; h++)
-        {
-            xr = &XR_n[n_idx*(h-l)];
-
-            for (int k=0; k < n_idx; k++)
-            {
-                sy[k] -= xr[k]*b[h];
-            }
-        }
 
 
-        for (int k=0; k < n_idx; k++)
-        {
-            SYY[ii] += sy[k]*sy[k];
-        }
 
     }
+
+}//pragma
+
 
     delete []Xl_n;
     delete []yred;
     delete []XR_n;
     delete []syvec;
 }
+
 
 
 void Algorithm::hpc_statistics(int Ymiss, int n,
@@ -1090,7 +1103,7 @@ void Algorithm::hpc_statistics(int Ymiss, int n,
 
         //!***************************
 
-        #pragma omp parallel for schedule(static) default(shared)
+        //#pragma omp parallel for schedule(static) default(shared)//fix
         for (int ii= 0; ii < a_amount; ii++)
         {
 

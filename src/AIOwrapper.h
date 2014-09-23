@@ -128,6 +128,7 @@ struct fileh
 
     pthread_cond_t  condition_read  ;
     pthread_mutex_t m_buff_upd   ;
+    pthread_mutex_t out_buff_upd   ;
 
     pthread_t iothread;
     pthread_attr_t attr;
