@@ -1,15 +1,31 @@
 #include <unistd.h>
 #include <getopt.h>
+#include <string>
+#include <vector>
 
+using namespace std;
 
 
 #include "../src/Definitions.h"
 #include "../src/Algorithm.h"
 
+void print_params(struct Settings params)
+{
+    cout << "Threads:" << params.threads << " ";
+    cout << "n:" << params.n << " ";
+    cout << "l:" << params.l << " ";
+    cout << "r:" << params.r << " ";
+    cout << "m:" << params.m << " ";
+    cout << "mb:" << params.mb << " ";
+    cout << "t:" << params.t << " ";
+    cout << "tb:" << params.tb << endl;
+}
+
 void print_output(struct Outputs out, float gemm_gflopsPsec)
 {
     std::cout << std::fixed;
 
+    cout << "\nTotal Results: \t" << out.total_sig_results << endl;
 
     cout << "\nDuration:\t\t" << out.duration <<" \t"<<  out.duration/out.duration*100 << "\n";
 
@@ -70,10 +86,6 @@ int main(int argc, char *argv[] )
     Algorithm alg;
 
 
-    //!default params
-    alg.applyDefaultParams(params);
-
-    params.use_fake_files = true;
 
 
 
@@ -91,58 +103,189 @@ int main(int argc, char *argv[] )
     gemm_gflopsPsec = gemmgflops/duration;
     cout << "\nGEMM GFLOPS/s " << gemm_gflopsPsec << endl;
 
-    struct Outputs out2 = {0};
-    int factor = 0;
-    params.n=2000; params.l=3;  params.r=1;
-    params.t=800; params.tb=min(800,params.t); params.m=1600; params.mb=min(1600,params.m);
-    //alg.solve(params, out2, P_NEQ_B_OPT_MD);
+    struct Outputs out = {0};
+    //    params.use_fake_files = false;
+//     !default params
+//    alg.applyDefaultParams(params);
+    //int factor = 0;//need to repair fakefiles?
+//    params.n=2000; params.l=3;  params.r=1;
+//    params.t=1000; params.tb=min(1000,params.t); params.m=1000; params.mb=min(200,params.m);
+//    print_params(params);
+//    alg.solve(params, out, P_NEQ_B_OPT_MD);
+//    print_output(out, gemm_gflopsPsec);
+//
+//
+//    cout << "\nDone\n";
 
-    //print_output(out2, gemm_gflopsPsec);
 
-
-    cout << "\nDone\n";
-    cout << "\nMisc Tests\n" << flush;
-
+    //!-------------------------------------
     //!default params
     alg.applyDefaultParams(params);
 
     params.minPstore = 0.1;
-    params.minPdisp = 0.05;
-    params.minR2store = 0.001;
-    params.minR2disp = 0.001;
+    params.minPdisp = 0.0005;
+    params.minR2store = 0.00001;
+    params.minR2disp = 0.000001;
 
 
     params.r = 2;
+    params.fnameOutFiles="examples/results/normal";
     params.fnameAL="examples/XL";
     params.fnameAR="examples/XR";
     params.fnameY="examples/Y";
-    params.fnameOutFiles="resultsSig";
-    params.dosages = false;
-    params.model = 2;
-    params.fname_dosages = "examples/dosages_2.txt";
+
+    alg.solve(params, out, P_NEQ_B_OPT_MD);
+    print_output(out, gemm_gflopsPsec);
 
 
-    for(int th = 0; th < max_threads; th++)
+
+     cout << "\nInteraction Tests\n" << flush;
+    //!-------------------------------------
+    //!-------------------------------------
+    //!interactions
+    params.fnameOutFiles="examples/results/normal";
+    params.fnameAL="examples/interactions/XL";
+    params.fnameAR="examples/interactions/XR";
+    params.fnameY="examples/interactions/Y";
+
+    params.use_interactions=true;params.r = 2;
+    params.limit_t = 50;params.limit_m = params.limit_t *params.r;
+    //params.limit_n = 1000;
+    params.fname_excludelist="examples/exclude_individuals.txt";
+    string source_path = "examples/interactions/INT";
+    string out_path[] = {"examples/results/single_inter_","examples/results/multi_inter_"};
+    string out_keep[] = {"","keep_"};
+    string dosagename[]={"","add_","dom_","res_","mylin_","myadd_"};
+    int dosage_r[]={1,2,2,2,1,2};
+    //!--------------No Model-----------------------
+    string test_names[] = {"0","1","R","R1","R0","10", "11",  "011", "1RR"};
+    string keep_test_names[] = {"R","R0", "RR"};
+    uint32_t exected_res_single[]   = {0,(uint32_t)params.limit_t,0,(uint32_t)params.limit_t,0,0,0,0,(uint32_t)params.limit_t};
+    uint32_t exected_res_mult[]   = {0,(uint32_t)params.limit_t,0,(uint32_t)params.limit_t,0,(uint32_t)params.limit_t,2*(uint32_t)params.limit_t,(uint32_t)2*params.limit_t,(uint32_t)params.limit_t};
+    uint32_t exected_res_single_keep[]   = {(uint32_t)params.limit_t,0,(uint32_t)params.limit_t};
+    uint32_t exected_res_mult_keep[]   = {(uint32_t)params.limit_t,(uint32_t)params.limit_t,(uint32_t)2*params.limit_t};
+
+
+    for(int j = 0; j < 2; j++ )
     {
-        cout << "****" << flush;
+        params.use_multiple_interaction_sets=j;
+        for(int k = 0; k < 2; k++ )
+        {
+            params.keep_depVar=k;
+            for(int d = 0; d < 6; d++ )
+            {
+                params.dosages = d;
+                params.model = d-1;
+                params.r=dosage_r[d];
+                params.fname_dosages = "examples/dosages_";
+                params.fname_dosages += std::to_string(params.r);
+                params.fname_dosages += ".txt";
+
+                if(params.keep_depVar)
+                {
+
+                    for(int i = 0; i < 3; i++ )
+                    {
+                        params.fnameOutFiles=out_path[j]+out_keep[k]+dosagename[d]+keep_test_names[i];
+                        cout << params.fnameOutFiles << endl;
+                        params.fname_interactions=source_path+keep_test_names[i];
+                        memset(&out, 0, sizeof(out));
+                        alg.solve(params, out, P_NEQ_B_OPT_MD);
+                        cout << "\nTotal Results: \t" << out.total_sig_results << endl;
+                        cout << "=========================================\n";
+                        if(d!=3)
+                        {
+                            if(j==0)
+                                myassert(exected_res_single_keep[i] <= out.total_sig_results,"Unexpected number of Results, check manually!");
+                            else
+                                myassert(exected_res_mult_keep[i] <=  out.total_sig_results,"Unexpected number of Results, check manually!");
+                        }
+                    }
+
+                }
+                else
+                {
+                    for(int i = 0; i < 9; i++ )
+                    {
+                        //cout << "=========================================\n";
+                        params.fnameOutFiles=out_path[j]+out_keep[k]+dosagename[d]+test_names[i];
+                        cout << params.fnameOutFiles << endl;
+                        params.fname_interactions=source_path+test_names[i];
+
+                        memset(&out, 0, sizeof(out));
+                        alg.solve(params, out, P_NEQ_B_OPT_MD);
+                        cout << "\nTotal Results: \t" << out.total_sig_results << endl;
+                        cout << "=========================================\n";
+
+                        if(d!=3)
+                        {
+                            if(j==0)
+                                myassert(exected_res_single[i] <= out.total_sig_results,"Unexpected number of Results, check manually!");
+                            else
+                                myassert(exected_res_mult[i] <=  out.total_sig_results,"Unexpected number of Results, check manually!");
+                        }
+                    }
+                }
+                cout << "========================================\n";
+            }
+            cout << "===============KEEP=============\n";
+        }
+        cout << "==================MULTI=========================\n";
+
     }
-    struct Outputs out23 = {0};
-    cout << "**\n*" << flush;
-    alg.solve(params, out23, P_NEQ_B_OPT_MD);
+    //!-------------------------------------
+    //!interactions END
+    //!-------------------------------------
 
-    print_output(out23, gemm_gflopsPsec);
+    cout << "\nDosage Tests\n" << flush;
+    //!-------------------------------------
+    //!dosages alone
+    //!-------------------------------------
+    string out_dos_path[] = {"examples/results/dosages_","examples/results/dosages_excl_"};
+
+    for(int j = 0; j < 2; j++ )
+    {
+        params.fname_excludelist="";
+        if(j)
+            params.fname_excludelist="examples/exclude_individuals.txt";
+
+        for(int d = 0; d < 6; d++ )
+        {
+            params.dosages = d;
+            params.model = d-1;
+            params.r=dosage_r[d];
+            params.fname_dosages = "examples/dosages_";
+            params.fname_dosages += std::to_string(params.r);
+            params.fname_dosages += ".txt";
+
+            params.fnameOutFiles=out_dos_path[j]+dosagename[d];
+            cout << params.fnameOutFiles << endl;
+
+            memset(&out, 0, sizeof(out));
+            alg.solve(params, out, P_NEQ_B_OPT_MD);
+            cout << "\nTotal Results: \t" << out.total_sig_results << endl;
+            cout << "=========================================\n";
+
+            if(d!=3)
+            {
+                myassert((uint32_t)params.limit_t <= out.total_sig_results,"Unexpected number of Results, check manually!");
+            }
+
+        }
+    }
 
 
-    cout << "*" << flush;
 
+    //!-------------------------------------
     alg.applyDefaultParams(params);
+    memset(&out, 0, sizeof(out));
     params.use_fake_files = true;
     params.ForceCheck = true;
 
     max_threads = 2;
     int iters = 10;
 
-    //cout << "misc tests" << endl;
+    cout << "Misc tests" << endl;
 
     for (int th = 1; th < max_threads+1; th++)
     {
@@ -154,9 +297,6 @@ int main(int argc, char *argv[] )
         params.n=10; params.l=4;  params.r=1;
         params.t=16; params.tb=1; params.m=16; params.mb=1;
 
-
-
-        struct Outputs out = {0};
         for (int i = 0; i < iters; i++)
         {
             alg.solve(params, out, P_NEQ_B_OPT_MD);

@@ -18,8 +18,13 @@ AM_MAINTAINER_MODE([enable])
 # Set some default compile flags
 if test -z "$CXXFLAGS"; then
    # User did not set CXXFLAGS, so we can put in our own defaults
+<<<<<<< .mine
+   CXXFLAGS=" -O3 -std=c++11 -march=native -mfpmath=sse -flto -funroll-loops"
+  #CXXFLAGS="-g -ggdb -std=c++11"
+=======
    CXXFLAGS=" -O3  -march=corei7 -mfpmath=sse -mtune=corei7 -flto -funroll-loops"
    #CXXFLAGS="-g -ggdb"
+>>>>>>> .r1828
 fi
 if test -z "$CPPFLAGS"; then
    # User did not set CPPFLAGS, so we can put in our own defaults
@@ -38,7 +43,7 @@ AC_OPENMP
 AC_SUBST(AM_CXXFLAGS, "$OPENMP_CFLAGS")
 
 #AM_CXXFLAGS="-static  -g -ggdb -I../libs/include -I./libs/include $AM_CXXFLAGS"
-AM_CXXFLAGS="-static -O3 -I../libs/include -I./libs/include $AM_CXXFLAGS"
+AM_CXXFLAGS="-static -std=c++11 -O3 -I../libs/include -I./libs/include $AM_CXXFLAGS"
 # Checks for libraries.
 # pthread library
 AC_SEARCH_LIBS([pthread_mutex_init], [pthread], [],

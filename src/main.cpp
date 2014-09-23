@@ -18,7 +18,8 @@ string helpcmd = "usage: omicabelnomm -c <path/fname> --geno <path/fname> -p <pa
                         -d <0.0~1.0> -r <-10.0~1.0> -b -s <0.0~1.0>  -e <-10.0~1.0> -i -f";
 
 string helpcmd_expl =
-"Required: \n\t\
+"omicabelnomm Version 0.9b \n\t\
+Required: \n\t\
 -p --phe    \t <path/filename> to the inputs containing phenotypes \n\t\
 -g --geno   \t <path/filename> to the inputs containing genotypes \n\t\
 -c --cov    \t <path/filename> to the inputs containing covariates \n\t\
@@ -45,6 +46,11 @@ Optional: \n\t\
 -y --myaddit  \t <path/filename> to read Factors 'f_i' for a Custom Additive Model with (f1*X1,f2*X2,f3*X3...fn*X_ngpred) as effects,\n\t\
               \t each column of each independent variable will be multiplied with the specified factors and then added together. \n\t\
               \t Formula: y~alpha*cov + beta*(f1*X1 + f2*X2 +...+ fn*Xn), (see example files!) \n\t\
+-v --simpleinter <path/filename> to read the interactions from; for single analysis using multile interactions \n\t\
+-w --multinter \t <path/filename> to read the interactions from; for multiple analysis using single interaction per analysis \n\t\
+-u --keepinter \t Flag that sets if the interaction analysis chose is to too keep the dependent variable X.\n\t\
+            \t If set, Formula: y~alpha*cov + beta_1*INT*X + beta_2*X, (see example files!) \n\t\
+            \t Default not set, Formula: y~alpha*cov + beta_1*INT*X, (see example files!) \n\t\
 ";
 
 
@@ -104,6 +110,9 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             {"recessive",    no_argument, 0, 'l'},//
             {"mylinear",    required_argument, 0, 'z'},//
             {"myaddit",    required_argument, 0, 'y'},//
+            {"simpleinter",    required_argument, 0, 'v'},//
+            {"multinter",    required_argument, 0, 'w'},//
+            {"keepinter",    no_argument, 0, 'u'},//
             {"help",    no_argument, 0, 'h'},//
             {0, 0, 0, 0}
         };
@@ -111,7 +120,7 @@ void parse_params(int argc, char *argv[], struct Settings &params )
         // getopt_long stores the option index here.
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "c:p:g:o:n:t:m:x:d:s:r:e:z:y:fibhjkl", long_options, &option_index);
+        c = getopt_long(argc, argv, "c:p:g:o:n:t:m:x:d:s:r:e:z:y:v:w:ufibhjkl", long_options, &option_index);
 
 
         // Detect the end of the options.
@@ -246,7 +255,7 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             params.model = 1;
             params.dosages = true;
 
-            cout << "-j Using Dominant Model with (1*AA,1*AB,0*BB) effects"<< endl;
+            cout << "-k Using Dominant Model with (1*AA,1*AB,0*BB) effects"<< endl;
             break;
 
         case 'l':
@@ -275,6 +284,31 @@ void parse_params(int argc, char *argv[], struct Settings &params )
 
 
             cout << "-b Results will be stored in binary format too"<< endl;
+            break;
+
+        case 'v':
+            params.fname_interactions =  (atof(optarg));
+            params.use_interactions = true;
+            params.keep_depVar = true;
+            params.use_multiple_interaction_sets = false;
+
+            cout << "-v File containing single interactions " << params.fname_interactions << endl;
+            break;
+
+
+        case 'w':
+            params.fname_interactions =  (atof(optarg));
+            params.use_interactions = true;
+            params.keep_depVar = true;
+            params.use_multiple_interaction_sets = true;
+
+            cout << "-w File containing multiple interactions " << params.fname_interactions << endl;
+            break;
+
+
+        case 'u':
+            params.keep_depVar = true;
+            cout << "-u Keeping independent variable for interaction analysis " <<  endl;
             break;
 
         case 'h':

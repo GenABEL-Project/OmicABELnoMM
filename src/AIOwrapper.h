@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <limits>
 #include <bitset>
+#include <utility>
 
 using namespace std;
 
@@ -56,7 +57,6 @@ struct fileh
     type_precision* Ar;
     type_precision* ArDosage;
     type_precision* AL;
-    type_precision* Int;//interaction data for I*X
     type_precision* B;
     type_buffElement* currentReadBuff;
     type_buffElement* Ar_currentReadBuff;
@@ -75,16 +75,20 @@ struct fileh
     int index;
     int fileN;
     int fileR;
+
+    int fileM;
     int n;
     int r;
     int l;
     int p;
 
     int model;
+    int modelR;
 
 
     int Ar_Amount;
     int Ar_blockSize;
+    int Ar_file_blocksize;//used when interactions changes the block size
     int Ar_to_readSize;
 
     int Y_Amount;
@@ -102,9 +106,13 @@ struct fileh
 
     bool use_interactions ;
     bool keep_depVar;
-    bool expand_depVar;
+    bool use_multiple_interaction_sets;
     string fname_interactions;
+    float* interaction_data;
+    float* temp_file_data;
     int numInter;
+    int ini_IDX_interactions;
+    int end_IDX_interactions;
 
     int seed;
     int Aseed;
@@ -190,8 +198,8 @@ class AIOwrapper
 
     private:
 
-        void generate_multinteraction_singleset(float* interaction_data, int cols_data, float* AR, int ar_block_size, int n, float* dest );
-        void generate_singleinteraction_multset(float* interaction_data, int cols_indp_data, float* AR, int ar_block_size, int n, float* dest );
+        static void  generate_multinteraction_singleset(float* interaction_data, int cols_data, float* AR, int ar_block_size, int n, float* dest, bool keep_original  );
+        static void  generate_singleinteraction_multset(float* interaction_data, int cols_indp_data, float* AR, int ar_block_size, int n, float* dest, bool keep_original  );
 
         void read_excludeList(list< pair<int,int> >* excl, int &excl_count, int max_excl, string fname_excludeList);
         void read_dosages(string fname_dosages, int expected_count, float* vec);
@@ -207,12 +215,12 @@ class AIOwrapper
         void prepare_AL( int columns, int n);
         void finalize_AL();
 
-        void prepare_OutFiles(int max_b_blockSize, int p);
+        void prepare_OutFiles();
         void finalize_OutFiles();
 
 
         void removeALmissings(list< pair<int,int> >* excl_List,struct Settings params,int &Almissings);
-        void splitpair(int value, list< pair<int,int> >* excl_List,struct Settings params);
+        bool splitpair(int value, list< pair<int,int> >* excl_List,int n);
 
 
         static void* async_io(void *ptr );

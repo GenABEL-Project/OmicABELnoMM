@@ -13,6 +13,7 @@
 
 double gemm_flops(double m, double n, double k,int sum);
 void myassert(int cond,string msg);
+void myassert(int cond,string msg,int var);
 type_precision* random_vec(int size);
 void re_random_vec(type_precision* vec, int size);
 inline void copy_vec(type_precision*old, type_precision* new_vec, int size)

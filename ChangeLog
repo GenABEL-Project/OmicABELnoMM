@@ -1,10 +1,13 @@
 
 TODO
 ---------
-Features:
+Required Features:
+-Add support for multiple files
+-Add MPI suport 
+
+Optional Features:
 -Add exclusion lists for single sets of elements of phenotypes
 -Add exclusion lists for single sets of elements of genotypes
--Add nonlinear interactions
 
 Optimizations:
 
@@ -14,6 +17,17 @@ Optimizations:
 Changes
 -------------
 -------------
+
+22-9-2014
+--------------
+Fixed countless bugs as a cause of non normal problem dimensions.
+Added several more dimension checks.
+Removed some warnings and changed comiling commands.
+Added over 150+ automated tests for validity checks.
+Broke fake files tests (re-add?).
+Multiple Non linear interactions added for single analysis.
+Single Non linear interactions added for multiple analysis.
+Stable user usable version.
 
 10-9-2014
 --------------

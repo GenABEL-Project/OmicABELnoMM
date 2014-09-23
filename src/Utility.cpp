@@ -8,26 +8,22 @@ double gemm_flops(double m, double n, double k,int sum)
 
 
 
+void myassert(int cond,string msg,int var)
+{
+    if(!cond)
+    {
+        cout << msg << " "<<var << endl;
+        exit(1);
+    }
+}
+
 void myassert(int cond,string msg)
 {
-    if(cond < 0)
+    if(!cond)
     {
-        cout <<"\nCondition violated on param "<< cond << ": ";
-        cout << msg << endl;
-
-        exit(cond);
+        cout << msg <<  endl;
+        exit(1);
     }
-    else
-    {
-        if(cond > 0)
-        {
-
-//            printf("\n%%WARINING %d in ",cond);
-//            printf(msg);
-//            printf("\n");
-        }
-    }
-
 }
 
 
@@ -215,8 +211,15 @@ void matlab_print_matrix(string name,int m,int n,type_precision* A)
               if(i != 0)
                 printf(",\t");
                 index = j+i*m;
-
-             printf(" %.5g",A[index]);
+            if(A[index] == 0.0)
+                {cout << " 0.000";}
+            else
+            {
+                 if(A[index] < 0.0)
+                    cout << std::setprecision(2) << A[index];
+                else
+                    cout << " "<<std::setprecision(2) << A[index];
+            }
           }
           cout << " ; \n";
         }

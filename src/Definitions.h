@@ -25,6 +25,7 @@
 #include <math.h>
 #include <omp.h>
 #include <pthread.h>
+#include <utility>
 
 
 #ifdef WINDOWS
@@ -167,6 +168,7 @@ struct Settings
     bool disp_cov;
     bool dosages;
     int model;//recessive additive dominant etc
+    int modelR;
 
     string fnameAL;
     string fnameAR;
@@ -177,12 +179,18 @@ struct Settings
 
     bool use_interactions;
     bool keep_depVar;
-    bool expand_depVar;
+    bool use_multiple_interaction_sets;
     string fname_interactions;
+    int ini_IDX_interactions;
+    int end_IDX_interactions;
 
     bool doublefileType;
 
     bool ForceCheck;
+
+    int limit_m;
+    int limit_t;
+    int limit_n;
 };
 
 
@@ -217,6 +225,8 @@ struct Outputs
     double acc_solve;
 
     double acc_stats;
+
+    unsigned int total_sig_results;
 
 
 };

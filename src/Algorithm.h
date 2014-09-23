@@ -56,6 +56,8 @@ class Algorithm
 
         int max_threads;
 
+        unsigned int total_results;
+
         float minPdisp;
 
 
