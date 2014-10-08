@@ -18,7 +18,7 @@ string helpcmd = "usage: omicabelnomm -c <path/fname> --geno <path/fname> -p <pa
                         -d <0.0~1.0> -r <-10.0~1.0> -b -s <0.0~1.0>  -e <-10.0~1.0> -i -f";
 
 string helpcmd_expl =
-"omicabelnomm Version 0.9b \n\t\
+"omicabelnomm Version 0.95b \n\t\
 Required: \n\t\
 -p --phe    \t <path/filename> to the inputs containing phenotypes \n\t\
 -g --geno   \t <path/filename> to the inputs containing genotypes \n\t\
@@ -375,6 +375,7 @@ int main(int argc, char *argv[] )
 
     omp_set_num_threads(params.threads);
     blas_set_num_threads(params.threads);
+    cout << "Omicabelnomm Version 0.95b \n\t\";
 
 
     //params.use_fake_files = true;
@@ -405,6 +406,7 @@ int main(int argc, char *argv[] )
         {
             alg.solve(params, out, P_NEQ_B_OPT_MD);
         }
+        cout << endl << "Number of Significant Results: " << out.total_sig_results <<  endl;
     }
 
     cout << endl;

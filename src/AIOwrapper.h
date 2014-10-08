@@ -31,6 +31,8 @@ struct fileh
     string fnameAR;
     string fnameY;
 
+    string io_overhead;
+
 
     string fnameOutFiles;
     string fname_dosages;
@@ -193,6 +195,7 @@ class AIOwrapper
         void write_OutSignificant(list < resultH >* sigResults, int min_p_disp, bool disp_cov);
 
         string io_overhead;
+        int realN;
 
 
     protected:

@@ -6,8 +6,8 @@ n = 4000 # number of individuals
 l = 3    # number of covariates+1 for intercept
 int = 3
 r = 2
-m = r*100 # number of snps
-t = 100  # number of traits
+m = r*1000 # number of snps
+t = 10000  # number of traits
 var=0.05
 
 set.seed(1001)
@@ -27,7 +27,7 @@ XL_db <- matrix2databel(XL,filename="XL",type="FLOAT")
 
 
 Y <- matrix(rnorm(t*n),ncol=t)
-for(i in 1:(n*t)){ if(sample(1:100,1) > 85) {Y[i]=0/0} }
+for(i in 1:(n*t)){ if(sample(1:100,1) > 90) {Y[i]=0/0} }
 colnames(Y) <- paste("ph",1:t,sep="")
 rownames(Y) <- paste("ind",1:n,sep="")
 Y_db <- matrix2databel(Y,filename="Y",type="FLOAT")
@@ -61,10 +61,16 @@ for(i in 1 + r*(0:((m-2)/r)) )
 	}
 }
 
-for(i in 1:(n*m)){ if(sample(1:100,1) > 85) XR[i]=0/0}
+for(i in 1:(n*m)){ if(sample(1:100,1) > 90) XR[i]=0/0}
 
 colnames(XR) <- paste("miss",1:m,sep="")
-for(i in 1:(m/r)){for(j in 1:r) {colnames(XR)[(i-1)*r+(j)] = paste0("snp",paste(i,j,sep="_")) }}
+for(i in 1:(m/r))
+{
+			for(j in 1:r) 
+			{
+			colnames(XR)[(i-1)*r+(j)] = paste0("snp",paste(i,j,sep="_") )
+			}
+}
 
 
 rownames(XR) <- paste("ind",1:n,sep="")

@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <queue>
+#include <map>
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -81,6 +82,7 @@
             return info;
         }
 
+
         inline  void cblas_ssyrk(int Order, char uplo, char Trans,
 		 int N, int K, float alpha, float *A, int lda,  float beta, float *C, int ldc)
         {
@@ -91,6 +93,20 @@
         {
             int info;
             sgels(trans, m, n, nrhs, a, lda, b, ldb,&info);
+            return info;
+        }
+
+        inline  lapack_int LAPACKE_spotrf( int matrix_order, char trans, lapack_int n, float* a,  lapack_int lda )
+        {
+            int info;
+            sgels(trans, n, nrhs, a, lda,&info);
+            return info;
+        }
+
+        inline  lapack_int LAPACKE_spotri( int matrix_order, char trans,lapack_int n, float* a,  lapack_int lda)
+        {
+            int info;
+            sgels(trans, n, a, lda,&info);
             return info;
         }
 
@@ -225,6 +241,9 @@ struct Outputs
     double acc_sbr;
     double acc_str;
     double acc_solve;
+
+    double acc_scorrect;
+    double acc_inner_scorrect;
 
     double acc_stats;
 

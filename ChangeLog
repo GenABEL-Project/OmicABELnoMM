@@ -9,14 +9,20 @@ Optional Features:
 -Add exclusion lists for single sets of elements of phenotypes
 -Add exclusion lists for single sets of elements of genotypes
 
-Optimizations:
-
--Reduce memcpy overhead of XR and XR XL factors
-
-
 Changes
 -------------
 -------------
+
+8-10-2014
+--------------
+
+Added naming checks/warning for element ids.
+Changed calculation of Standard errors to numerically robust versions.
+Reduced memcpy overhead of XR and XR XL factors.
+Created efficient calculation with corrections of covariance matrices.
+Covariants are displayed as results with -i only when the snp/XR is significant.
+Added a better performing operation for the calculation of residuals.
+Stable user usable version.
 
 22-9-2014
 --------------

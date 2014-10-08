@@ -67,43 +67,60 @@ class Algorithm
         bool disp_cov;
 
 
-        type_precision* SYY;
+        float* SYY;
 
 
+        void generate_correction_missings_Str(int y_block_size, int xr_block_size, int n, int l, int r,
+            float* __restrict XL_block, float* __restrict XR_block, float* __restrict Str_block, float* __restrict Sbr_block,
+                    list<long int>* index_nans);
+
+        void generate_correction_missings_Stl(int y_block_size, int x1_block_size, int x2_block_size,
+                            int n, int cols1, int cols2, float* X1_block, float* X2_block, float* S_block, list< long int>* index_nans);
+
+        void correct_missings_S(int p,int l,int r, float* S, float* Stl, float* Sbr, float* Str);
 
 
-        void t_students_cdf(int y_amount,int a_amount,int p, type_precision* T, type_precision* P, int deg_freedom);
+        void t_students_cdf(int y_amount,int a_amount,int p, float* T, float* P, int deg_freedom);
 
-        void sumSquares(type_precision* Data, int cols, int rows, type_precision* ssData, list<long int>* indexs_Data);
+        void sumSquares(float* Data, int cols, int rows, float* ssData, list<long int>* indexs_Data);
 
-        void hpc_statistics(int YxALmiss, int n, type_precision* AL, type_precision* AR, int a_amount, type_precision* y, int jj,float varY, type_precision* B,
-                int p, int l,int r,type_precision* var_xR,type_precision* var_xL, int y_blck_offset, int A_blck_offset, list < resultH >* sigResults);
-
-
-        void check_result(type_precision* AL, type_precision* AR,int rowsA,int colsA, int rhs,int colsAR,
-                            type_precision* y, type_precision* res,struct Settings params,int iX,int iiX, int jY, int jjY);
+        void hpc_statistics(int YxALmiss, int n, int realN, float* AL, float* AR, int a_amount, float* y, int jj,float varY, float* B,
+                int p, int l,int r,float* var_x, int y_blck_offset, int A_blck_offset, list < resultH >* sigResults);
 
 
-        void update_R(type_precision* R, type_precision* topRr, type_precision* botRr,int dim1, int dim2, int r);
+        void check_result(float* AL, float* AR,int rowsA,int colsA, int rhs,int colsAR,
+                            float* y, float* res,struct Settings params,int iX,int iiX, int jY, int jjY);
 
-        type_precision* extract_R(type_precision* A,int dim1_A, int dim2_A);
 
-        type_precision* prepare_R(type_precision* RL,int dim1_A, int dim2_AL,int dim2_AR);
+        void update_R(float* R, float* topRr, float* botRr,int dim1, int dim2, int r);
 
-        void prepare_QY(type_precision* qy, type_precision* top,type_precision* bot,int dim1_QY, int dim2_QY,int dim1_qy_bot,int bot_blocks );
+        float* extract_R(float* A,int dim1_A, int dim2_A);
 
-        void prepare_Bfinal(type_precision* bfinal, type_precision* bsource, int a_amount, int y_amount, int p);
+        float* prepare_R(float* RL,int dim1_A, int dim2_AL,int dim2_AR);
 
-        void extract_subMatrix(type_precision* source, type_precision* dest,int dim1_source, int dim2_source,
+        void prepare_QY(float* qy, float* top,float* bot,int dim1_QY, int dim2_QY,int dim1_qy_bot,int bot_blocks );
+
+        void prepare_Bfinal(float* bfinal, float* bsource, int a_amount, int y_amount, int p);
+
+        void extract_subMatrix(float* source, float* dest,int dim1_source, int dim2_source,
                                                             int dim1_ini,int dim1_end,int dim2_ini,int dim2_end);
-        void build_S(type_precision* S,type_precision* Stl,type_precision* Str,type_precision* Sbr,int l,int r);
+        void build_S(float* S,float* Stl,float* Str,float* Sbr,int l,int r);
 
 
 
-        void hpc_SSY(int n,int p, int l,int r, type_precision* __restrict  AL, type_precision* __restrict  AR, int a_amount, type_precision* __restrict y, type_precision* __restrict  B );
+        void hpc_SSY(int n,int p, int l,int r, float* __restrict  AL, float* __restrict  AR,
+                      int a_amount, int y_block_size, float* __restrict y, float* __restrict  B );
 
 
 
+        void singleSSY( float* __restrict sum, float* __restrict b,float* __restrict b2,float* __restrict b3,float* __restrict b4,
+                        float* __restrict y1, float* __restrict y2, float* __restrict y3, float* __restrict y4,
+                        float* __restrict sy,float* __restrict Xl_n,float* __restrict XR_n,
+                     int l,int r, int p, int n, int thead_id  );
+
+
+        inline float singleSSY(float* __restrict b, float* __restrict y, float* __restrict sy,float* __restrict Xl_n,float* __restrict XR_n,
+                     int l,int r, int p, int n, int thead_id  );
 
 
 

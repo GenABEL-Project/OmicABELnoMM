@@ -80,6 +80,7 @@ void AIOwrapper::initialize(struct Settings &params)
 
         params.n = min((int)(ALfvi->fvi_header.numObservations),params.limit_n);
         Fhandler->fileN = params.n;
+        realN = params.n;
 
 
         params.m = min((int)(ARfvi->fvi_header.numVariables/params.r),params.limit_m/params.r);
@@ -104,14 +105,37 @@ void AIOwrapper::initialize(struct Settings &params)
         params.t = min((int)(Yfvi->fvi_header.numVariables),params.limit_t);
         params.l = ALfvi->fvi_header.numVariables;
 
+
+        //!check id names order
+        string  YidNames;
+        string  ALidName;
+        string  ARidName;
+        string  INTidName;
+
         int yname_idx=0;//starting idx for names on ALfvi->data
         for(int i = 0; i < params.n; i++)
         {
-            //Nnames.push_back(string(&(Yfvi->fvi_data[yname_idx])));
+            YidNames = string(&(Yfvi->fvi_data[yname_idx]));
+            ALidName = string(&(ALfvi->fvi_data[yname_idx]));
+            ARidName = string(&(ARfvi->fvi_data[yname_idx]));
+            if(YidNames.compare(ALidName))
+            {
+                cout << "Warning, ID names between -p file and -c file do not coincide! The files must have the same meaningful order" << endl;
+                i = params.n;//exit
+            }
+            if(YidNames.compare(ARidName))
+            {
+                cout << "Warning, ID names between -p file and -g file do not coincide! The files must have the same meaningful order" << endl;
+                i = params.n;//exit
+            }
+            if(ARidName.compare(ALidName))
+            {
+                cout << "Warning, ID names between -g file and -c file do not coincide! The files must have the same meaningful order" << endl;
+                i = params.n;//exit
+            }
             yname_idx += Yfvi->fvi_header.namelength;
 
-            //cout << i << ": " << string(&(Yfvi->fvi_data[yname_idx])) << "\t";
-            //cout << i << ": " << Ynames[i] << "\t";
+
         }
 
 
@@ -135,7 +159,7 @@ void AIOwrapper::initialize(struct Settings &params)
 
 
         int opt_tb = 1000;
-        int opt_mb = 100;//4WONT WORK WTF?
+        int opt_mb = 500;
 
         params.mb = min(params.m, opt_mb);
         params.tb = min(params.t, opt_tb);
@@ -160,6 +184,7 @@ void AIOwrapper::initialize(struct Settings &params)
     int excl_count = 0;
     int Almissings = 0;
     Fhandler->excl_List = new list< pair<int,int> >();
+
 
 
 
@@ -286,6 +311,21 @@ void AIOwrapper::initialize(struct Settings &params)
             cout << Fhandler->fnameAR << ":" << ARfvi->fvi_header.numObservations << endl;
             exit(1);
         }
+
+        int name_idx= 0;
+        for(int i = 0; i < params.n; i++)
+        {
+            string ARidName = string(&(ARfvi->fvi_data[name_idx]));
+            string INTidName = string(&(Ifvi->fvi_data[name_idx]));
+            if(ARidName.compare(INTidName))
+            {
+                cout << "Warning, ID names between -g file and interactions file do not coincide! The files must have the same meaningful order!" << endl;
+                i = params.n;//exit
+            }
+
+            name_idx += Yfvi->fvi_header.namelength;
+        }
+
 
         if(params.end_IDX_interactions != -1 || params.ini_IDX_interactions != -1)
         {
@@ -731,6 +771,10 @@ void* AIOwrapper::async_io( void *ptr )
 
     int y_file_pos = 0;
     int ar_file_pos = 0;
+
+
+    int seq_count;
+    int max_secuential_write_count= 10;
 
 
     if(!Fhandler->fakefiles)
@@ -1200,9 +1244,9 @@ void* AIOwrapper::async_io( void *ptr )
         }
         //B write
 
-        while(!Fhandler->write_full_buffers.empty() && Local_not_done)
+        while(!Fhandler->write_full_buffers.empty() && Local_not_done && seq_count < max_secuential_write_count)
         {
-
+            seq_count++;
             //cout << "S" << " ";
 
             pthread_mutex_lock(&(Fhandler->out_buff_upd));
@@ -1258,8 +1302,9 @@ void* AIOwrapper::async_io( void *ptr )
                     for (list<  result  >::iterator it2=current.res_p.begin(); it2 != current.res_p.end(); ++it2)
                     {
                         result res_p = *it2;
-                        if(res_p.P <= Fhandler->min_p_disp && current.R2 >= Fhandler->min_R2_disp)
+                        if((res_p.P <= Fhandler->min_p_disp && current.R2 >= Fhandler->min_R2_disp )|| Fhandler->storePInd)
                         {
+                            Fhandler->io_overhead = "!";//let the user know a result was found
                             string Aname = " ";
 
                             if(res_p.AL_name_idx < Fhandler->l)
@@ -1323,6 +1368,8 @@ void* AIOwrapper::async_io( void *ptr )
 
         }
 
+        seq_count = 0;
+
 
         if(!Fhandler->not_done && Fhandler->write_full_buffers.empty())
                 {Local_not_done = false;}
@@ -1337,7 +1384,8 @@ void* AIOwrapper::async_io( void *ptr )
         timeToWait.tv_nsec = time.wMilliseconds*1000 + morenanos ;
 #else
         clock_gettime(CLOCK_REALTIME, &timeToWait);
-        timeToWait.tv_nsec += 10000000;
+        //timeToWait.tv_nsec += 10000000;
+        timeToWait.tv_nsec += 10000;
 #endif
 
         pthread_mutex_lock(&(Fhandler->m_more));
@@ -1511,7 +1559,7 @@ void AIOwrapper::load_Yblock(type_precision** Y, int &y_blockSize)
         pthread_cond_signal( &(Fhandler->condition_more ));
         pthread_mutex_unlock(&(Fhandler->m_more));
 
-        io_overhead = "!";
+        io_overhead = "$";
 
         pthread_mutex_lock(&(Fhandler->m_read));
         pthread_cond_wait( &(Fhandler->condition_read), &(Fhandler->m_read ));
@@ -1564,7 +1612,7 @@ void AIOwrapper::prepare_Y(int y_blockSize, int n, int totalY)
     Fhandler->n= n;
     Fhandler->Y_Amount=totalY;
     Fhandler->y_to_readSize = Fhandler->Y_Amount;
-    Fhandler->buff_count = min(3,(totalY+ y_blockSize - 1)/y_blockSize) ;
+    Fhandler->buff_count = max(3,1+(totalY+ y_blockSize - 1)/y_blockSize) ;
     //cout << "buffcount " << Fhandler->buff_count;
 
 
@@ -1619,6 +1667,9 @@ void AIOwrapper::getCurrentWriteBuffers(list < resultH >* &sigResults)
     pthread_mutex_unlock(&(Fhandler->out_buff_upd));
 
 
+    sigResults->clear();
+
+
     pthread_mutex_lock(&(Fhandler->m_more));
     pthread_cond_signal( &(Fhandler->condition_more ));
     pthread_mutex_unlock(&(Fhandler->m_more));
@@ -1633,6 +1684,15 @@ void AIOwrapper::write_OutFiles(list < resultH >* &sigResults)
     Fhandler->write_full_buffers.push(sigResults);
     sigResults = 0;
     //cout << Fhandler->write_full_buffers.size() << endl;
+
+    if(Fhandler->io_overhead.compare(""))
+    {
+        io_overhead = Fhandler->io_overhead;
+    }
+    else
+    {
+        Fhandler->io_overhead = "";
+    }
 
     pthread_mutex_unlock(&(Fhandler->out_buff_upd));
 
@@ -1740,7 +1800,7 @@ void AIOwrapper::prepare_AR( int desired_blockSize, int n, int totalRfile, int c
 
 
 
-    int buff_count = min(10,2*(Fhandler->Ar_Amount+desired_blockSize-1)/desired_blockSize+1);
+    int buff_count = max(10,4*(Fhandler->Ar_Amount+desired_blockSize-1)/desired_blockSize+1);
 
     #ifdef DEBUG
     cout << "buff_count" << buff_count << endl  << flush;
@@ -1769,7 +1829,7 @@ void AIOwrapper::finalize_AR()
 
 }
 
-void AIOwrapper::removeALmissings(list< pair<int,int> >* excl_List,struct Settings params, int &Almissings)
+void AIOwrapper::removeALmissings(list< pair<int,int> >* excl_List, struct Settings params, int &Almissings)
 {
     float* tempAL = new float[params.n*params.l];
 
@@ -1811,6 +1871,10 @@ void AIOwrapper::removeALmissings(list< pair<int,int> >* excl_List,struct Settin
 
 
 }
+
+
+
+
 
 bool AIOwrapper::splitpair(int value, list< pair<int,int> >* excl_List, int n)
 {
@@ -2018,8 +2082,15 @@ void AIOwrapper::read_excludeList(list< pair<int,int> >* excl, int &excl_count, 
                 cout << "\nPlease provide ordered pairs!\n";
                 exit( 1 );
             }
-            for(int i = first; i <= second;i++ )
+            if(first < 1 || second < 1)
             {
+                cout << "\nPlease provide valid ositive indixes!\n";
+                exit( 1 );
+            }
+
+            for(int i = first-1; i <= second-1;i++ )
+            {
+
                 bool removed  = splitpair(i,excl, n );
                 if(removed)
                 {
@@ -2082,7 +2153,7 @@ FILE * AIOwrapper::fgls_fopen( const char *path, const char *mode )
 	f = fopen( path, mode );
 	if ( f == NULL )
 	{
-		cout << "\nerror on fgls_fopen\n";
+		cout << "\nError reading file: " << path << endl;
 		exit( 1 );
 	}
 	return f;

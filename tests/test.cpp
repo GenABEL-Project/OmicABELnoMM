@@ -30,15 +30,16 @@ void print_output(struct Outputs out, float gemm_gflopsPsec)
     cout << "\nDuration:\t\t" << out.duration <<" \t"<<  out.duration/out.duration*100 << "\n";
 
     double missing = (out.duration - (out.acc_loady+out.acc_loadxr
-                                                            +out.acc_real_innerloops+out.acc_gemm));
+                                                            +out.acc_real_innerloops+out.acc_gemm+out.acc_scorrect));
 
     cout << "Missing Sec:\t\t" << missing <<" \t"<<  missing/out.duration*100 << "\n";
 
-    missing = (out.acc_real_innerloops - (out.acc_solve+out.acc_sbr +out.acc_stl+out.acc_str+out.acc_other+out.acc_stats+out.acc_storeb));
+    missing = (out.acc_real_innerloops - (out.acc_solve+out.acc_sbr +out.acc_stl+out.acc_str+out.acc_other+out.acc_stats+out.acc_storeb+out.acc_inner_scorrect));
 
     cout << endl;
 
     cout << "GEMM Sec:\t\t" << out.acc_gemm <<" \t"<<  out.acc_gemm/out.duration*100 << "\n";
+    cout << "SGenCorr Sec:\t\t" <<  out.acc_scorrect <<"\t"<<  out.acc_scorrect/out.duration*100 << "\n";
 
     cout << "InnerLoops  Sec:\t" << out.acc_real_innerloops <<" \t"<<  out.acc_real_innerloops/out.duration*100 << "\n";
     cout << "Stl Sec:\t\t" << out.acc_stl <<" \t"<<  out.acc_stl/out.duration*100 << "\n";
@@ -47,6 +48,8 @@ void print_output(struct Outputs out, float gemm_gflopsPsec)
     cout << "Solve Sec:\t\t" << out.acc_solve <<" \t"<<  out.acc_solve/out.duration*100 << "\n";
     cout << "Other Sec:\t\t" << out.acc_other <<" \t"<<  out.acc_other/out.duration*100 << "\n";
     cout << "Stats Sec:\t\t" <<  out.acc_stats <<"\t"<<  out.acc_stats/out.duration*100 << "\n";
+    cout << "SCorr Sec:\t\t" <<  out.acc_inner_scorrect <<"\t"<<  out.acc_inner_scorrect/out.duration*100 << "\n";
+
     cout << "Missing Sec:\t\t" << missing <<"\t"<<  missing/out.duration*100 << "\n";
 
     //cout << "RQy Sec:\t" << out.acc_real_innerloops-out.acc_gemm <<" \t"<<  (out.acc_real_innerloops-out.acc_gemm)/out.duration*100 << "\n";
@@ -124,9 +127,10 @@ int main(int argc, char *argv[] )
     params.threads = max_threads;
 
     params.minPstore = 0.1;
-    params.minPdisp = 0.0005;
+    params.minPdisp = 0.00005;
     params.minR2store = 0.00001;
     params.minR2disp = 0.000001;
+    params.disp_cov = true;
 
 
     params.r = 2;
@@ -135,10 +139,12 @@ int main(int argc, char *argv[] )
     params.fnameAR="examples/XR";
     params.fnameY="examples/Y";
 
+    params.limit_t = 1000;params.limit_m = params.limit_t *params.r;
+
     alg.solve(params, out, P_NEQ_B_OPT_MD);
     print_output(out, gemm_gflopsPsec);
 
-
+    exit(0);
 
      cout << "\nInteraction Tests\n" << flush;
     //!-------------------------------------
