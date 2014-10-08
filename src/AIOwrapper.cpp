@@ -354,7 +354,7 @@ void AIOwrapper::initialize(struct Settings &params)
 
         if(Fhandler->use_multiple_interaction_sets)
         {
-            cout << "rm:"<< params.m<<  " rmb:" << params.mb << endl;
+            //cout << "rm:"<< params.m<<  " rmb:" << params.mb << endl;
 
             params.m *= Fhandler->numInter;
             Fhandler->Ar_file_blocksize = params.mb/Fhandler->numInter;
