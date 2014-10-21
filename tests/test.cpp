@@ -81,6 +81,12 @@ int main(int argc, char *argv[] )
 {
     struct Settings params;
 
+    //!MPI
+    int size, rank;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    //printf("SIZE = %d RANK = %d\n",size,rank);
 
 
     omp_set_nested(false);
@@ -92,7 +98,7 @@ int main(int argc, char *argv[] )
 
 
 
-    int max_threads = 2;
+    int max_threads = 1;
 
     params.threads = max_threads;
 
@@ -132,6 +138,9 @@ int main(int argc, char *argv[] )
     params.minR2disp = 0.000001;
     params.disp_cov = true;
 
+    params.mpi_id = rank;
+    params.mpi_num_threads = size;
+
 
     params.r = 2;
     params.fnameOutFiles="examples/results/normal";
@@ -144,7 +153,10 @@ int main(int argc, char *argv[] )
     alg.solve(params, out, P_NEQ_B_OPT_MD);
     print_output(out, gemm_gflopsPsec);
 
-    exit(0);
+    //!MPI
+    MPI_Finalize();
+
+    //exit(0);
 
      cout << "\nInteraction Tests\n" << flush;
     //!-------------------------------------
@@ -282,7 +294,7 @@ int main(int argc, char *argv[] )
     }
 
 
-
+    exit(0);
     //!-------------------------------------
     alg.applyDefaultParams(params);
     memset(&out, 0, sizeof(out));

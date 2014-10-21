@@ -3,7 +3,6 @@ TODO
 ---------
 Required Features:
 -Add support for multiple files
--Add MPI suport 
 
 Optional Features:
 -Add exclusion lists for single sets of elements of phenotypes
@@ -12,6 +11,17 @@ Optional Features:
 Changes
 -------------
 -------------
+
+21-10-2014
+--------------
+svn commit -m "Added check for rank of covariate matrix to avoid miss-calculations of results when covariates are linearly dependent. An error is given and the program is exited while letting the user know that covariates need to change. Added MPI functionality for clusters. Screen output happens on process 0 and multiple output files are produced, one per process."
+Added check for rank of covariate matrix to avoid miss-calculations of 
+results when covariates are linearly dependent. 
+An error is given and the program is exited while
+ letting the user know that covariates need to change. 
+Added MPI functionality for clusters. 
+Screen output happens on process 0 
+and multiple output files are produced, one per process. 
 
 8-10-2014
 --------------

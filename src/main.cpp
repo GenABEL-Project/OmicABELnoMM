@@ -18,39 +18,41 @@ string helpcmd = "usage: omicabelnomm -c <path/fname> --geno <path/fname> -p <pa
                         -d <0.0~1.0> -r <-10.0~1.0> -b -s <0.0~1.0>  -e <-10.0~1.0> -i -f";
 
 string helpcmd_expl =
-"omicabelnomm Version 0.95b \n\t\
+"omicabelnomm Version 0.96b \n\t\
 Required: \n\t\
--p --phe    \t <path/filename> to the inputs containing phenotypes \n\t\
--g --geno   \t <path/filename> to the inputs containing genotypes \n\t\
--c --cov    \t <path/filename> to the inputs containing covariates \n\t\
--o --out    \t <path/filename> to store the output to (used for all .txt and .ibin & .dbin) \n\n\
+-p --phe    \t <path/filename> to the inputs containing phenotypes. \n\t\
+-g --geno   \t <path/filename> to the inputs containing genotypes. \n\t\
+-c --cov    \t <path/filename> to the inputs containing covariates. \n\t\
+-o --out    \t <path/filename> to store the output to (used for all .txt and .ibin & .dbin). \n\n\
 Optional: \n\t\
--n --ngpred \t <#SNPcols> Number of columns in the geno file that represent a single SNP \n\t\
--t --thr    \t <#CPUs> Number of computing threads to use to speed computations \n\t\
--x --excl   \t <path/filename> file containing list of individuals to exclude from input files, (see example file) \n\t\
+-n --ngpred \t <#SNPcols> Number of columns in the geno file that represent a single SNP. \n\t\
+-t --thr    \t <#CPUs> Number of computing threads to use to speed computations. Recommended is 4-8 per node (see MPI). \n\t\
+-x --excl   \t <path/filename> file containing list of individuals to exclude from input files, (see example file). \n\t\
 -d --pdisp  \t <0.0~1.0> Value to use as maximum threshold for significance.\n\t\
-\t\t Results with P-values UNDER this threshold will be displayed in the putput .txt file \n\t\
+\t\t Results with P-values UNDER this threshold will be displayed in the putput .txt file. \n\t\
 -r --rdisp  \t <-10.0~1.0> Value to use as minimum threshold for R2. \n\t\
-\t\t Results with R2-values ABOVE this threshold will be displayed in the putput .txt file \n\t\
--b --stobin \t Flag that forces to ALSO store results in a smaller binary format (*.ibin & *.dbin) \n\t\
--s --psto   \t <0.0~1.0>  Results with P-values UNDER this threshold will be displayed in the putput binary files \n\t\
--e --rsto   \t <-10.0~1.0> Results with R2-values ABOVE this threshold will be stored in the putput binary files \n\t\
--i --fdcov  \t Flag that forces to include covariates as part of the results that are stored in .txt and binary files \n\t\
+\t\t Results with R2-values ABOVE this threshold will be displayed in the putput .txt file. \n\t\
+-b --stobin \t Flag that forces to ALSO store results in a smaller binary format (*.ibin & *.dbin). \n\t\
+-s --psto   \t <0.0~1.0>  Results with P-values UNDER this threshold will be displayed in the putput binary files. \n\t\
+-e --rsto   \t <-10.0~1.0> Results with R2-values ABOVE this threshold will be stored in the putput binary files. \n\t\
+-i --fdcov  \t Flag that forces to include covariates (when its genotype is significant) as part of the results stored \n\t\
 -f --fdgen  \t Flag that forces to consider all included results (causes the analisis to ignores ALL threshold values). \n\t\
--j --additive  \t Flag that runs the analisis with an Additive Model with (2*AA,1*AB,0*BB) effects \n\t\
--k --dominant  \t Flag that runs the analisis with an Dominant Model with (1*AA,1*AB,0*BB) effects \n\t\
--l --recessive \t Flag that runs the analisis with an Recessive Model with (1*AA,0*AB,0*BB) effects \n\t\
+-j --additive  \t Flag that runs the analisis with an Additive Model with (2*AA,1*AB,0*BB) effects. \n\t\
+-k --dominant  \t Flag that runs the analisis with an Dominant Model with (1*AA,1*AB,0*BB) effects. \n\t\
+-l --recessive \t Flag that runs the analisis with an Recessive Model with (1*AA,0*AB,0*BB) effects. \n\t\
 -z --mylinear \t <path/filename> to read Factors 'f_i' for a Custom Linear Model with f1*X1,f2*X2,f3*X3...fn*X_ngpred as effects,\n\t\
               \t each column of each independent variable will be multiplied with the specified factors. \n\t\
-              \t Formula: y~alpha*cov + beta_1*f1*X1 + beta_2*f2*X2 +...+ beta_n*fn*Xn, (see example files!) \n\t\
+              \t Formula: y~alpha*cov + beta_1*f1*X1 + beta_2*f2*X2 +...+ beta_n*fn*Xn, (see example files!). \n\t\
 -y --myaddit  \t <path/filename> to read Factors 'f_i' for a Custom Additive Model with (f1*X1,f2*X2,f3*X3...fn*X_ngpred) as effects,\n\t\
               \t each column of each independent variable will be multiplied with the specified factors and then added together. \n\t\
-              \t Formula: y~alpha*cov + beta*(f1*X1 + f2*X2 +...+ fn*Xn), (see example files!) \n\t\
--v --simpleinter <path/filename> to read the interactions from; for single analysis using multile interactions \n\t\
--w --multinter \t <path/filename> to read the interactions from; for multiple analysis using single interaction per analysis \n\t\
+              \t Formula: y~alpha*cov + beta*(f1*X1 + f2*X2 +...+ fn*Xn), (see example files!). \n\t\
+-v --simpleinter <path/filename> to read the interactions from; for single analysis using multile interactions. \n\t\
+-w --multinter \t <path/filename> to read the interactions from; for multiple analysis using single interaction per analysis. \n\t\
 -u --keepinter \t Flag that sets if the interaction analysis chose is to too keep the dependent variable X.\n\t\
-            \t If set, Formula: y~alpha*cov + beta_1*INT*X + beta_2*X, (see example files!) \n\t\
-            \t Default not set, Formula: y~alpha*cov + beta_1*INT*X, (see example files!) \n\t\
+            \t If set, Formula: y~alpha*cov + beta_1*INT*X + beta_2*X, (see example files!). \n\t\
+            \t Default not set, Formula: y~alpha*cov + beta_1*INT*X, (see example files!). \n\t\n\t\
+            \t Support for MPI is available. Simply use mpirun -np <#nodes> omicabelnomm <params> on an Open-MPI enabled computer/cluster.\n\t\
+            \t Recommended is to use MPI when dealing with problems with over 2000 genotypes, at a rate of 1 node per 2000 genotypes.\n\t\
 ";
 
 
@@ -129,6 +131,7 @@ void parse_params(int argc, char *argv[], struct Settings &params )
 
         if (!optarg && (c != 'f' && c != 'b' && c != 'i' && c != 'h'))
         {
+            if(params.mpi_id == 0)
             cout << "\nerror with argument parameter " << (char)c << endl;
             exit(1);
         }
@@ -152,7 +155,7 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             pos = string(optarg).find(".");
             if (pos != string::npos)
                 params.fnameY = string(optarg).substr(0, pos);
-
+            if(params.mpi_id == 0)
             cout << "-p Reading phenotypes from file " << optarg << endl;
             break;
 
@@ -163,13 +166,14 @@ void parse_params(int argc, char *argv[], struct Settings &params )
            pos = string(optarg).find(".");
             if (pos != string::npos)
                 params.fnameAR = string(optarg).substr(0, pos);
-
+            if(params.mpi_id == 0)
             cout << "-g Reading with genotype data from file " << optarg << endl;
             break;
 
          case 'n':
             params.r = atoi(optarg);
             params.r = max(params.r, 1);
+            if(params.mpi_id == 0)
             cout << "-n Using columns per snp as " << params.r << endl;
             break;
 
@@ -180,7 +184,7 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             pos = string(optarg).find(".");
             if (pos != string::npos)
                 params.fnameAL = string(optarg).substr(0, pos);
-
+            if(params.mpi_id == 0)
             cout << "-c Reading covariates from file " << optarg << endl;
             break;
 
@@ -191,98 +195,99 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             pos = string(optarg).find(".");
             if (pos != string::npos)
                 params.fnameOutFiles = string(optarg).substr(0, pos);
-
+            if(params.mpi_id == 0)
             cout << "-o Writing output files to " << optarg << endl;
             break;
 
         case 't':
             params.threads = atoi(optarg);
             params.threads = min(max(params.threads, 1), 32);
+            if(params.mpi_id == 0)
             cout << "-t Using " << params.threads << " CPU threads for parallelism" <<  endl;
             break;
 
          case 'x':
             params.fname_excludelist = string(optarg);
-
+            if(params.mpi_id == 0)
             cout << "-x Excluding ids on " << params.fname_excludelist << endl;
             break;
 
 
          case 'd':
             params.minPdisp = fabs(atof(optarg));
-
+            if(params.mpi_id == 0)
             cout << "-d Significance to display in .txt will be P-val's below " << params.minPdisp << endl;
             break;
 
         case 's':
             params.minPstore = fabs(atof(optarg));
-
+            if(params.mpi_id == 0)
             cout << "-s Significance to store in .bin will be P-val's below " << params.minPstore << endl;
             break;
 
         case 'r':
             params.minR2disp = (atof(optarg));
-
+            if(params.mpi_id == 0)
             cout << "-r Minimum R2 to display in .txt will be above " << params.minR2disp << endl;
             break;
 
         case 'e':
             params.minR2store =  (atof(optarg));
-
+            if(params.mpi_id == 0)
             cout << "-e Minimum R2 to store in .bin will be above " << params.minR2store << endl;
             break;
 
         case 'i':
             params.disp_cov = true;
-
-            cout << "-i Covariate results will be included in results" << endl;
+            if(params.mpi_id == 0)
+            cout << "-i Covariate results (significant) will be included in results whenever their respective snps are also significant" << endl;
             break;
 
         case 'f':
             params.storePInd = true;
-
+            if(params.mpi_id == 0)
             cout << "-f Forcing all included results to be considered independently of max P-val or min R2. (SLOW!)"<< endl;
             break;
 
         case 'j':
             params.model = 0;
             params.dosages = true;
-
+            if(params.mpi_id == 0)
             cout << "-j Using Additive Model with (2*AA,1*AB,0*BB) effects"<< endl;
             break;
 
         case 'k':
             params.model = 1;
             params.dosages = true;
-
+            if(params.mpi_id == 0)
             cout << "-k Using Dominant Model with (1*AA,1*AB,0*BB) effects"<< endl;
             break;
 
         case 'l':
             params.model = 2;
             params.dosages = true;
-
+            if(params.mpi_id == 0)
             cout << "-j Using Recessive Model with (1*AA,0*AB,0*BB) effects"<< endl;
             break;
 
         case 'z':
             params.model = 3;
             params.dosages = true;
-
+            if(params.mpi_id == 0)
             cout << "-z Using Custom Linear Model with parameters read from the file "<< params.fname_dosages << endl;
             break;
 
         case 'y':
             params.model = 4;
             params.dosages = true;
-
+            if(params.mpi_id == 0)
             cout << "-z Using Custom Additive Model with parameters read from the file "<< params.fname_dosages << endl;
             break;
 
         case 'b':
             params.storeBin = true;
 
-
+            if(params.mpi_id == 0)
             cout << "-b Results will be stored in binary format too"<< endl;
             break;
 
@@ -291,7 +296,7 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             params.use_interactions = true;
             params.keep_depVar = true;
             params.use_multiple_interaction_sets = false;
-
+            if(params.mpi_id == 0)
             cout << "-v File containing single interactions " << params.fname_interactions << endl;
             break;
 
@@ -301,13 +306,14 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             params.use_interactions = true;
             params.keep_depVar = true;
             params.use_multiple_interaction_sets = true;
-
+            if(params.mpi_id == 0)
             cout << "-w File containing multiple interactions " << params.fname_interactions << endl;
             break;
 
 
         case 'u':
             params.keep_depVar = true;
+            if(params.mpi_id == 0)
             cout << "-u Keeping independent variable for interaction analysis " <<  endl;
             break;
 
@@ -360,9 +366,24 @@ int main(int argc, char *argv[] )
     struct Settings params;
     Algorithm alg;
 
-
     //!default params
     alg.applyDefaultParams(params);
+
+    //!MPI
+    int size, rank;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    //printf("SIZE = %d RANK = %d\n",size,rank);
+    params.mpi_id = rank;
+    params.mpi_num_threads = size;
+
+
+
+
+
+
+
 
 
 
@@ -375,24 +396,25 @@ int main(int argc, char *argv[] )
 
     omp_set_num_threads(params.threads);
     blas_set_num_threads(params.threads);
-    cout << "Omicabelnomm Version 0.95b \n\t\";
+    if(params.mpi_id == 0)
+        cout << "Omicabelnomm Version 0.96b \n";
 
 
     //params.use_fake_files = true;
-    if (params.use_fake_files)
-    {
-        int multiplier = 1000;
-
-        params.n = 4 * multiplier;
-        params.l = 3;
-        params.r = 1;
-
-        params.t  = 1 * multiplier;
-        params.tb = 1 * multiplier;
-
-        params.m  = 1 * multiplier;
-        params.mb = 1 * multiplier;
-    }
+//    if (params.use_fake_files)
+//    {
+//        int multiplier = 1000;
+//
+//        params.n = 4 * multiplier;
+//        params.l = 3;
+//        params.r = 1;
+//
+//        params.t  = 1 * multiplier;
+//        params.tb = 1 * multiplier;
+//
+//        params.m  = 1 * multiplier;
+//        params.mb = 1 * multiplier;
+//    }
 
 
     if(!help_request)
@@ -410,6 +432,9 @@ int main(int argc, char *argv[] )
     }
 
     cout << endl;
+
+    //!MPI
+    MPI_Finalize();
 
     return 0;
 }

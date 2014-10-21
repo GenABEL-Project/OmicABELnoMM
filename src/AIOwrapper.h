@@ -37,6 +37,8 @@ struct fileh
     string fnameOutFiles;
     string fname_dosages;
 
+    int mpi_id;
+
 
 
     list< pair<int,int> >* excl_List;
@@ -73,6 +75,9 @@ struct fileh
 
     queue<type_buffElement*> ar_empty_buffers;
     queue<type_buffElement*> ar_full_buffers;
+
+    //MPI related vars
+    int initial_file_pos;
 
     int index;
     int fileN;
@@ -196,6 +201,7 @@ class AIOwrapper
 
         string io_overhead;
         int realN;
+
 
 
     protected:

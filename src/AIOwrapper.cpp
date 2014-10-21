@@ -45,7 +45,10 @@ void AIOwrapper::initialize(struct Settings &params)
     Fhandler->dosage_skip = 0;
     Fhandler->fileR = 0;
     Fhandler->add_dosages = false;
+    Fhandler->initial_file_pos = 0;
+    Fhandler->mpi_id = params.mpi_id;
 
+    int ar_names_toskip = 0;
 
 
     if(!Fhandler->fakefiles)
@@ -82,8 +85,31 @@ void AIOwrapper::initialize(struct Settings &params)
         Fhandler->fileN = params.n;
         realN = params.n;
 
-
         params.m = min((int)(ARfvi->fvi_header.numVariables/params.r),params.limit_m/params.r);
+
+        if(params.mpi_num_threads > 1 && params.m >= params.mpi_num_threads)
+        {
+            int m_mpi = params.m/params.mpi_num_threads;
+            ar_names_toskip = m_mpi;
+            Fhandler->initial_file_pos = (m_mpi*params.mpi_id) * params.r * params.n;
+            //cout << Fhandler->initial_file_pos << endl;
+            //corner case for non whole divisions of data among mpi procs
+            if((params.mpi_num_threads-1) == params.mpi_id)
+            {
+                //portion+rest
+                params.m = m_mpi + (params.m-params.mpi_num_threads* m_mpi);
+            }
+            else
+            {
+                params.m = m_mpi;
+            }
+
+            Fhandler->fnameOutFiles += "_mpi";
+            Fhandler->fnameOutFiles += std::to_string(params.mpi_id+1);
+            Fhandler->fnameOutFiles += "_";
+        }
+
+
 
         #ifdef DEBUG
         cout << "calcM:" << params.m << endl;
@@ -120,16 +146,19 @@ void AIOwrapper::initialize(struct Settings &params)
             ARidName = string(&(ARfvi->fvi_data[yname_idx]));
             if(YidNames.compare(ALidName))
             {
+                if(params.mpi_id == 0)
                 cout << "Warning, ID names between -p file and -c file do not coincide! The files must have the same meaningful order" << endl;
                 i = params.n;//exit
             }
             if(YidNames.compare(ARidName))
             {
+                if(params.mpi_id == 0)
                 cout << "Warning, ID names between -p file and -g file do not coincide! The files must have the same meaningful order" << endl;
                 i = params.n;//exit
             }
             if(ARidName.compare(ALidName))
             {
+                if(params.mpi_id == 0)
                 cout << "Warning, ID names between -g file and -c file do not coincide! The files must have the same meaningful order" << endl;
                 i = params.n;//exit
             }
@@ -203,9 +232,7 @@ void AIOwrapper::initialize(struct Settings &params)
 
     if(!Fhandler->fakefiles)
     {
-
         removeALmissings(Fhandler->excl_List,params,Almissings);
-
     }
 
 
@@ -319,6 +346,7 @@ void AIOwrapper::initialize(struct Settings &params)
             string INTidName = string(&(Ifvi->fvi_data[name_idx]));
             if(ARidName.compare(INTidName))
             {
+                if(params.mpi_id == 0)
                 cout << "Warning, ID names between -g file and interactions file do not coincide! The files must have the same meaningful order!" << endl;
                 i = params.n;//exit
             }
@@ -433,7 +461,7 @@ void AIOwrapper::initialize(struct Settings &params)
                 }
             }
         }
-        if(interaction_missings)
+        if(interaction_missings && params.mpi_id == 0)
             cout << "Excluding " << interaction_missings << " from Interaction missings" << endl;
         #ifdef DEBUG
         cout << params.mb << " " << params.r << " " << params.m << endl;
@@ -462,6 +490,7 @@ void AIOwrapper::initialize(struct Settings &params)
         //!******nameGATHER****************
 
         int Aname_idx=Fhandler->fileN*ARfvi->fvi_header.namelength;//skip the names of the rows
+        Aname_idx += ARfvi->fvi_header.namelength*Fhandler->fileR*params.mpi_id*ar_names_toskip; // skipnot mine according to mpi
         if(Fhandler->use_dosages && Fhandler->add_dosages)
         {
             for(int i = 0; i < Fhandler->fileM; i++)
@@ -563,8 +592,11 @@ void AIOwrapper::initialize(struct Settings &params)
 
         if(params.l > 255 || params.p > 255 || params.n > 65535)//can remove if fixed for output files
         {
+            if(params.mpi_id == 0)
+            {
             cout << "Warning, output binary format does not yet support current problem sizes for the provided p, l, r and n." << endl;
             cout << "Omitting outputfile." << endl;
+            }
         }
 
         if(params.storeBin)
@@ -770,7 +802,13 @@ void* AIOwrapper::async_io( void *ptr )
     ofstream fp_allResults;
 
     int y_file_pos = 0;
-    int ar_file_pos = 0;
+
+    int initial_file_pos = Fhandler->initial_file_pos;
+
+    int ar_file_pos = initial_file_pos;
+
+
+
 
 
     int seq_count;
@@ -1028,11 +1066,11 @@ void* AIOwrapper::async_io( void *ptr )
 
             if(Fhandler->fakefiles)
             {
-                fp_Ar.seekg ( 0 ,  ios::beg  );
-                fp_Ar.read ((char*)tobeFilled->buff,sizeof(type_precision)*size_buff);
-
-                re_random_vec(tobeFilled->buff , Fhandler->n * tmp_ar_blockSize*Fhandler->r );
-                re_random_vec_nan(tobeFilled->buff , Fhandler->n * tmp_ar_blockSize*Fhandler->r );
+//                fp_Ar.seekg ( 0 ,  ios::beg  );
+//                fp_Ar.read ((char*)tobeFilled->buff,sizeof(type_precision)*size_buff);
+//
+//                re_random_vec(tobeFilled->buff , Fhandler->n * tmp_ar_blockSize*Fhandler->r );
+//                re_random_vec_nan(tobeFilled->buff , Fhandler->n * tmp_ar_blockSize*Fhandler->r );
 
             }
             else
@@ -1220,8 +1258,8 @@ void* AIOwrapper::async_io( void *ptr )
             if(Fhandler->Ar_to_readSize <= 0)
             {
                 Fhandler->Ar_to_readSize = Fhandler->Ar_Amount;
-                ar_file_pos = 0;
-                fp_Ar.seekg(0, ios::beg);
+                ar_file_pos = initial_file_pos;
+                fp_Ar.seekg(ar_file_pos, ios::beg);
 
                 if(fp_Ar.fail())
                 {
@@ -1864,7 +1902,7 @@ void AIOwrapper::removeALmissings(list< pair<int,int> >* excl_List, struct Setti
     }
 
 
-    if(Almissings > 0)
+    if(Almissings > 0 && (params.mpi_id == 0))
         cout << "Excluding " << Almissings << " from covariate missings" << endl;
 
     delete tempAL;
@@ -2067,7 +2105,8 @@ void AIOwrapper::read_excludeList(list< pair<int,int> >* excl, int &excl_count, 
 
     int first,second;
 
-     cout << "Excluding Ids: \n";
+    if(Fhandler->mpi_id == 0)
+        cout << "Excluding Ids: \n";
 
       while (std::getline(fp_exL, line) && second < n )
       {
@@ -2076,6 +2115,7 @@ void AIOwrapper::read_excludeList(list< pair<int,int> >* excl, int &excl_count, 
             iss >> first;
 
             iss >> second;
+            if(Fhandler->mpi_id == 0)
             cout << first << "-" << second << ", ";
             if(first > second)
             {
@@ -2108,6 +2148,7 @@ void AIOwrapper::read_excludeList(list< pair<int,int> >* excl, int &excl_count, 
 		cout << "Total Ids: " << n << "\nExcluded Ids: " << excl_count << endl;
 		exit( 1 );
 	}
+	if(Fhandler->mpi_id == 0)
 	 cout << "Excluded: "  << excl_count << " Using: " << n-excl_count<< endl;
 
 

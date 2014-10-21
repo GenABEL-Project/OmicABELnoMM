@@ -32,15 +32,17 @@ fi
 # with its own defaults
 
 # Checks for programs.
-AC_PROG_CC
-AC_PROG_CXX
+#AC_PROG_CC
+#AC_PROG_CXX
+AC_PROG_CXX([mpic++ mpicxx])
+
 
 # Check for openMP. If found the OPENMP_CXXFLAGS is set automatically
 AC_OPENMP
 AC_SUBST(AM_CXXFLAGS, "$OPENMP_CFLAGS")
 
 #AM_CXXFLAGS="-static  -g -ggdb -I../libs/include -I./libs/include $AM_CXXFLAGS"
-AM_CXXFLAGS="-static -std=c++11 -O3 -I../libs/include -I./libs/include $AM_CXXFLAGS"
+AM_CXXFLAGS=" -std=c++11 -O3 -I../libs/include -I./libs/include $AM_CXXFLAGS"
 # Checks for libraries.
 # pthread library
 AC_SEARCH_LIBS([pthread_mutex_init], [pthread], [],

@@ -28,6 +28,7 @@
 #include <pthread.h>
 #include <utility>
 #include <iomanip>
+#include <mpi.h>
 
 #ifdef WINDOWS
     #include <windows.h>
@@ -171,6 +172,8 @@ struct Settings
     int id;
 
     int threads;
+    int mpi_id;
+    int mpi_num_threads;
 
     bool use_fake_files;
 

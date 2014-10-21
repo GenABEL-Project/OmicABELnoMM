@@ -2,11 +2,11 @@ rm(list = setdiff(ls(), lsf.str()))
 
 library(DatABEL)
 
-n = 4000 # number of individuals
+n = 2000 # number of individuals
 l = 3    # number of covariates+1 for intercept
 int = 3
 r = 2
-m = r*1000 # number of snps
+m = r*100000 # number of snps
 t = 10000  # number of traits
 var=0.05
 

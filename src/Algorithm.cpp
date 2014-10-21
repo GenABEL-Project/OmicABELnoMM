@@ -401,6 +401,8 @@ void Algorithm::applyDefaultParams(struct Settings &params)
     params.threads = 1;
     params.r = 1;
     params.model = -1;
+    params.mpi_id = 0;
+    params.mpi_num_threads = 1;
 
     params.use_interactions = false;
     params.keep_depVar = false;
@@ -491,11 +493,12 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
 
     lda = n;
-    if(!params.ForceCheck )
+    if(!params.ForceCheck && params.mpi_id == 0)
     {
         cout << endl;
     }
-    for (int j = 0; j < y_iters && !params.ForceCheck; j++)
+
+    for (int j = 0; j < y_iters && !params.ForceCheck && params.mpi_id == 0; j++)
     {
         if (!params.ForceCheck &&  ((y_iters < 10 && y_iters > 2 )|| (y_iters >= 10 && (j%(y_iters/10)) == 0 )) )
         {
@@ -514,7 +517,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
         }
     }
 
-    if(!params.ForceCheck)
+    if(!params.ForceCheck && params.mpi_id == 0)
         cout << endl;
 
     //add memalign
@@ -611,9 +614,37 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
     out.acc_stl += ticks2sec(end_tick,start_tick2);
 
 
+    //linear dep of columns check
+    float* singular_vals = new float[l];
+    float* u = new float[n*n];
+    float* vt = new float[l*l];
+    float* superb = new float[l-1];
+//    for (int j = 0; j < n; j++)
+//    {
+//        AL[j] = AL[j+n];
+//    }
 
 
+    info = LAPACKE_sgesvd(STORAGE_TYPE, 'N','N',n,l,AL,n,singular_vals,u,n,vt,l,superb);info++;
 
+    for (int j = 0; j < l; j++)
+    {
+        if(singular_vals[j] < 0.000001)
+        {
+            if(params.mpi_id == 0)
+            {
+                cout << endl;
+                cout << "Error, the covariate matrix contains linearly dependent columns. Please review and change it accordingly." << singular_vals[j];
+                cout << "Make sure there are no duplciates or closesly realted covariates (complement).";
+            }
+            exit(1);
+        }
+    }
+
+    delete []singular_vals;
+    delete []u;
+    delete []vt;
+    delete []superb;
 
 
 
@@ -621,12 +652,14 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
     // printf("\n\n%%Computations\n%%");
 
+    copy_vec(backupAL, AL, n*l);
+
 
     get_ticks(start_tick);
 
     for (int j = 0; j < y_iters; j++)
     {
-        if (!params.ForceCheck &&  ((y_iters < 10 && y_iters > 2 )|| (y_iters >= 10 && (j%(y_iters/10)) == 0 )) )
+        if (!params.ForceCheck && params.mpi_id == 0 && ((y_iters < 10 && y_iters > 2 )|| (y_iters >= 10 && (j%(y_iters/10)) == 0 )) )
         {
             cout << AIOfile.io_overhead << flush;
             AIOfile.io_overhead = "*";
@@ -685,7 +718,7 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
         for (int i = 0; i < a_iters; i++)
         {
 
-            if (!params.ForceCheck && y_iters <= 2 &&
+            if (!params.ForceCheck && y_iters <= 2 && params.mpi_id == 0 &&
                 (  (a_iters >= 10 && (i%(a_iters/(10))) == 0) || (a_iters < (10)) ))
             {
                 cout << AIOfile.io_overhead << flush;
