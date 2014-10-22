@@ -1,0 +1,173 @@
+\documentclass{report}
+
+\usepackage{fullpage}
+
+\usepackage{graphicx,color}
+\usepackage{mhchem}
+\usepackage{xcolor}
+\usepackage{listings}
+
+
+\lstdefinestyle{BASH}
+{
+    backgroundcolor=\color{black},
+    basicstyle=\scriptsize\color{white}\ttfamily
+}
+
+
+\begin{document}
+
+\title{OmicabelNoMM User's Guide}
+\author{Alvaro Frank}
+\date{October 2014}
+\maketitle
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Quick Usage}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Understanding OmicabelNoMM}
+
+\section{Overview}
+
+\section{Glossary}
+
+\section{Formulas}
+
+\subsection{Possible analysis}
+
+\subsubsection{Basic analysis}
+\begin{align}
+y &\sim \beta_0 1 + \beta_1 x \\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_r x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} x_{l+1}  + \dots + \beta_p x_p\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{r} \left(x_{l+1}  + \dots +  x_p\right)
+\end{align}
+
+\subsubsection{Analysis with factors/dosages}
+\begin{align}
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_r \phi_1 x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1}  \phi_1 x_{l+1}  + \dots + \beta_p  \phi_r x_p\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{r} \left( \phi_1 x_{l+1}  + \dots +   \phi_r x_p\right)
+\end{align}
+
+\subsubsection{Analysis with Interactions/Environmental Effects}
+\begin{align}
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_r i_1 x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} i_1 x_r + \dots  + \beta_j j_1 x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{r}  i_1 \left( x_{l+1}  + \dots + x_p\right) \\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1}  i_1 \left( x_{l+1}  + \dots + x_p\right) +\dots + \beta_{j}  i_j \left( x_{l+1}  + \dots + x_p\right) 
+\end{align}
+
+\subsubsection{Analysis with Interactions/Environmental Effects keeping original variable}
+\begin{align}
+y &\sim\beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l +  \beta_{l+1} x_r +  \beta_{l+2} i_1 x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} x_r + \beta_{l+2} i_1 x_r + \dots  + \beta_j j_1 x_r
+\end{align}
+
+\subsubsection{Analysis with Interactions and factors}
+\begin{align}
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_r i_1 \phi_1 x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} i_1 \phi_1 x_r + \dots  + \beta_j j_1 \phi_1 x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{r}  i_1 \left( \phi_{l+1} x_{l+1}  + \dots + \phi_p x_p\right) \\
+y &\sim  \dots + \beta_l cov_l + \beta_{l+1}  i_1 \left(  \phi_{l+1} x_{l+1}  + \dots +  \phi_{p} x_p\right) +\dots + \beta_{j}  i_j \left( \phi_{l+1} x_{l+1}  + \dots + \phi_{p} x_p\right) 
+\end{align}
+
+\subsubsection{Analysis with Interactions and factor keeping original variable}
+\begin{align}
+y &\sim\beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l +  \beta_{l+1} \phi_{r} x_r +  \beta_{l+2} i_1 \phi_{r} x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} \phi_{r} x_r + \beta_{l+2} i_1 \phi_{r} x_r + \dots  + \beta_j j_1 \phi_{r} x_r
+\end{align}
+
+
+\subsection{Regression Coefficients}
+
+$\beta=(X^T X)^{-1} X^T y$
+
+\subsection{T-statistic}
+\subsection{P-values}
+
+
+\section{Algorithm}
+
+\section{Compromises}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Setting OmicabelNoMM up}
+
+\section{Your Machine}
+
+\subsection{Clusters vs personal Computers}
+
+\section{Source Files}
+
+\begin{lstlisting}[style=BASH,escapechar=\%]
+
+user@ubuntu:~$ svn checkout svn://svn.r-forge.r-project.org/svnroot/genabel/pkg/OmicABELnoMM
+Checked out revision 1838.
+user@ubuntu:~$ cd OmicABELnoMM/
+user@ubuntu:~/OmicABELnoMM$
+$%
+\end{lstlisting}
+
+\section{Compilers}
+
+\begin{lstlisting}[style=BASH,escapechar=\%]
+
+TODO:Install Compilers cmds
+$%
+\end{lstlisting}
+
+\section{3rd Party Libraries}
+
+\begin{lstlisting}[style=BASH,escapechar=\%]
+
+TODO:Install BOOST and BLAS LIBRARIES cmds
+$%
+\end{lstlisting}
+
+\section{Compiling}
+
+For compiling the final executable binary use:
+\begin{lstlisting}[style=BASH,escapechar=\%]
+
+user@ubuntu:~/OmicABELnoMM$ make
+$%
+\end{lstlisting}
+
+For compiling the test binary use:
+\begin{lstlisting}[style=BASH,escapechar=\%]
+
+user@ubuntu:~/OmicABELnoMM$ make check
+$%
+\end{lstlisting}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Preparing Source Data}
+
+\section{Overview}
+\section{Databel}
+\section{Covariates}
+\section{Independent Variables, SNPs,CPG Sites,Measurements used to explain other Measurements}
+\section{Dependent Variable, Phenotypes,Measurements to be explained}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Running Analysis}
+
+\section{WARNING: Theoretical Caveats}
+
+\section{Simple Linear Regression}
+
+\section{Cluster usage for Simple Linear Regression}
+
+\section{Covariates in Linear Regression}
+
+\section{Simple interactions of non linear terms, Enviromental Effects}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{FAQ}
+
+\end{document}
