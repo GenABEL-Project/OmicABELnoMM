@@ -19,7 +19,8 @@ CLEANFILES = tempAL.bin tempB.bin tempY.bin tempAR.bin
 
 
 ## Stuff needed for documentation in the doc/ directory
-dist_doc_DATA = doc/howtocompile.txt
+dist_doc_DATA = doc/howtocompile.txt doc/UserGuide.tex \
+COPYING INSTALL ChangeLog AUTHORS
 
 ## Specify where to store the examples data
 exampledir = $(pkgdatadir)/examples
