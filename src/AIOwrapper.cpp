@@ -1905,7 +1905,7 @@ void AIOwrapper::removeALmissings(list< pair<int,int> >* excl_List, struct Setti
     if(Almissings > 0 && (params.mpi_id == 0))
         cout << "Excluding " << Almissings << " from covariate missings" << endl;
 
-    delete tempAL;
+    delete []tempAL;
 
 
 }
