@@ -224,7 +224,7 @@ endif
 	$(PDFLATEX) $(PDFLATEXOPTS) $(srcdir)/$(MANTEXSRC)
 
 .tex.aux:
-	@echo === Making $@ file from $^, we are in $(shell pwd) ===
+	@echo === Making $@ file from $^ ===
 	$(PDFLATEX) $(PDFLATEXOPTS) $(srcdir)/$(MANTEXSRC)
 ## Look for citations. Make sure grep never returns an error code.
 	@grep "^\\\\citation" $(MANAUX) > .btmp.new || true
