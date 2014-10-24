@@ -93,6 +93,32 @@ AC_TYPE_SIZE_T
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([clock_gettime gettimeofday memset])
 
+
+# Add an option to ./configure that allows the user to specify a path
+# to the Boost headers, also include the default Boost path to the
+# compiler flags.
+AC_ARG_WITH([boost-include-path],
+   [AS_HELP_STRING([--with-boost-include-path],
+      [location of the Boost math headers, defaults to /usr/include/boost/]
+      )
+    ],
+   [CXXFLAGS+=" -I${withval}"
+    CPPFLAGS+=" -I${withval}"],
+   [CXXFLAGS+=' -I/usr/include/boost/'
+    CPPFLAGS+=' -I/usr/include/boost/']
+)
+
+# Check for the Boost Math header files; this uses a compile check, so
+# make sure C++ is selected first.
+AC_LANG_PUSH([C++])
+AC_CHECK_HEADER([math/distributions.hpp],
+  [],
+  [AC_MSG_ERROR([Could not find the Boost Math header files, did you \
+specify the --with-boost-include-path option correctly?])]
+)
+AC_LANG_POP([C++])
+
+
 # The user can disable building of the PDF of the manual, for example
 # if the required LaTeX packages are not installed
 AC_ARG_ENABLE([latex-doc],
