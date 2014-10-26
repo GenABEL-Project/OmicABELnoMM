@@ -31,10 +31,34 @@ fi
 # If CXXFLAGS/CPPFLAGS are already set AC_PROG_CXX will not overwrite them
 # with its own defaults
 
-# Checks for programs.
-#AC_PROG_CC
-#AC_PROG_CXX
-AC_PROG_CXX([mpic++ mpicxx])
+
+# If --with-mpi=auto is used, try to find MPI, but use standard C
+#  compiler if it is not found.
+# If --with-mpi=yes is used, try to find MPI and fail if it isn't found.
+# If --with-mpi=no is used, use a standard C compiler instead.
+AC_ARG_WITH(mpi,
+   [AS_HELP_STRING([--with-mpi],
+      [compile with MPI (shared memory parallelization) support. If\
+none is found, MPI is not used. Default: auto])
+   ]
+   ,
+   ,
+   [with_mpi=auto])
+
+# AC_PROG_CXX_MPI will run AC_PROG_CXX if no MPI compiler can be found.
+AX_PROG_CXX_MPI([test "x$with_mpi" != "xno"],
+   [use_mpi=yes],
+   [use_mpi=no
+    if test "x$with_mpi" = "xyes"; then
+       AC_MSG_FAILURE([MPI compiler requested, but couldn't find MPI.])
+    elif test "x$with_mpi" = "xauto"; then
+       AC_MSG_NOTICE([No MPI compiler found, continuing without MPI.])
+    else
+       AC_MSG_NOTICE([Use of MPI disabled by user.])
+    fi]
+)
+
+AM_CONDITIONAL([USE_MPI], test "x$use_mpi" = "xyes")
 
 
 # Check for openMP. If found the OPENMP_CXXFLAGS is set automatically
