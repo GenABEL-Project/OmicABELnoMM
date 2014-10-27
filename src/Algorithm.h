@@ -33,99 +33,119 @@
 
 class Algorithm
 {
-    public:
+ public:
+    Algorithm();
 
-        Algorithm();
+    virtual ~Algorithm();
 
-        virtual ~Algorithm();
+    void solve(struct Settings params, struct Outputs &out, int type);
 
-        void solve(struct Settings params, struct Outputs &out, int type);
+    void partialNEQ_Blocked_STL_MD(struct Settings params, struct Outputs &out);
 
-        void partialNEQ_Blocked_STL_MD(struct Settings params, struct Outputs &out);
+    void partialNEQ_Blocked_STL(struct Settings params, struct Outputs &out);
 
-        void partialNEQ_Blocked_STL(struct Settings params, struct Outputs &out);
-
-        void applyDefaultParams(struct Settings &params);
-
-    protected:
-    private:
+    void applyDefaultParams(struct Settings &params);
 
 
-
-        list < resultH > sigResults;
-
-        int max_threads;
-
-        unsigned int total_results;
-
-        float minPdisp;
+ protected:
 
 
-        float minTstore;
-        float minR2store;
-        bool storePInd;
-        bool disp_cov;
+ private:
+    list < resultH > sigResults;
+
+    int max_threads;
+
+    unsigned int total_results;
+
+    float minPdisp;
 
 
-        float* SYY;
+    float minTstore;
+    float minR2store;
+    bool storePInd;
+    bool disp_cov;
 
 
-        void generate_correction_missings_Str(int y_block_size, int xr_block_size, int n, int l, int r,
-            float* __restrict XL_block, float* __restrict XR_block, float* __restrict Str_block, float* __restrict Sbr_block,
-                    list<long int>* index_nans);
-
-        void generate_correction_missings_Stl(int y_block_size, int x1_block_size, int x2_block_size,
-                            int n, int cols1, int cols2, float* X1_block, float* X2_block, float* S_block, list< long int>* index_nans);
-
-        void correct_missings_S(int p,int l,int r, float* S, float* Stl, float* Sbr, float* Str);
+    float* SYY;
 
 
-        void t_students_cdf(int y_amount,int a_amount,int p, float* T, float* P, int deg_freedom);
+    void generate_correction_missings_Str(int y_block_size,
+                                          int xr_block_size,
+                                          int n, int l, int r,
+                                          float* __restrict XL_block,
+                                          float* __restrict XR_block,
+                                          float* __restrict Str_block,
+                                          float* __restrict Sbr_block,
+                                          list<long int>* index_nans);
 
-        void sumSquares(float* Data, int cols, int rows, float* ssData, list<long int>* indexs_Data);
+    void generate_correction_missings_Stl(int y_block_size,
+                                          int x1_block_size,
+                                          int x2_block_size,
+                                          int n, int cols1, int cols2,
+                                          float* X1_block,
+                                          float* X2_block,
+                                          float* S_block,
+                                          list< long int>* index_nans);
 
-        void hpc_statistics(int YxALmiss, int n, int realN, float* AL, float* AR, int a_amount, float* y, int jj,float varY, float* B,
-                int p, int l,int r,float* var_x, int y_blck_offset, int A_blck_offset, list < resultH >* sigResults);
-
-
-        void check_result(float* AL, float* AR,int rowsA,int colsA, int rhs,int colsAR,
-                            float* y, float* res,struct Settings params,int iX,int iiX, int jY, int jjY);
-
-
-        void update_R(float* R, float* topRr, float* botRr,int dim1, int dim2, int r);
-
-        float* extract_R(float* A,int dim1_A, int dim2_A);
-
-        float* prepare_R(float* RL,int dim1_A, int dim2_AL,int dim2_AR);
-
-        void prepare_QY(float* qy, float* top,float* bot,int dim1_QY, int dim2_QY,int dim1_qy_bot,int bot_blocks );
-
-        void prepare_Bfinal(float* bfinal, float* bsource, int a_amount, int y_amount, int p);
-
-        void extract_subMatrix(float* source, float* dest,int dim1_source, int dim2_source,
-                                                            int dim1_ini,int dim1_end,int dim2_ini,int dim2_end);
-        void build_S(float* S,float* Stl,float* Str,float* Sbr,int l,int r);
+    void correct_missings_S(int p, int l, int r, float* S, float* Stl,
+                            float* Sbr, float* Str);
 
 
+    void t_students_cdf(int y_amount, int a_amount, int p, float* T,
+                        float* P, int deg_freedom);
 
-        void hpc_SSY(int n,int p, int l,int r, float* __restrict  AL, float* __restrict  AR,
-                      int a_amount, int y_block_size, float* __restrict y, float* __restrict  B );
+    void sumSquares(float* Data, int cols, int rows, float* ssData,
+                    list<long int>* indexs_Data);
 
-
-
-        void singleSSY( float* __restrict sum, float* __restrict b,float* __restrict b2,float* __restrict b3,float* __restrict b4,
-                        float* __restrict y1, float* __restrict y2, float* __restrict y3, float* __restrict y4,
-                        float* __restrict sy,float* __restrict Xl_n,float* __restrict XR_n,
-                     int l,int r, int p, int n, int thead_id  );
-
-
-        inline float singleSSY(float* __restrict b, float* __restrict y, float* __restrict sy,float* __restrict Xl_n,float* __restrict XR_n,
-                     int l,int r, int p, int n, int thead_id  );
+    void hpc_statistics(int YxALmiss, int n, int realN, float* AL,
+                        float* AR, int a_amount, float* y, int jj,
+                        float varY, float* B, int p, int l, int r,
+                        float* var_x, int y_blck_offset, int A_blck_offset,
+                        list < resultH >* sigResults);
 
 
+    void check_result(float* AL, float* AR, int rowsA, int colsA, int rhs,
+                      int colsAR,float* y, float* res, struct Settings params,
+                      int iX, int iiX, int jY, int jjY);
 
 
+    void update_R(float* R, float* topRr, float* botRr,
+                  int dim1, int dim2, int r);
 
+    float* extract_R(float* A, int dim1_A, int dim2_A);
+
+    float* prepare_R(float* RL, int dim1_A, int dim2_AL, int dim2_AR);
+
+    void prepare_QY(float* qy, float* top, float* bot, int dim1_QY,
+                    int dim2_QY, int dim1_qy_bot, int bot_blocks);
+
+    void prepare_Bfinal(float* bfinal, float* bsource, int a_amount,
+                        int y_amount, int p);
+
+    void extract_subMatrix(float* source, float* dest, int dim1_source,
+                           int dim2_source, int dim1_ini, int dim1_end,
+                           int dim2_ini, int dim2_end);
+    void build_S(float* S, float* Stl, float* Str, float* Sbr, int l, int r);
+
+
+    void hpc_SSY(int n, int p, int l, int r, float* __restrict  AL,
+                 float* __restrict  AR, int a_amount, int y_block_size,
+                 float* __restrict y, float* __restrict B);
+
+
+    void singleSSY( float* __restrict sum, float* __restrict b,
+                    float* __restrict b2, float* __restrict b3,
+                    float* __restrict b4, float* __restrict y1,
+                    float* __restrict y2, float* __restrict y3,
+                    float* __restrict y4, float* __restrict sy,
+                    float* __restrict Xl_n, float* __restrict XR_n,
+                    int l, int r, int p, int n, int thead_id);
+
+
+    inline float singleSSY(float* __restrict b, float* __restrict y,
+                           float* __restrict sy, float* __restrict Xl_n,
+                           float* __restrict XR_n, int l, int r, int p,
+                           int n, int thead_id);
 };
 
 #endif // ALGORITHM_H
