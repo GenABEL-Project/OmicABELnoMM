@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
             {
                 params.dosages = d;
                 params.model = d - 1;
-                params.r=dosage_r[d];
+                params.r = dosage_r[d];
                 params.fname_dosages = "examples/dosages_";
                 params.fname_dosages += std::to_string(params.r);
                 params.fname_dosages += ".txt";
@@ -272,10 +272,10 @@ int main(int argc, char *argv[])
                     for (int i = 0; i < 9; i++ )
                     {
                         //cout << "=========================================\n";
-                        params.fnameOutFiles=out_path[j] + out_keep[k] +
+                        params.fnameOutFiles = out_path[j] + out_keep[k] +
                             dosagename[d] + test_names[i];
                         cout << params.fnameOutFiles << endl;
-                        params.fname_interactions=source_path + test_names[i];
+                        params.fname_interactions = source_path + test_names[i];
 
                         memset(&out, 0, sizeof(out));
                         alg.solve(params, out, P_NEQ_B_OPT_MD);
@@ -363,8 +363,8 @@ int main(int argc, char *argv[])
         blas_set_num_threads(th);
         params.threads = th;
 
-        params.n=10; params.l=4;  params.r=1;
-        params.t=16; params.tb=1; params.m=16; params.mb=1;
+        params.n = 10; params.l = 4;  params.r = 1;
+        params.t = 16; params.tb = 1; params.m = 16; params.mb = 1;
 
         for (int i = 0; i < iters; i++)
         {
@@ -372,18 +372,8 @@ int main(int argc, char *argv[])
         }
         cout << "*" << flush;
         /******************************/
-        params.n=10; params.l=4;  params.r=2;
-        params.t=16; params.tb=4; params.m=16; params.mb=4;
-
-
-        for (int i = 0; i < iters; i++)
-        {
-            alg.solve(params, out, P_NEQ_B_OPT_MD);
-        }
-        cout << "*" << flush;
-        /******************************/
-        params.n=10; params.l=4;  params.r=2;
-        params.t=16; params.tb=3; params.m=16; params.mb=5;
+        params.n = 10; params.l = 4;  params.r = 2;
+        params.t = 16; params.tb = 4; params.m = 16; params.mb = 4;
 
 
         for (int i = 0; i < iters; i++)
@@ -392,8 +382,8 @@ int main(int argc, char *argv[])
         }
         cout << "*" << flush;
         /******************************/
-        params.n=10; params.l=4;  params.r=2;
-        params.t=4; params.tb=4; params.m=4; params.mb=4;
+        params.n = 10; params.l = 4;  params.r = 2;
+        params.t = 16; params.tb = 3; params.m = 16; params.mb = 5;
 
 
         for (int i = 0; i < iters; i++)
@@ -401,7 +391,16 @@ int main(int argc, char *argv[])
             alg.solve(params, out, P_NEQ_B_OPT_MD);
         }
         cout << "*" << flush;
+        /******************************/
+        params.n = 10; params.l = 4;  params.r = 2;
+        params.t = 4; params.tb = 4; params.m = 4; params.mb = 4;
 
+
+        for (int i = 0; i < iters; i++)
+        {
+            alg.solve(params, out, P_NEQ_B_OPT_MD);
+        }
+        cout << "*" << flush;
     }
 
     cout << "\nTest finished succesfully\n";
