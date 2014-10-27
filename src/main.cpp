@@ -49,19 +49,19 @@ string helpcmd_expl =
 "-f --fdgen  \t Flag that forces to consider all included results (causes"
     " the analysis to ignore ALL threshold values). \n\t"
 "-j --additive  \t Flag that runs the analysis with an Additive Model"
-    " with (2*AA,1*AB,0*BB) effects. \n\t"
+    " with (2*AA, 1*AB, 0*BB) effects. \n\t"
 "-k --dominant  \t Flag that runs the analysis with a Dominant Model"
-    " with (1*AA,1*AB,0*BB) effects. \n\t"
+    " with (1*AA, 1*AB, 0*BB) effects. \n\t"
 "-l --recessive \t Flag that runs the analysis with a Recessive Model"
-    " with (1*AA,0*AB,0*BB) effects. \n\t"
+    " with (1*AA, 0*AB, 0*BB) effects. \n\t"
 "-z --mylinear \t <path/filename> to read Factors 'f_i' for a Custom"
-    " Linear Model with f1*X1,f2*X2,f3*X3...fn*X_ngpred as effects,\n\t"
+    " Linear Model with f1*X1, f2*X2, f3*X3...fn*X_ngpred as effects,\n\t"
 "              \t each column of each independent variable will be"
     " multiplied with the specified factors. \n\t"
 "              \t Formula: y~alpha*cov + beta_1*f1*X1 + beta_2*f2*X2"
     " +...+ beta_n*fn*Xn, (see example files!). \n\t"
 "-y --myaddit  \t <path/filename> to read Factors 'f_i' for a Custom"
-    " Additive Model with (f1*X1,f2*X2,f3*X3...fn*X_ngpred) as effects,\n\t"
+    " Additive Model with (f1*X1, f2*X2, f3*X3...fn*X_ngpred) as effects,\n\t"
 "              \t each column of each independent variable will be"
     " multiplied with the specified factors and then added together. \n\t"
 "              \t Formula: y~alpha*cov + beta*(f1*X1 + f2*X2 +...+"
@@ -82,8 +82,6 @@ string helpcmd_expl =
     " with over 2000 genotypes, at a rate of 1 node per 2000 genotypes.\n";
 
 
-
-
 void print_params(struct Settings params)
 {
     cout << "Threads:" << params.threads << " ";
@@ -97,7 +95,7 @@ void print_params(struct Settings params)
 }
 
 
-void parse_params(int argc, char *argv[], struct Settings &params )
+void parse_params(int argc, char *argv[], struct Settings &params)
 {
     int c;
 
@@ -122,34 +120,35 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             {"geno",   required_argument, 0, 'g'},
             {"cov",    required_argument, 0, 'c'},
             {"out",    required_argument, 0, 'o'},
-            {"ngpred", required_argument, 0, 'n'},//r
+            {"ngpred", required_argument, 0, 'n'}, //r
             {"thr",    required_argument, 0, 't'},
             {"mem",    required_argument, 0, 'm'},
             {"excl",    required_argument, 0, 'x'},
             {"stobin",    no_argument, 0, 'b'},
-            {"pdisp",    required_argument, 0, 'd'},//
-            {"psto",    required_argument, 0, 's'},//
-            {"rdisp",    required_argument, 0, 'r'},//
-            {"rsto",    required_argument, 0, 'e'},//
-            {"fdcov",    no_argument, 0, 'i'},//
-            {"fdgen",    no_argument, 0, 'f'},//
-            {"additive",    no_argument, 0, 'j'},//
-            {"dominant",   no_argument, 0, 'k'},//
-            {"recessive",    no_argument, 0, 'l'},//
-            {"mylinear",    required_argument, 0, 'z'},//
-            {"myaddit",    required_argument, 0, 'y'},//
-            {"simpleinter",    required_argument, 0, 'v'},//
-            {"multinter",    required_argument, 0, 'w'},//
-            {"keepinter",    no_argument, 0, 'u'},//
-            {"help",    no_argument, 0, 'h'},//
+            {"pdisp",    required_argument, 0, 'd'}, //
+            {"psto",    required_argument, 0, 's'}, //
+            {"rdisp",    required_argument, 0, 'r'}, //
+            {"rsto",    required_argument, 0, 'e'}, //
+            {"fdcov",    no_argument, 0, 'i'}, //
+            {"fdgen",    no_argument, 0, 'f'}, //
+            {"additive",    no_argument, 0, 'j'}, //
+            {"dominant",   no_argument, 0, 'k'}, //
+            {"recessive",    no_argument, 0, 'l'}, //
+            {"mylinear",    required_argument, 0, 'z'}, //
+            {"myaddit",    required_argument, 0, 'y'}, //
+            {"simpleinter",    required_argument, 0, 'v'}, //
+            {"multinter",    required_argument, 0, 'w'}, //
+            {"keepinter",    no_argument, 0, 'u'}, //
+            {"help",    no_argument, 0, 'h'}, //
             {0, 0, 0, 0}
         };
 
         // getopt_long stores the option index here.
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "c:p:g:o:n:t:m:x:d:s:r:e:z:y:v:w:ufibhjkl", long_options, &option_index);
-
+        c = getopt_long(argc, argv,
+                        "c:p:g:o:n:t:m:x:d:s:r:e:z:y:v:w:ufibhjkl",
+                        long_options, &option_index);
 
         // Detect the end of the options.
         if (c == -1)
@@ -157,7 +156,7 @@ void parse_params(int argc, char *argv[], struct Settings &params )
 
         if (!optarg && (c != 'f' && c != 'b' && c != 'i' && c != 'h'))
         {
-            if(params.mpi_id == 0)
+            if (params.mpi_id == 0)
             cout << "\nerror with argument parameter " << (char)c << endl;
             exit(1);
         }
@@ -167,10 +166,14 @@ void parse_params(int argc, char *argv[], struct Settings &params )
         case 0:
             /* If this option set a flag, do nothing else now. */
             if (long_options[option_index].flag != 0)
+            {
                 break;
+            }
             printf("Long option %s", long_options[option_index].name);
             if (optarg)
-                printf (" with arg %s", optarg);
+            {
+                printf(" with arg %s", optarg);
+            }
             printf("\n");
             break;
 
@@ -180,27 +183,32 @@ void parse_params(int argc, char *argv[], struct Settings &params )
 
             pos = string(optarg).find(".");
             if (pos != string::npos)
+            {
                 params.fnameY = string(optarg).substr(0, pos);
-            if(params.mpi_id == 0)
-            cout << "-p Reading phenotypes from file " << optarg << endl;
+            }
+            if (params.mpi_id == 0)
+                cout << "-p Reading phenotypes from file " << optarg << endl;
             break;
 
         case 'g':
             snp = !snp;
             params.fnameAR = string(optarg);
 
-           pos = string(optarg).find(".");
+            pos = string(optarg).find(".");
             if (pos != string::npos)
                 params.fnameAR = string(optarg).substr(0, pos);
-            if(params.mpi_id == 0)
-            cout << "-g Reading with genotype data from file " << optarg << endl;
+            if (params.mpi_id == 0)
+            {
+                cout << "-g Reading with genotype data from file "
+                     << optarg << endl;
+            }
             break;
 
          case 'n':
             params.r = atoi(optarg);
             params.r = max(params.r, 1);
-            if(params.mpi_id == 0)
-            cout << "-n Using columns per snp as " << params.r << endl;
+            if (params.mpi_id == 0)
+                cout << "-n Using columns per snp as " << params.r << endl;
             break;
 
         case 'c':
@@ -210,8 +218,8 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             pos = string(optarg).find(".");
             if (pos != string::npos)
                 params.fnameAL = string(optarg).substr(0, pos);
-            if(params.mpi_id == 0)
-            cout << "-c Reading covariates from file " << optarg << endl;
+            if (params.mpi_id == 0)
+                cout << "-c Reading covariates from file " << optarg << endl;
             break;
 
         case 'o':
@@ -221,100 +229,111 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             pos = string(optarg).find(".");
             if (pos != string::npos)
                 params.fnameOutFiles = string(optarg).substr(0, pos);
-            if(params.mpi_id == 0)
-            cout << "-o Writing output files to " << optarg << endl;
+            if (params.mpi_id == 0)
+                cout << "-o Writing output files to " << optarg << endl;
             break;
 
         case 't':
             params.threads = atoi(optarg);
             params.threads = min(max(params.threads, 1), 32);
-            if(params.mpi_id == 0)
-            cout << "-t Using " << params.threads << " CPU threads for parallelism" <<  endl;
+            if (params.mpi_id == 0) {
+                cout << "-t Using " << params.threads
+                     << " CPU threads for parallelism" << endl;
+            }
             break;
 
          case 'x':
             params.fname_excludelist = string(optarg);
-            if(params.mpi_id == 0)
-            cout << "-x Excluding ids on " << params.fname_excludelist << endl;
+            if (params.mpi_id == 0)
+                cout << "-x Excluding ids on " << params.fname_excludelist << endl;
             break;
 
 
          case 'd':
             params.minPdisp = fabs(atof(optarg));
-            if(params.mpi_id == 0)
-            cout << "-d Significance to display in .txt will be P-val's below " << params.minPdisp << endl;
+            if (params.mpi_id == 0)
+            {
+                cout << "-d Significance to display in .txt "
+                     << "will be P-val's below " << params.minPdisp << endl;
+            }
             break;
 
         case 's':
             params.minPstore = fabs(atof(optarg));
-            if(params.mpi_id == 0)
-            cout << "-s Significance to store in .bin will be P-val's below " << params.minPstore << endl;
+            if (params.mpi_id == 0)
+            {
+                cout << "-s Significance to store in .bin will be "
+                     << "P-val's below " << params.minPstore << endl;
+            }
             break;
 
         case 'r':
             params.minR2disp = (atof(optarg));
-            if(params.mpi_id == 0)
-            cout << "-r Minimum R2 to display in .txt will be above " << params.minR2disp << endl;
+            if (params.mpi_id == 0)
+                {
+                    cout << "-r Minimum R2 to display in .txt will be above "
+                         << params.minR2disp << endl;
+                }
             break;
 
         case 'e':
             params.minR2store =  (atof(optarg));
-            if(params.mpi_id == 0)
-            cout << "-e Minimum R2 to store in .bin will be above " << params.minR2store << endl;
+            if (params.mpi_id == 0)
+                cout << "-e Minimum R2 to store in .bin will be above " << params.minR2store << endl;
             break;
 
         case 'i':
             params.disp_cov = true;
-            if(params.mpi_id == 0)
-            cout << "-i Covariate results (significant) will be included in results whenever their respective snps are also significant" << endl;
+            if (params.mpi_id == 0)
+                cout << "-i Covariate results (significant) will be included in results whenever their respective snps are also significant" << endl;
             break;
 
         case 'f':
             params.storePInd = true;
-            if(params.mpi_id == 0)
-            cout << "-f Forcing all included results to be considered independently of max P-val or min R2. (SLOW!)"<< endl;
+            if (params.mpi_id == 0)
+                cout << "-f Forcing all included results to be considered independently of max P-val or min R2. (SLOW!)" << endl;
             break;
 
         case 'j':
             params.model = 0;
             params.dosages = true;
-            if(params.mpi_id == 0)
-            cout << "-j Using Additive Model with (2*AA,1*AB,0*BB) effects"<< endl;
+            if (params.mpi_id == 0)
+                cout << "-j Using Additive Model with (2*AA, 1*AB, 0*BB) effects" << endl;
             break;
 
         case 'k':
             params.model = 1;
             params.dosages = true;
-            if(params.mpi_id == 0)
-            cout << "-k Using Dominant Model with (1*AA,1*AB,0*BB) effects"<< endl;
+            if (params.mpi_id == 0)
+                cout << "-k Using Dominant Model with (1*AA, 1*AB, 0*BB) effects" << endl;
             break;
 
         case 'l':
             params.model = 2;
             params.dosages = true;
-            if(params.mpi_id == 0)
-            cout << "-j Using Recessive Model with (1*AA,0*AB,0*BB) effects"<< endl;
+            if (params.mpi_id == 0)
+                cout << "-j Using Recessive Model with (1*AA, 0*AB, 0*BB) effects" << endl;
             break;
 
         case 'z':
             params.model = 3;
             params.dosages = true;
-            if(params.mpi_id == 0)
-            cout << "-z Using Custom Linear Model with parameters read from the file "<< params.fname_dosages << endl;
+            if (params.mpi_id == 0)
+                cout << "-z Using Custom Linear Model with parameters read from the file " << params.fname_dosages << endl;
             break;
 
         case 'y':
             params.model = 4;
             params.dosages = true;
-            if(params.mpi_id == 0)
-            cout << "-z Using Custom Additive Model with parameters read from the file "<< params.fname_dosages << endl;
+            if (params.mpi_id == 0)
+                cout << "-z Using Custom Additive Model with parameters read from the file " << params.fname_dosages << endl;
             break;
 
         case 'b':
             params.storeBin = true;
 
-            if(params.mpi_id == 0)
-            cout << "-b Results will be stored in binary format too"<< endl;
+            if (params.mpi_id == 0)
+                cout << "-b Results will be stored in binary format too" << endl;
             break;
 
         case 'v':
@@ -322,34 +341,30 @@ void parse_params(int argc, char *argv[], struct Settings &params )
             params.use_interactions = true;
             params.keep_depVar = true;
             params.use_multiple_interaction_sets = false;
-            if(params.mpi_id == 0)
-            cout << "-v File containing single interactions " << params.fname_interactions << endl;
+            if (params.mpi_id == 0)
+                cout << "-v File containing single interactions " << params.fname_interactions << endl;
             break;
-
 
         case 'w':
             params.fname_interactions =  (atof(optarg));
             params.use_interactions = true;
             params.keep_depVar = true;
             params.use_multiple_interaction_sets = true;
-            if(params.mpi_id == 0)
-            cout << "-w File containing multiple interactions " << params.fname_interactions << endl;
+            if (params.mpi_id == 0)
+                cout << "-w File containing multiple interactions " << params.fname_interactions << endl;
             break;
-
 
         case 'u':
             params.keep_depVar = true;
-            if(params.mpi_id == 0)
-            cout << "-u Keeping independent variable for interaction analysis " <<  endl;
+            if (params.mpi_id == 0)
+                cout << "-u Keeping independent variable for interaction analysis " <<  endl;
             break;
 
         case 'h':
-
             cout << helpcmd << endl;
             cout << helpcmd_expl << endl;
             help_request = true;
-             exit(1);
-
+            exit(1);
             break;
 
         case '?':
@@ -366,7 +381,9 @@ void parse_params(int argc, char *argv[], struct Settings &params )
     {
         printf("non-option ARGV-elements: ");
         while (optind < argc)
+        {
             printf("%s ", argv[optind++]);
+        }
 
         putchar('\n');
     }
@@ -384,11 +401,8 @@ void parse_params(int argc, char *argv[], struct Settings &params )
 }
 
 
-
-
 int main(int argc, char *argv[] )
 {
-
     struct Settings params;
     Algorithm alg;
 
@@ -400,17 +414,9 @@ int main(int argc, char *argv[] )
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    //printf("SIZE = %d RANK = %d\n",size,rank);
+    //printf("SIZE = %d RANK = %d\n", size,rank);
     params.mpi_id = rank;
     params.mpi_num_threads = size;
-
-
-
-
-
-
-
-
 
 
     parse_params(argc, argv, params);
@@ -422,8 +428,10 @@ int main(int argc, char *argv[] )
 
     omp_set_num_threads(params.threads);
     blas_set_num_threads(params.threads);
-    if(params.mpi_id == 0)
+    if (params.mpi_id == 0)
+    {
         cout << "Omicabelnomm Version 0.96b \n";
+    }
 
 
     //params.use_fake_files = true;
@@ -443,18 +451,19 @@ int main(int argc, char *argv[] )
 //    }
 
 
-    if(!help_request)
+    if (!help_request)
     {
         struct Outputs out = {0};
         if (params.use_fake_files)
         {
-                alg.solve(params, out, P_NEQ_B_OPT_MD);
+            alg.solve(params, out, P_NEQ_B_OPT_MD);
         }
         else
         {
             alg.solve(params, out, P_NEQ_B_OPT_MD);
         }
-        cout << endl << "Number of Significant Results: " << out.total_sig_results <<  endl;
+        cout << endl << "Number of Significant Results: "
+             << out.total_sig_results <<  endl;
     }
 
     cout << endl;
