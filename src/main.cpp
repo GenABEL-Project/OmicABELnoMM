@@ -3,8 +3,6 @@
 #include <boost/math/special_functions/erf.hpp>
 #include <boost/math/distributions/normal.hpp>
 
-
-
 #include <unistd.h>
 #include <getopt.h>
 
@@ -13,9 +11,10 @@
 
 bool help_request = false;
 
-string helpcmd = "usage: omicabelnomm -c <path/fname> --geno <path/fname> -p <path/fname> -o <path/fname> \n\
-                -x <path/fname> -n <#SNPcols> -t <#CPUs>\n \
-                        -d <0.0~1.0> -r <-10.0~1.0> -b -s <0.0~1.0>  -e <-10.0~1.0> -i -f";
+string helpcmd = "usage: omicabelnomm -c <path/fname> --geno <path/fname> "
+    "-p <path/fname> -o <path/fname> -x <path/fname> -n <#SNPcols> "
+    "-t <#CPUs> -d <0.0~1.0> -r <-10.0~1.0> -b -s <0.0~1.0> "
+    "-e <-10.0~1.0> -i -f";
 
 string helpcmd_expl =
 "omicabelnomm Version 0.96b \n\t\
