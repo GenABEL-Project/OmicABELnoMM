@@ -17,42 +17,69 @@ string helpcmd = "usage: omicabelnomm -c <path/fname> --geno <path/fname> "
     "-e <-10.0~1.0> -i -f";
 
 string helpcmd_expl =
-"omicabelnomm Version 0.96b \n\t\
-Required: \n\t\
--p --phe    \t <path/filename> to the inputs containing phenotypes. \n\t\
--g --geno   \t <path/filename> to the inputs containing genotypes. \n\t\
--c --cov    \t <path/filename> to the inputs containing covariates. \n\t\
--o --out    \t <path/filename> to store the output to (used for all .txt and .ibin & .dbin). \n\n\
-Optional: \n\t\
--n --ngpred \t <#SNPcols> Number of columns in the geno file that represent a single SNP. \n\t\
--t --thr    \t <#CPUs> Number of computing threads to use to speed computations. Recommended is 4-8 per node (see MPI). \n\t\
--x --excl   \t <path/filename> file containing list of individuals to exclude from input files, (see example file). \n\t\
--d --pdisp  \t <0.0~1.0> Value to use as maximum threshold for significance.\n\t\
-\t\t Results with P-values UNDER this threshold will be displayed in the putput .txt file. \n\t\
--r --rdisp  \t <-10.0~1.0> Value to use as minimum threshold for R2. \n\t\
-\t\t Results with R2-values ABOVE this threshold will be displayed in the putput .txt file. \n\t\
--b --stobin \t Flag that forces to ALSO store results in a smaller binary format (*.ibin & *.dbin). \n\t\
--s --psto   \t <0.0~1.0>  Results with P-values UNDER this threshold will be displayed in the putput binary files. \n\t\
--e --rsto   \t <-10.0~1.0> Results with R2-values ABOVE this threshold will be stored in the putput binary files. \n\t\
--i --fdcov  \t Flag that forces to include covariates (when its genotype is significant) as part of the results stored \n\t\
--f --fdgen  \t Flag that forces to consider all included results (causes the analisis to ignores ALL threshold values). \n\t\
--j --additive  \t Flag that runs the analisis with an Additive Model with (2*AA,1*AB,0*BB) effects. \n\t\
--k --dominant  \t Flag that runs the analisis with an Dominant Model with (1*AA,1*AB,0*BB) effects. \n\t\
--l --recessive \t Flag that runs the analisis with an Recessive Model with (1*AA,0*AB,0*BB) effects. \n\t\
--z --mylinear \t <path/filename> to read Factors 'f_i' for a Custom Linear Model with f1*X1,f2*X2,f3*X3...fn*X_ngpred as effects,\n\t\
-              \t each column of each independent variable will be multiplied with the specified factors. \n\t\
-              \t Formula: y~alpha*cov + beta_1*f1*X1 + beta_2*f2*X2 +...+ beta_n*fn*Xn, (see example files!). \n\t\
--y --myaddit  \t <path/filename> to read Factors 'f_i' for a Custom Additive Model with (f1*X1,f2*X2,f3*X3...fn*X_ngpred) as effects,\n\t\
-              \t each column of each independent variable will be multiplied with the specified factors and then added together. \n\t\
-              \t Formula: y~alpha*cov + beta*(f1*X1 + f2*X2 +...+ fn*Xn), (see example files!). \n\t\
--v --simpleinter <path/filename> to read the interactions from; for single analysis using multile interactions. \n\t\
--w --multinter \t <path/filename> to read the interactions from; for multiple analysis using single interaction per analysis. \n\t\
--u --keepinter \t Flag that sets if the interaction analysis chose is to too keep the dependent variable X.\n\t\
-            \t If set, Formula: y~alpha*cov + beta_1*INT*X + beta_2*X, (see example files!). \n\t\
-            \t Default not set, Formula: y~alpha*cov + beta_1*INT*X, (see example files!). \n\t\n\t\
-            \t Support for MPI is available. Simply use mpirun -np <#nodes> omicabelnomm <params> on an Open-MPI enabled computer/cluster.\n\t\
-            \t Recommended is to use MPI when dealing with problems with over 2000 genotypes, at a rate of 1 node per 2000 genotypes.\n\t\
-";
+"omicabelnomm Version 0.96b \n\t"
+"Required: \n\t"
+"-p --phe    \t <path/filename> to the inputs containing phenotypes. \n\t"
+"-g --geno   \t <path/filename> to the inputs containing genotypes. \n\t"
+"-c --cov    \t <path/filename> to the inputs containing covariates. \n\t"
+"-o --out    \t <path/filename> to store the output to (used for all .txt"
+    " and .ibin & .dbin). \n\n"
+"Optional: \n\t"
+"-n --ngpred \t <#SNPcols> Number of columns in the geno file that represent"
+    " a single SNP. \n\t"
+"-t --thr    \t <#CPUs> Number of computing threads to use to speed"
+    " computations. Recommended is 4-8 per node (see MPI). \n\t"
+"-x --excl   \t <path/filename> file containing list of individuals to"
+    " exclude from input files, (see example file). \n\t"
+"-d --pdisp  \t <0.0~1.0> Value to use as maximum threshold for"
+    " significance.\n\t"
+"\t\t Results with P-values UNDER this threshold will be displayed in"
+    " the putput .txt file. \n\t"
+"-r --rdisp  \t <-10.0~1.0> Value to use as minimum threshold for R2. \n\t"
+"\t\t Results with R2-values ABOVE this threshold will be displayed in"
+    " the putput .txt file. \n\t"
+"-b --stobin \t Flag that forces to ALSO store results in a smaller binary"
+    " format (*.ibin & *.dbin). \n\t"
+"-s --psto   \t <0.0~1.0>  Results with P-values UNDER this threshold will"
+    " be displayed in the putput binary files. \n\t"
+"-e --rsto   \t <-10.0~1.0> Results with R2-values ABOVE this threshold"
+    " will be stored in the putput binary files. \n\t"
+"-i --fdcov  \t Flag that forces to include covariates (when its genotype"
+    " is significant) as part of the results stored \n\t"
+"-f --fdgen  \t Flag that forces to consider all included results (causes"
+    " the analisis to ignores ALL threshold values). \n\t"
+"-j --additive  \t Flag that runs the analisis with an Additive Model"
+    " with (2*AA,1*AB,0*BB) effects. \n\t"
+"-k --dominant  \t Flag that runs the analisis with an Dominant Model"
+    " with (1*AA,1*AB,0*BB) effects. \n\t"
+"-l --recessive \t Flag that runs the analisis with an Recessive Model"
+    " with (1*AA,0*AB,0*BB) effects. \n\t"
+"-z --mylinear \t <path/filename> to read Factors 'f_i' for a Custom"
+    " Linear Model with f1*X1,f2*X2,f3*X3...fn*X_ngpred as effects,\n\t"
+"              \t each column of each independent variable will be"
+    " multiplied with the specified factors. \n\t"
+"              \t Formula: y~alpha*cov + beta_1*f1*X1 + beta_2*f2*X2"
+    " +...+ beta_n*fn*Xn, (see example files!). \n\t"
+"-y --myaddit  \t <path/filename> to read Factors 'f_i' for a Custom"
+    " Additive Model with (f1*X1,f2*X2,f3*X3...fn*X_ngpred) as effects,\n\t"
+"              \t each column of each independent variable will be"
+    " multiplied with the specified factors and then added together. \n\t"
+"              \t Formula: y~alpha*cov + beta*(f1*X1 + f2*X2 +...+"
+    " fn*Xn), (see example files!). \n\t"
+"-v --simpleinter <path/filename> to read the interactions from; for"
+    " single analysis using multile interactions. \n\t"
+"-w --multinter \t <path/filename> to read the interactions from; for"
+    " multiple analysis using single interaction per analysis. \n\t"
+"-u --keepinter \t Flag that sets if the interaction analysis chose is"
+    " to too keep the dependent variable X.\n\t"
+"            \t If set, Formula: y~alpha*cov + beta_1*INT*X + beta_2*X,"
+    " (see example files!). \n\t"
+"            \t Default not set, Formula: y~alpha*cov + beta_1*INT*X,"
+    " (see example files!). \n\t\n\t"
+"            \t Support for MPI is available. Simply use mpirun -np"
+    " <#nodes> omicabelnomm <params> on an Open-MPI enabled computer/cluster.\n\t"
+"            \t Recommended is to use MPI when dealing with problems"
+    " with over 2000 genotypes, at a rate of 1 node per 2000 genotypes.\n";
 
 
 
