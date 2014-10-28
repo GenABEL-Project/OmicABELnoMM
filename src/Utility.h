@@ -25,9 +25,6 @@ inline void copy_vec(type_precision*old, type_precision* new_vec, int size)
 
 type_precision* replicate_vec(type_precision*old, int size);
 void matlab_print_matrix(string name, int m, int n, type_precision* A);
-void cpu_benchmark(int n, int samples, double &duration, double &gflops);
-
-void re_random_vec_nan(type_precision* vec, int size);
 
 void replace_with_zeros(list<long int>* indexs, type_precision* vec,
                         int n, int r, int block_count);

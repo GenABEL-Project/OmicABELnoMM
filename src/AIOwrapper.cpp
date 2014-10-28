@@ -200,7 +200,7 @@ void AIOwrapper::initialize(struct Settings &params)
     }
     else
     {
-        //other params come from outside
+        //no longer used
     }
 
     params.mb = min(params.m,params.mb);
@@ -791,7 +791,7 @@ void* AIOwrapper::async_io( void *ptr )
 {
     //cout << "async_io\n" << flush;
     type_fileh* Fhandler = (type_fileh *)ptr;
-    int size_buff,tmp_y_blockSize,tmp_ar_blockSize;
+    int tmp_y_blockSize,tmp_ar_blockSize;
 
     struct timespec timeToWait;
     FILE*  fp_Y;
@@ -967,7 +967,6 @@ void* AIOwrapper::async_io( void *ptr )
                 tmp_y_blockSize = Fhandler->y_to_readSize;
 
             Fhandler->y_to_readSize -= tmp_y_blockSize;
-            size_buff = Fhandler->n * tmp_y_blockSize;
 
 
 
@@ -983,14 +982,7 @@ void* AIOwrapper::async_io( void *ptr )
 
             if(Fhandler->fakefiles)
             {
-                fseek ( fp_Y , 0 , SEEK_SET );
-                size_t result = fread (tobeFilled->buff,sizeof(type_precision),size_buff,fp_Y);
-                result++;
-                int old_seed = Fhandler->seed;
-                srand (old_seed);
-                re_random_vec(tobeFilled->buff, size_buff );
-                re_random_vec_nan(tobeFilled->buff, size_buff );
-                Fhandler->seed += 75;
+                //no longer used
             }
             else
             {
@@ -1052,7 +1044,6 @@ void* AIOwrapper::async_io( void *ptr )
             #endif
 
             Fhandler->Ar_to_readSize -= tmp_ar_blockSize;
-            size_buff = Fhandler->n * tmp_ar_blockSize*Fhandler->r;
 
             pthread_mutex_lock(&(Fhandler->m_buff_upd));
             type_buffElement* tobeFilled = Fhandler->ar_empty_buffers.front();
@@ -1066,12 +1057,7 @@ void* AIOwrapper::async_io( void *ptr )
 
             if(Fhandler->fakefiles)
             {
-//                fp_Ar.seekg ( 0 ,  ios::beg  );
-//                fp_Ar.read ((char*)tobeFilled->buff,sizeof(type_precision)*size_buff);
-//
-//                re_random_vec(tobeFilled->buff , Fhandler->n * tmp_ar_blockSize*Fhandler->r );
-//                re_random_vec_nan(tobeFilled->buff , Fhandler->n * tmp_ar_blockSize*Fhandler->r );
-
+                //no longer used
             }
             else
             {
@@ -1292,10 +1278,6 @@ void* AIOwrapper::async_io( void *ptr )
             Fhandler->write_full_buffers.pop();
 
 
-            if(Fhandler->fakefiles)
-            {
-
-            }
 
             if(!Fhandler->fakefiles && !tobeWritten->empty())
             {
@@ -2001,62 +1983,39 @@ bool AIOwrapper::splitpair(int value, list< pair<int,int> >* excl_List, int n)
 void AIOwrapper::load_AL(type_precision** AL)
 {
 
-    if(Fhandler->fakefiles)
+
+    FILE *fp;
+    fp = fopen((Fhandler->fnameAL+".fvd").c_str(), "rb");
+    if(fp == 0)
     {
-        FILE *fp;
-        fp = fopen("tempAL.bin", "rb");
-        if(fp == 0)
-        {
-            cout << "Error Reading File tempAL.bin" << endl;
-            exit(1);
-        }
-
-        size_t result = fread (Fhandler->AL,sizeof(type_precision),Fhandler->l*Fhandler->n,fp);
-        result++;
-        fclose(fp);
-        srand(22);
-        re_random_vec(Fhandler->AL,Fhandler->n*Fhandler->l);
-        re_random_vec_nan(Fhandler->AL,Fhandler->n*Fhandler->l);
-        (*AL) = Fhandler->AL;
+        cout << "Error Reading File " << Fhandler->fnameAL << endl;
+        exit(1);
     }
-    else
+
+    list< pair<int,int> >* excl_List = Fhandler->excl_List;
+
+    int chunk_size_buff;
+    int buff_pos=0;
+    int file_pos;
+
+    for (int i=0; i < Fhandler->l; i++)
     {
-        FILE *fp;
-        fp = fopen((Fhandler->fnameAL+".fvd").c_str(), "rb");
-        if(fp == 0)
+        for (list<  pair<int,int>  >::iterator it=excl_List->begin(); it != excl_List->end(); ++it)
         {
-            cout << "Error Reading File " << Fhandler->fnameAL << endl;
-            exit(1);
+
+            file_pos = i*Fhandler->fileN+ it->first;
+            fseek ( fp , file_pos*sizeof(type_precision) , SEEK_SET );
+            chunk_size_buff = it->second;
+
+            size_t result = fread (&(Fhandler->AL[buff_pos]),sizeof(type_precision),chunk_size_buff,fp); result++;
+            buff_pos += chunk_size_buff;
         }
-
-        list< pair<int,int> >* excl_List = Fhandler->excl_List;
-
-        int chunk_size_buff;
-        int buff_pos=0;
-        int file_pos;
-
-        for (int i=0; i < Fhandler->l; i++)
-        {
-            for (list<  pair<int,int>  >::iterator it=excl_List->begin(); it != excl_List->end(); ++it)
-            {
-
-                file_pos = i*Fhandler->fileN+ it->first;
-                fseek ( fp , file_pos*sizeof(type_precision) , SEEK_SET );
-                chunk_size_buff = it->second;
-
-                size_t result = fread (&(Fhandler->AL[buff_pos]),sizeof(type_precision),chunk_size_buff,fp); result++;
-                buff_pos += chunk_size_buff;
-            }
-        }
-
-        //cout << Fhandler->n;
-
-
-//        size_t result = fread (Fhandler->AL,sizeof(type_precision),Fhandler->l*Fhandler->n,fp);
-//
-//        result++;
-        fclose(fp);
     }
+
+    //cout << Fhandler->n;
+
+    fclose(fp);
+
 
 
 
@@ -2070,17 +2029,6 @@ void AIOwrapper::prepare_AL( int columnsAL, int n)
 
     Fhandler->AL = new type_precision[columnsAL*n];
     Fhandler->l=columnsAL;
-    if(Fhandler->fakefiles)
-    {
-        FILE* fp_AL = fopen("tempAL.bin", "w+b");
-        if(fp_AL == 0)
-        {
-            cout << "Error creating temp File AL "<< endl;
-            exit(1);
-        }
-        fwrite(Fhandler->AL, sizeof(type_precision), n*columnsAL, fp_AL);
-        fclose(fp_AL);
-    }
 }
 
 void AIOwrapper::finalize_AL()

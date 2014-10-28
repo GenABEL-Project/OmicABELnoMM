@@ -28,26 +28,7 @@ void myassert(int cond, string msg)
 }
 
 
-type_precision* random_vec(int size)
-{
 
-    type_precision* vec =
-        (type_precision*)malloc(size * sizeof(type_precision));
-
-    if (vec == 0)
-    {
-       cout << "\nNot enough RAM! "
-            << (int)(size*sizeof(type_precision)/1024/1024) << "MB\n";
-        //system("pause");
-        exit(1);
-    }
-
-    for (int i = 0; i < size; i++)
-    {
-        vec[i] = (type_precision)rand() / (type_precision)RAND_MAX;
-    }
-    return vec;
-}
 
 
 void re_random_vec(type_precision* vec, int size)
@@ -59,23 +40,7 @@ void re_random_vec(type_precision* vec, int size)
 }
 
 
-void re_random_vec_nan(type_precision* vec, int size)
-{
-    //int i;
 
-//    for ( i = 0; i < size; i++)
-//    {
-//        if ((type_precision)rand() / (type_precision)RAND_MAX > 0.5)
-//            vec[i] = nanf("");
-//    }
-}
-
-
-//no allocation!
-//inline void inlinecopy_vec(type_precision*old, type_precision* new_vec, int size)
-//{
-//    memcpy( (type_precision*)new_vec, (type_precision*)old, size * sizeof(type_precision) );
-//}
 
 
 type_precision* replicate_vec(type_precision* old, int size)
@@ -239,46 +204,6 @@ void matlab_print_matrix(string name, int m, int n, type_precision* A)
         cout << "];\n";
     }
 }
-
-
-void cpu_benchmark(int n, int samples, double &duration, double &GFLOPS)
-{
-    type_precision* A = new type_precision[n * n];
-    type_precision* B = new type_precision[n * n];
-    type_precision* C = new type_precision[n * n];
-
-    cputime_type start_tick, end_tick;
-    duration = 9999999999.0;
-    int b = 0;
-
-    for (int i = 0; i < samples; i++)
-    {
-        re_random_vec(A, n*n);
-        re_random_vec(B, n*n);
-        re_random_vec(C, n*n);
-
-        get_ticks(start_tick);
-        cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n,
-                    1.0, A, n, B, n, 1.0, C, n);
-        get_ticks(end_tick);
-        duration = min(duration, (double)(ticks2sec(end_tick, start_tick)));
-        int a = 0;
-        for (int j = 0; j < n * n ; j++)
-        {
-            a += A[j] + B[j] + C[j];
-        }
-        b += a;
-    }
-    //!2nnn - nn + 2nn (from+c)
-    GFLOPS = gemm_flops(n, n, n, 0);
-
-    cout << b;
-
-    delete []A;
-    delete []B;
-    delete []C;
-}
-
 
 float getTvalue(float pval)
 {
