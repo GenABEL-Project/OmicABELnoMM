@@ -25,7 +25,12 @@
 #include <pthread.h>
 #include <utility>
 #include <iomanip>
+
+#ifdef HAVE_MPI
 #include <mpi.h>
+pragma message("Compiled with MPI SUPPORT")
+#endif
+
 
 #ifdef WINDOWS
     #include <windows.h>

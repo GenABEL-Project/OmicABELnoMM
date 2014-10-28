@@ -410,6 +410,7 @@ int main(int argc, char *argv[] )
     alg.applyDefaultParams(params);
 
     //!MPI
+    #ifdef USE_MPI
     int size, rank;
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -417,6 +418,8 @@ int main(int argc, char *argv[] )
     //printf("SIZE = %d RANK = %d\n", size,rank);
     params.mpi_id = rank;
     params.mpi_num_threads = size;
+    #endif
+
 
 
     parse_params(argc, argv, params);
@@ -453,7 +456,9 @@ int main(int argc, char *argv[] )
     cout << endl;
 
     //!MPI
+    #ifdef USE_MPI
     MPI_Finalize();
+    #endif
 
     return 0;
 }

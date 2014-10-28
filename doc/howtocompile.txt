@@ -118,5 +118,7 @@ sudo apt-get install liblapacke-dev
 
 lscpu
 
+-------------------------------install m4 files
+m4_ax_prog_cxx_mpi.m4
 
-
+autoreconf -i -I.
