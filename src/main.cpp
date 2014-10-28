@@ -157,7 +157,7 @@ void parse_params(int argc, char *argv[], struct Settings &params)
         if (!optarg && (c != 'f' && c != 'b' && c != 'i' && c != 'h'))
         {
             if (params.mpi_id == 0)
-            cout << "\nerror with argument parameter " << (char)c << endl;
+            cerr << "\nerror with argument parameter " << (char)c << endl;
             exit(1);
         }
 
