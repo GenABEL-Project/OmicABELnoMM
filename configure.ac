@@ -38,8 +38,8 @@ fi
 # If --with-mpi=no is used, use a standard C compiler instead.
 AC_ARG_WITH(mpi,
    [AS_HELP_STRING([--with-mpi],
-      [compile with MPI (shared memory parallelization) support. If\
-none is found, MPI is not used. Default: auto])
+      [compile with MPI (distributed memory parallelization) support. If\
+ none is found, MPI is not used. Default: auto])
    ]
    ,
    ,
