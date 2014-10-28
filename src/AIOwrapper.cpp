@@ -72,7 +72,7 @@ void AIOwrapper::initialize(struct Settings &params)
         ARfvi = load_databel_fvi( (Fhandler->fnameAR+".fvi").c_str() );
 
         if(ALfvi->fvi_header.numObservations !=  ARfvi->fvi_header.numObservations &&  ARfvi->fvi_header.numObservations != Yfvi->fvi_header.numObservations
-              &&  ARfvi->fvi_header.numObservations != Yfvi->fvi_header.numObservations   )
+              &&  ALfvi->fvi_header.numObservations != Yfvi->fvi_header.numObservations   )
         {
             cout << "The number of elements/individuals from the input files do not coincide with each other! See:" << endl;
             cout << Fhandler->fnameY << ":" <<  Yfvi->fvi_header.numObservations << endl;
@@ -136,7 +136,7 @@ void AIOwrapper::initialize(struct Settings &params)
         string  YidNames;
         string  ALidName;
         string  ARidName;
-        string  INTidName;
+
 
         int yname_idx=0;//starting idx for names on ALfvi->data
         for(int i = 0; i < params.n; i++)
@@ -772,7 +772,15 @@ void AIOwrapper::finalize()
     }
 
 
+    free_databel_fvi(&Yfvi);
+    free_databel_fvi(&ALfvi);
+    free_databel_fvi(&ARfvi);
 
+    if( Fhandler->use_interactions)
+    {
+
+        free_databel_fvi(&Ifvi);
+    }
 
 
 
@@ -1750,47 +1758,6 @@ void AIOwrapper::prepare_OutFiles()
 
 
 
-void AIOwrapper::reset_Y()
-{
-    //void *status;
-
-    Fhandler->seed = 1337;
-
-    cout << "ry" << flush;
-
-    Fhandler->reset_wait = true;
-    pthread_barrier_wait(&(Fhandler->finalize_barrier));
-
-    pthread_mutex_lock(&(Fhandler->m_buff_upd));
-    Fhandler->y_to_readSize = Fhandler->Y_Amount;
-
-    if(Fhandler->currentReadBuff)
-    {
-        Fhandler->full_buffers.push(Fhandler->currentReadBuff);
-        Fhandler->currentReadBuff=0;
-    }
-
-    while(!Fhandler->full_buffers.empty())
-    {
-        Fhandler->empty_buffers.push(Fhandler->full_buffers.front());
-        for( int i = 0; i < Fhandler->n*Fhandler->y_blockSize; i++)
-        {
-            ((Fhandler->full_buffers.front())->buff)[i] = 0;
-        }
-        Fhandler->full_buffers.pop();
-    }
-    pthread_mutex_unlock(&(Fhandler->m_buff_upd));
-
-    Fhandler->reset_wait = false;
-
-    pthread_barrier_wait(&(Fhandler->finalize_barrier));
-
-    pthread_mutex_lock(&(Fhandler->m_more));
-    pthread_cond_signal( &(Fhandler->condition_more ));
-    pthread_mutex_unlock(&(Fhandler->m_more));
-
-
-}
 
 void AIOwrapper::reset_AR()
 {

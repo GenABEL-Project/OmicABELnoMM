@@ -29,30 +29,6 @@ void Algorithm::solve(struct Settings params, struct Outputs &out, int type)
 }
 
 
-void Algorithm::extract_subMatrix(float* source, float* dest,
-                                  int dim1_source, int dim2_source,
-                                  int dim1_ini, int dim1_end, int dim2_ini,
-                                  int dim2_end)
-{
-    int i, j, idx = 0;
-    int size, source_ini;
-    for (i = dim2_ini; i < dim2_end; i++)
-    {
-        j = dim1_ini;
-        source_ini = i * dim1_source+j;
-        size = dim1_end - dim1_ini;
-        memcpy( (float*)&dest[idx],
-                (float*)&source[source_ini],
-                size * sizeof(float) );
-//        for (j = dim1_ini; j<dim1_end; j++)
-//        {
-//            dest[idx] = source[i*dim1_source+j];
-//            idx++;
-//        }
-        idx += size;
-    }
-}
-
 
 
 void Algorithm::prepare_QY(float* qy, float* top,
@@ -80,75 +56,6 @@ void Algorithm::prepare_QY(float* qy, float* top,
     }
 }
 
-
-float* Algorithm::extract_R(float* A, int dim1_A, int dim2_A)
-{
-    float* R = (float*)calloc(dim2_A * dim2_A,
-                                                sizeof(float));
-    int i, j;
-
-    int R_idx = 0;
-
-    for (i = 0; i < dim2_A; i++)
-    {
-        for (j = 0; j <= i; j++)
-        {
-            R[R_idx] = A[j + i * dim1_A];
-            R_idx++;
-        }
-        R_idx = dim2_A * (i+1);
-    }
-    return R;
-}
-
-
-float* Algorithm::prepare_R(float* RL, int dim1_A,
-                                     int dim2_AL, int dim2_AR)
-{
-    int R_dim = (dim2_AR + dim2_AL);
-    float* R = new float[R_dim * R_dim];
-
-    int i, j;
-
-    int RL_idx = 0;
-    int R_idx = 0;
-
-    for (i = 0; i < dim2_AL; i++)
-    {
-        for (j = 0; j <= i; j++)
-        {
-            RL_idx   = i * dim1_A + j;
-            R_idx    = i * R_dim + j;
-            R[R_idx] = RL[RL_idx];
-        }
-    }
-    return R;
-}
-
-
-void Algorithm::update_R(float* R, float* topRr,
-                         float* botRr, int dim1, int dim2, int r)
-{
-    int i, j, w;
-    int max = dim1 * dim2;
-    int rtr_idx = 0;
-    int rbr_idx = 0;
-    for (j = r; j > 0; j--)
-    {
-        for (i = max - dim1 * j; i < max - dim1 * j + dim2 - r; i++)
-        {
-            R[i] = topRr[rtr_idx];
-            rtr_idx++;
-        }
-        w = i;
-
-        for (i = w; i < w + r; i++)
-        {
-            R[i] = botRr[rbr_idx];
-            rbr_idx++;
-        }
-    }
-}
 
 
 void Algorithm::build_S(float* S, float* Stl,
@@ -507,15 +414,15 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
     float* Ay_top = new float[l * y_amount];
     float* Ay_bot = new float[y_block_size * a_block_size * r];
 
-    float* y_residual = new float[n * y_block_size ];
-    float* y_res_norms = new float[a_block_size];
+    //float* y_residual = new float[n * y_block_size ];
+    //float* y_res_norms = new float[a_block_size];
 
     //list<long int>* al_nan_idxs = new list<long int>[l];
     list<long int>* y_nan_idxs = new list<long int>[y_block_size];
     list<long int>* ar_nan_idxs = new list<long int>[a_block_size*r];
     int* Ymiss=new int[y_block_size];
 
-    std::map <int , list < int > > y_missings_jj;
+
 
 
     float* A = new float[n * p * 1];
@@ -940,8 +847,8 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
     //delete []S;
     delete []y_nan_idxs;
     delete []ar_nan_idxs;
-    delete []y_residual;
-    delete []y_res_norms;
+
+
     delete []Stl_corr;
     delete []Str_corr;
     delete []Sbr_corr;

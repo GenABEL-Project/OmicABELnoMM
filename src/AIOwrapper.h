@@ -188,7 +188,7 @@ class AIOwrapper
     void load_AL(type_precision** AL);
     void load_ARblock(type_precision** Y, int &blockSize);
     void load_Yblock(type_precision** Y, int &blockSize);
-    void reset_Y();
+
     void reset_AR();
 
     void getCurrentWriteBuffers(list < resultH >* &sigResults);

@@ -109,12 +109,6 @@ class Algorithm
                       int iX, int iiX, int jY, int jjY);
 
 
-    void update_R(float* R, float* topRr, float* botRr,
-                  int dim1, int dim2, int r);
-
-    float* extract_R(float* A, int dim1_A, int dim2_A);
-
-    float* prepare_R(float* RL, int dim1_A, int dim2_AL, int dim2_AR);
 
     void prepare_QY(float* qy, float* top, float* bot, int dim1_QY,
                     int dim2_QY, int dim1_qy_bot, int bot_blocks);
@@ -122,9 +116,7 @@ class Algorithm
     void prepare_Bfinal(float* bfinal, float* bsource, int a_amount,
                         int y_amount, int p);
 
-    void extract_subMatrix(float* source, float* dest, int dim1_source,
-                           int dim2_source, int dim1_ini, int dim1_end,
-                           int dim2_ini, int dim2_end);
+
     void build_S(float* S, float* Stl, float* Str, float* Sbr, int l, int r);
 
 

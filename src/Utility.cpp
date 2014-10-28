@@ -28,7 +28,43 @@ void myassert(int cond, string msg)
 }
 
 
+void cpu_benchmark(int n, int samples, double &duration, double &GFLOPS)
+{
+    type_precision* A = new type_precision[n * n];
+    type_precision* B = new type_precision[n * n];
+    type_precision* C = new type_precision[n * n];
 
+    cputime_type start_tick, end_tick;
+    duration = 9999999999.0;
+    int b = 0;
+
+    for (int i = 0; i < samples; i++)
+    {
+        re_random_vec(A, n*n);
+        re_random_vec(B, n*n);
+        re_random_vec(C, n*n);
+
+        get_ticks(start_tick);
+        cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n,
+                 1.0, A, n, B, n, 1.0, C, n);
+        get_ticks(end_tick);
+        duration = min(duration, (double)(ticks2sec(end_tick, start_tick)));
+        int a = 0;
+        for (int j = 0; j < n * n ; j++)
+        {
+            a += A[j] + B[j] + C[j];
+        }
+        b += a;
+    }
+    //!2nnn - nn + 2nn (from+c)
+    GFLOPS = gemm_flops(n, n, n, 0);
+
+    cout << b;
+
+    delete []A;
+    delete []B;
+    delete []C;
+}
 
 
 void re_random_vec(type_precision* vec, int size)

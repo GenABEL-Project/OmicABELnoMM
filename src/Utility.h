@@ -16,6 +16,8 @@ void myassert(int cond, string msg, int var);
 type_precision* random_vec(int size);
 void re_random_vec(type_precision* vec, int size);
 
+void cpu_benchmark(int n, int samples, double &duration, double &GFLOPS);
+
 inline void copy_vec(type_precision*old, type_precision* new_vec, int size)
 {
     memcpy( (type_precision*)new_vec,
