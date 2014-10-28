@@ -434,22 +434,6 @@ int main(int argc, char *argv[] )
     }
 
 
-    //params.use_fake_files = true;
-//    if (params.use_fake_files)
-//    {
-//        int multiplier = 1000;
-//
-//        params.n = 4 * multiplier;
-//        params.l = 3;
-//        params.r = 1;
-//
-//        params.t  = 1 * multiplier;
-//        params.tb = 1 * multiplier;
-//
-//        params.m  = 1 * multiplier;
-//        params.mb = 1 * multiplier;
-//    }
-
 
     if (!help_request)
     {

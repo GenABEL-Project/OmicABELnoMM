@@ -2103,7 +2103,9 @@ void AIOwrapper::read_excludeList(list< pair<int,int> >* excl, int &excl_count, 
     string line;
     excl_count = 0;
 
-    int first,second;
+    int first;
+    int second = 0;
+    int prev_second = -1;
 
     if(Fhandler->mpi_id == 0)
         cout << "Excluding Ids: \n";
@@ -2115,18 +2117,40 @@ void AIOwrapper::read_excludeList(list< pair<int,int> >* excl, int &excl_count, 
             iss >> first;
 
             iss >> second;
-            if(Fhandler->mpi_id == 0)
-            cout << first << "-" << second << ", ";
-            if(first > second)
+
+            if(prev_second > first )
             {
-                cout << "\nPlease provide ordered pairs!\n";
+
+                cout << "\nPlease provide valid positive ordered indixes!\n";
+                cout << prev_second << " > " << first << "\n";
                 exit( 1 );
             }
-            if(first < 1 || second < 1)
+
+            if(second == prev_second)
             {
-                cout << "\nPlease provide valid ositive indixes!\n";
-                exit( 1 );
+                if(Fhandler->mpi_id == 0)
+                cout << first << ", ";
+                second = first;
+
             }
+            else
+            {
+                if(Fhandler->mpi_id == 0)
+                cout << first << "-" << second << ", ";
+                if(first > second)
+                {
+                    cout << "\nPlease provide ordered pairs!\n";
+                    exit( 1 );
+                }
+                if(first < 1 || second < 1)
+                {
+                    cout << "\nPlease provide valid positive indixes!\n";
+                    exit( 1 );
+                }
+            }
+
+            prev_second = second;
+
 
             for(int i = first-1; i <= second-1;i++ )
             {

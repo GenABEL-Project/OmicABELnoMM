@@ -54,41 +54,6 @@ void Algorithm::extract_subMatrix(float* source, float* dest,
 }
 
 
-void Algorithm::prepare_Bfinal(float* bfinal, float* bsource, int a_amount, int y_amount, int p)
-{
-//    // memcpy are faster version of the fors
-//    int i, k, w, top_idx, bot_idx;
-//    int size;
-//    top_idx = 0;
-//    bot_idx = 0;
-//    for (k = 0; k < dim2_b; k++)
-//    {
-//        size = k * dim1_b + (dim1_b - dim1_b_bot) - (k * dim1_b);
-//        memcpy( (float*)&bfinal[k * dim1_b],
-//                (float*)&top[top_idx],
-//                size * sizeof(float) );
-////        for (i = k*dim1_b; i < k*dim1_b+(dim1_b-dim1_b_bot); i++)
-////        {
-////            bfinal[i] = top[top_idx];
-////            top_idx++;
-////        }
-//        top_idx += size;
-//        i = k * dim1_b + size;
-//        w = i;
-//
-//        size = w + dim1_b_bot - w;
-//        memcpy( (float*)&bfinal[w],
-//                (float*)&bot[bot_idx],
-//                size * sizeof(float) );
-////        for (i = w; i < w+dim1_b_bot; i++)
-////        {
-////            bfinal[i] = bot[bot_idx];
-////            bot_idx++;
-////        }
-//        bot_idx += size;
-//    }
-}
-
 
 void Algorithm::prepare_QY(float* qy, float* top,
                            float* bot, int dim1_QY,
@@ -475,12 +440,12 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
     int y_amount = params.t;
     int y_block_size = params.tb;
-    //int orig_y_block_size = y_block_size;
+
     //cout << "yt:"<< y_amount << " oybz:"<<y_block_size << flush;
 
     int a_amount = params.m;
     int a_block_size = params.mb;
-    //int orig_a_block_size = a_block_size;
+
 
     //cout << r << endl;
 
@@ -520,10 +485,8 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
     if(!params.ForceCheck && params.mpi_id == 0)
         cout << endl;
 
-    //add memalign
 
-    //float Stl[l*l];
-    //float Str[l*r*a_block_size];
+
     float* Stl = new float[l*l*1];
     float* Str = new float[l*r*a_block_size*1];
 
@@ -535,9 +498,8 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
     float* Sbr = new float[r *  r * a_block_size];
     float* Ay = new float[p * a_block_size * y_block_size];
-    //float* B_resorted = new float[p * a_block_size*y_block_size];
 
-    //float* S = new float[p * p];
+
 
     float* S2global = new float[p*p*max_threads];
 
@@ -585,22 +547,13 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
     AIOfile.load_AL(&backupAL);
 
-    //pthread_barrier_wait(&(AIOfile.Fhandler->finalize_barrier));
+
 
     //matlab_print_matrix("AL", n,l,backupAL);
 
-//    replace_nans(al_nan_idxs,1, backupAL, n, l);
-//    for (int i = 1; i < l; i++)
-//    {
-//        al_nan_idxs[i]=al_nan_idxs[0];
-//    }
-
-
-    //sumSquares(backupAL,l,n,ssAL,0);
 
 
 
-    //LAPACKE_dgesdd()
 
     copy_vec(backupAL, AL, n*l);
 
@@ -810,8 +763,6 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
             get_ticks(end_tick);
             out.acc_scorrect += ticks2sec(end_tick,start_tick2);
-
-
 
 
 
@@ -1128,56 +1079,6 @@ inline float Algorithm::singleSSY(float* __restrict b, float* __restrict y, floa
     return (float)sum;
 
 }
-
-//inline float Algorithm::blas_singleSSY(float* __restrict b, float* __restrict y, float* __restrict sy,float* __restrict Xl_n,float* __restrict XR_n,
-//                     int l,int r, int p, int n, int thead_id  )
-//{
-//
-//    long double sum = 0;
-//
-//    float* __restrict xl;
-//    float* __restrict xr;
-//
-//
-//
-//
-//    for (int h=0; h < l; h++)
-//    {
-//        xl = &Xl_n[(n)*h];
-//        float bval = b[h];
-//
-//        for (int k=0; k < n; k++)
-//        {
-//            sy[k] += xl[k]*bval;
-//        }
-//    }
-//
-//
-//    for (int h=l; h < p; h++)
-//    {
-//        xr = &XR_n[(n)*(h-l)];
-//
-//        float bval = b[h];
-//
-//        for (int k=0; k < n; k++)
-//        {
-//            sy[k] += xr[k]*bval;
-//
-//        }
-//    }
-//
-//    for (int k=0; k < n; k++)
-//    {
-//        if(y[k] != 0)
-//        {
-//            sy[k] -= y[k];
-//            sum += sy[k]*sy[k];
-//        }
-//    }
-//
-//    return (float)sum;
-//
-//}
 
 
 void Algorithm::hpc_statistics(int Ymiss, int n, int realN,
@@ -1520,224 +1421,12 @@ void Algorithm::correct_missings_S(int p,int l,int r, float* __restrict S, float
         }
     }
 
-//    for(int i = 0; i < l; i++)
-//    {
-//        for(int j = 0; j < r; j++)
-//        {
-//            S[i*p+l+j] -= Str[i+j*l];
-//        }
-//    }
+
 }
 
-//void Algorithm::mean(float* Data, int block, int cols, int rows, float* ssData, list<long int>* indexs_Data)
-//{
-//    for (int b=0; b< block; b++)
-//    {
-//        for (int h=0; h< cols; h++)
-//        {
-//            double sx = 0;
-//            double sxx = 0;
-//            float* x = &Data[h*rows];
-//
-//            int n = rows;
-//            if(indexs_Data)
-//                n =n-indexs_A[b].size();
-//
-//            for (int k=0; k < rows; k++)
-//            {
-//                    sx += x[k];
-//            }
-//            ssData[h] = (float)(sxx - sx*sx/n);
-//        }
-//    }
-//}
 
 
 
 
-//!*************************************************!//
-
-//for reference
-void Algorithm::partialNEQ_Blocked_STL(struct Settings params,
-                                       struct Outputs &out)
-{
-//    int max_threads = params.threads;
-//
-//    srand(time(NULL));
-//
-//    blas_set_num_threads(max_threads);
-//
-//    float *Ytemp;
-//    lapack_int info, n, lda,ldy, l, r, p;
-//
-//    int i,k;
-//
-//    cputime_type start_tick, start_tick2, end_tick;
-//
-//    AIOfile.initialize(params);
-//
-//    n = params.n; l = params.l; r = params.r; p = l+r;
-//
-//    int y_amount = params.m;
-//    int y_block_size = params.mb;  // kk
-//
-//    int a_amount = params.t;
-//    int a_block_size = params.tb;
-//
-//    int a_iters = (a_amount + a_block_size - 1) / a_block_size;
-//
-//    lda = n; ldy = n;
-//    k = p;
-//
-//
-//
-//    float* backupAL;
-//
-//    AIOfile.load_AL(&backupAL);
-//
-//
-//    float Stl[l * l];
-//    float Str[l * r * a_block_size];
-//
-//
-//    float* Ay_top = new float[l * y_amount];
-//    float* Ay_bot = new float[y_block_size * a_block_size * r];
-//    float* A = new float[n * p];
-//    float* AR = new float[n * r * a_block_size];
-//    float* AL = new float[n * l];
-//
-//    copy_vec(backupAL, AL, n * l);
-//    copy_vec(backupAL, A, n * l);
-//
-//
-//    int y_iters = y_amount/y_block_size;
-//
-//    float* Y;
-//    float* backupAR;
-//
-//    // printf("\n\n%%Computations\n%%");
-//
-//
-//    get_ticks(start_tick);
-//
-//
-//    //! Generate S
-//    cblas_ssyrk(CblasColMajor, CblasUpper, CblasTrans,
-//                l, n, 1.0, backupAL, lda, 0.0, Stl, l);
-//
-//    for (int j = 0; j < y_iters; j++)
-//    {
-//        AIOfile.load_Yblock(&Y, y_block_size);
-//
-//        //! Ay_top = AL'*Y
-//        cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
-//                    l, y_block_size, n, 1.0, AL, n, Y, n, 0.0,
-//                    &Ay_top[j * l * y_block_size], l);
-//    }
-//
-//
-//    for (int i = 0; i < a_iters; i++)
-//    {
-//        if (a_iters > 10 && (i%(a_iters/10)) == 0)
-//        {
-//            cout << "%" << flush;
-//        }
-//
-//
-//        AIOfile.load_ARblock(&backupAR, a_block_size);
-//        AIOfile.reset_Y();
-//        copy_vec(backupAR, AR, n*r*a_block_size);
-//
-//        // matlab_print_matrix("A", n, p, A);
-//        //! Generate Str
-//        cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
-//                    l, r * a_block_size, n, 1.0, AL, n, AR, n, 0.0, Str, l);
-//
-//        float Sbr[r*r*a_block_size];
-//
-//        #pragma omp parallel for default(shared) schedule(static)
-//        for (int ii= 0; ii < a_block_size; ii++)
-//        {
-//            //! Generate Sbr
-//            cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
-//                        r, r, n, 1.0, &AR[ii*r*n], n, &AR[ii*r*n],
-//                        n, 0.0, &Sbr[ii*r*r], r);
-//        }
-//
-//        float Ay[y_block_size*p];
-//        float S[p*p];
-//
-//
-//        for (int j = 0; j < y_iters; j++)
-//        {
-//            if (a_iters < 10 && (y_iters < 10 || (j%(y_iters/10)) == 0))
-//            {
-//                cout << "%" << flush;
-//            }
-//
-//
-//            AIOfile.load_Yblock(&Y, y_block_size);
-//
-//            //! Ay_bot = AR'*Y
-//            cblas_sgemm(CblasColMajor, CblasTrans, CblasNoTrans,
-//                        r * a_block_size, y_block_size, n, 1.0, AR, n, Y, n,
-//                        0.0, Ay_bot, r * a_block_size);
-//
-//            #pragma omp parallel for private(S, Ay) default(shared) schedule(static)
-//            for (int ii= 0; ii < a_block_size; ii++)
-//            {
-//                // matlab_print_matrix("Y", n, y_block_size, Y);
-//
-//                //! Rebuild AY
-//
-//                for (int jj = 0; jj < y_block_size; jj++)
-//                {
-//                    copy_vec(&Ay_top[j*l*y_block_size+jj*l], &Ay[jj*p], l);
-//                    copy_vec(&Ay_bot[ii*r + jj*r*a_block_size], &Ay[l+jj*p], r);
-//                }
-//
-//                float* B = Ay;
-//                // matlab_print_matrix("Ay_top", l, y_block_size,&Ay_top[j*l*y_block_size]);
-//                // matlab_print_matrix("Ay_bot", r, y_block_size, Ay_bot);
-//                // matlab_print_matrix("Ay", p, y_block_size, Ay);
-//
-//                //! Rebuild S
-//                build_S(S, Stl, &Str[ii*r*l], &Sbr[ii*r*r], l, r);
-//                // matlab_print_matrix("S", p, p, S);
-//
-//                //! b = S\Ay
-//                info = LAPACKE_sposv(STORAGE_TYPE, 'U', p, y_block_size,
-//                                     S, p, Ay, p);
-//                // assert(info == 0,"POSV");
-//
-//
-//                if (ForceCheck)
-//                {
-//                    check_result(backupAL, &AR[ii * r * n], n, p,
-//                                 y_block_size, r, Y, B);
-//                }
-//            }
-//        }
-//    }
-//
-//    get_ticks(end_tick);
-//    out.duration = ticks2sec(end_tick - start_tick, cpu_freq);
-//    // out.gflops = a_amount/1000.0*(n*l*r+n*r*r+y_amount*(n*r+p*p*p)))/1000.0/1000.0;
-//    out.gflops = gemm_flops(l, n, l, 0) + gemm_flops(l, n, y_amount, 0) +
-//                 a_amount * (gemm_flops(l, n, r, 0) +
-//                             gemm_flops(r, n, r, 0) +
-//                             gemm_flops(r, n, y_amount, 0) +
-//                             (y_amount/1000.0) *
-//                             (p * p * p / 3.0) / 1000.0/1000.0);
-//
-//
-//    AIOfile.finalize();
-//
-//    delete []Ay_top;
-//    delete []Ay_bot;
-//    delete []A;
-//    delete []AL;
-//    delete []AR;
-}
 
 
