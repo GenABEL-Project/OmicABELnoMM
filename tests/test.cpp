@@ -107,12 +107,13 @@ int main(int argc, char *argv[])
     struct Settings params;
 
     //!MPI
+    #ifdef USE_MPI
     int size, rank;
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     //printf("SIZE = %d RANK = %d\n",size,rank);
-
+    #endif
 
     omp_set_nested(false);
     omp_set_dynamic(false);
@@ -160,9 +161,10 @@ int main(int argc, char *argv[])
     params.minR2disp = 0.000001;
     params.disp_cov = true;
 
+    #ifdef USE_MPI
     params.mpi_id = rank;
     params.mpi_num_threads = size;
-
+    #endif
 
     params.r = 2;
     params.fnameOutFiles = "examples/results/normal";
@@ -177,7 +179,9 @@ int main(int argc, char *argv[])
     print_output(out, gemm_gflopsPsec);
 
     //!MPI
+    #ifdef USE_MPI
     MPI_Finalize();
+    #endif
 
     // exit(0);
 
