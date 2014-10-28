@@ -2,6 +2,12 @@
 
 
 
+/*!
+ * \brief All initialization happens in the resective solver method.
+
+
+ *
+ */
 Algorithm::Algorithm()
 {
     // ctor
@@ -9,12 +15,25 @@ Algorithm::Algorithm()
 }
 
 
+
+/*!
+ * \brief All cleaning happens in the respective solver method.
+
+
+ *
+ */
 Algorithm::~Algorithm()
 {
     // dtor
 }
 
 
+/*!
+ * \brief In the presence of more than one algorothm for solving the LSQ, coose the resective one.
+
+
+ *
+ */
 void Algorithm::solve(struct Settings params, struct Outputs &out, int type)
 {
     switch (type)
@@ -31,33 +50,13 @@ void Algorithm::solve(struct Settings params, struct Outputs &out, int type)
 
 
 
-void Algorithm::prepare_QY(float* qy, float* top,
-                           float* bot, int dim1_QY,
-                           int dim2_QY, int dim1_qy_bot, int bot_blocks )
-{
-    int i, k, w, top_idx, bot_idx;
-    top_idx = 0;
-    bot_idx = 0;
-    for (k = 0; k < dim2_QY; k++)
-    {
-        for (i = k * dim1_QY; i < (k+1) * dim1_QY - dim1_qy_bot; i++)
-        {
-            qy[i] = top[top_idx];
-            top_idx++;
-        }
-        w = i;
 
-        for (i = w; i < w + dim1_qy_bot; i++)
-        {
-            qy[i] = bot[bot_idx];
-            bot_idx++;
-        }
-        bot_idx += (bot_blocks-1) * dim1_qy_bot;
-    }
-}
+/*!
+ * \brief Rebuilds the SPD matrix S=X^T*X from its parts.
 
 
-
+ * \param the parts that were computed separately and its dimensions.
+ */
 void Algorithm::build_S(float* S, float* Stl,
                         float* Str, float* Sbr, int l, int r)
 {
@@ -95,7 +94,13 @@ void Algorithm::build_S(float* S, float* Stl,
     }
 }
 
+/*!
+ * \brief Used to check validity of a single OLS.
 
+
+ * \param Parts of the matrix A (X), Vector Y, results (Coefficients B), dimensions.
+ * \warning iX,iiX,jY,jjY and related data to precomputed results are for testing puroses and are broken atm.
+ */
 void Algorithm::check_result(float* AL, float* AR,
                              int rowsA, int colsA, int rhs, int colsAR,
                              float* y, float* res,struct Settings params,int iX,int iiX, int jY, int jjY)
@@ -260,6 +265,15 @@ void Algorithm::check_result(float* AL, float* AR,
 }
 
 
+/*!
+ * \brief Initializes parameters passed to the solvers.
+
+    Should be called before the usage of any paramaters and
+    must be consistent with the default behaivior in the absense of
+    any other user specified changes.
+
+ * \param parameters to initlialize.
+ */
 void Algorithm::applyDefaultParams(struct Settings &params)
 {
 
@@ -299,6 +313,12 @@ void Algorithm::applyDefaultParams(struct Settings &params)
 ///////////////////////////////
 
 
+/*!
+ * \brief Main OLS algorithm based on NEQ with Missing Data Suport.
+
+
+ * \param Parameter, both default and/or user defined, Output structure to store non file results
+ */
 void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
                                           struct Outputs &out)
 {
@@ -865,6 +885,14 @@ void Algorithm::partialNEQ_Blocked_STL_MD(struct Settings params,
 
 }
 
+/*!
+ * \brief Highperformance calculation of residuals between blocks of Y and Xb: Y-Xb for all n of all elements within a block
+
+
+ * \param Matrix blocks, dimensions
+ * \warning This function is 50% of the load of the entire runtime. It is memorybound at the moment.
+ * Consider optimizing it with BLAS or any other options.
+ */
 void Algorithm::hpc_SSY(int n,int p, int l,int r, float*  AL, float*  ARb, int a_block_size,
                                     int y_block_size,
                                     float*  Yb, float*  Bb )
@@ -937,6 +965,14 @@ void Algorithm::hpc_SSY(int n,int p, int l,int r, float*  AL, float*  ARb, int a
 }
 
 
+/*!
+ * \brief Highperformance calculation of residuals between single Y and Xb: Y-Xb for all n
+
+
+ * \param matrix X, Vector Y and position
+ * \warning This function is 50% of the load of the entire runtime. It is memorybound at the moment.
+ * Consider optimizing it with BLAS or any other options.
+ */
 inline float Algorithm::singleSSY(float* __restrict b, float* __restrict y, float* __restrict sy,float* __restrict Xl_n,float* __restrict XR_n,
                      int l,int r, int p, int n, int thead_id  )
 {
@@ -988,6 +1024,13 @@ inline float Algorithm::singleSSY(float* __restrict b, float* __restrict y, floa
 }
 
 
+/*!
+ * \brief Highperformance calculation of statistics resulting from OLS
+
+    Will calculate residuals,T statistics and Pvalues based on the available data of X, Y, variances and coefficients
+
+ * \param TODO
+ */
 void Algorithm::hpc_statistics(int Ymiss, int n, int realN,
                 float* __restrict  AL, float* __restrict  AR, int a_block_size, float* __restrict y, int jj, float varY, float* __restrict  B,
                 int p, int l,int r,float* __restrict var_x, int y_blck_offset, int A_blck_offset, list < resultH >* __restrict sigResults)
@@ -1170,6 +1213,12 @@ void Algorithm::hpc_statistics(int Ymiss, int n, int realN,
 
 }
 
+/*!
+ * \brief Simple sum of squares for blocks of vectors (Used for Y)
+    Note that the method uses x as generic name, but it is meant for singel vector of uncorrelated variables.
+
+ * \param block of Vectors, dimensions, destination block of results, real size of the data (list<long int>* indexs_Data)
+ */
 void Algorithm::sumSquares(float* Data, int cols, int rows, float* ssData, list<long int>* indexs_Data)
 {
     //cout <<"\nvars" << endl;
@@ -1202,6 +1251,12 @@ void Algorithm::sumSquares(float* Data, int cols, int rows, float* ssData, list<
 }
 
 
+/*!
+ * \brief Adds up missing values in a vector product form to later subtract them from precomputed matrix products.
+
+
+ * \param Blocks of data, dimnsions, destination blocks of data, missing indexes.
+ */
 void Algorithm::generate_correction_missings_Str(int y_block_size, int xr_block_size, int n, int l, int r,
     float* __restrict XL_block, float* __restrict XR_block, float* __restrict Str_block, float* __restrict Sbr_block,
         list<long int>* index_nans)
@@ -1260,6 +1315,12 @@ void Algorithm::generate_correction_missings_Str(int y_block_size, int xr_block_
 }
 
 
+/*!
+ * \brief Adds up missing values in a vector product form to later subtract them from precomputed matrix products.
+
+
+ * \param Blocks of data, dimnsions, destination blocks of data, missing indexes.
+ */
 void Algorithm::generate_correction_missings_Stl(int y_block_size, int x1_block_size, int x2_block_size, int n, int cols1, int cols2, float* X1_block, float* X2_block, float* S_block,
         list<long int>* index_nans)
 {
@@ -1300,6 +1361,12 @@ void Algorithm::generate_correction_missings_Stl(int y_block_size, int x1_block_
     }
 }
 
+/*!
+ * \brief Will do the actual substraction of corrections on the SPD matrix S based on it parts.
+
+
+ * \param parts of the corrected SPD containing the corrections, dimensions and estination (original S matrix).
+ */
 void Algorithm::correct_missings_S(int p,int l,int r, float* __restrict S, float*__restrict  Stl, float* __restrict Sbr, float* __restrict Str)
 {
     for(int i = 0; i < l; i++)

@@ -110,8 +110,7 @@ class Algorithm
 
 
 
-    void prepare_QY(float* qy, float* top, float* bot, int dim1_QY,
-                    int dim2_QY, int dim1_qy_bot, int bot_blocks);
+
 
     void prepare_Bfinal(float* bfinal, float* bsource, int a_amount,
                         int y_amount, int p);
