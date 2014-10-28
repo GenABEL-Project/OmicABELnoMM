@@ -26,9 +26,9 @@
 #include <utility>
 #include <iomanip>
 
-#ifdef HAVE_MPI
+#ifdef USE_MPI
 #include <mpi.h>
-pragma message("Compiled with MPI SUPPORT")
+#pragma message("Compiled with MPI SUPPORT")
 #endif
 
 

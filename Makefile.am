@@ -4,6 +4,10 @@ oanomm_cpp = src/AIOwrapper.cpp src/Algorithm.cpp src/Utility.cpp
 oanomm_headers = $(oanomm_cpp:.cpp=.h) src/Definitions.h
 
 omicabelnomm_SOURCES = $(oanomm_headers) $(oanomm_cpp) src/main.cpp
+omicabelnomm_CXXFLAGS = $(AM_CXXFLAGS)
+if USE_MPI
+omicabelnomm_CXXFLAGS += -DUSE_MPI
+endif
 
 
 ## Stuff needed for the checks in the tests/ directory
@@ -15,6 +19,7 @@ tests_test_omicabelnomm_SOURCES =		\
  tests/test.cpp
 
 TESTS = $(check_PROGRAMS)
+
 cleanfiles_tests = examples/results/dosages__dis.txt	\
  examples/results/dosages_add__dis.txt			\
  examples/results/dosages_dom__dis.txt			\
