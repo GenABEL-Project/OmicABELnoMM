@@ -3,26 +3,32 @@
 
 
 
-## Stuff needed for the checks in the tests/ directory
+## Stuff needed for the checks in the tests/ directory. The DATADIR
+## variable is used to tell the test program where to find the source
+## files. In a VPATH build (e.g. when running 'make distcheck') the
+## $(srcdir) variable is set to the correct location.
 check_PROGRAMS = tests/test_omicabelnomm
+tests_test_omicabelnomm_CPPFLAGS = -DDATADIR=\"$(srcdir)/\" $(AM_CPPFLAGS)
 if USE_MPI
-tests_test_omicabelnomm_CXXFLAGS = -DUSE_MPI $(AM_CXXFLAGS)
+tests_test_omicabelnomm_CPPFLAGS += -DUSE_MPI
 endif
 
-# List the sources for the test binary. Also include the empty
-# directory for the results, so that it gets included in the tar-ball
-# when running 'make dist'. Otherwise running 'make check' fails if
-# run by the user (since the test program doesn't check for the
-# directory's existence).
-testresultsdir = $(exmpldir)/results
+# List the sources for the test binary.
 tests_test_omicabelnomm_SOURCES =		\
  $(oanomm_headers)				\
  $(oanomm_cpp)					\
- $(testresultsdir)				\
  tests/test.cpp
 
+# List of programs to run when running 'make check'
 TESTS = $(check_PROGRAMS)
 
+## Create the directory where the test results will be stored before
+## running the tests
+testresultsdir = tests/results
+AM_TESTS_ENVIRONMENT = \
+ $(MKDIR_P) $(testresultsdir);
+
+# Files created by the test programs need to be cleaned up.
 cleanfiles_tests = $(testresultsdir)/dosages__dis.txt	\
  $(testresultsdir)/dosages_add__dis.txt			\
  $(testresultsdir)/dosages_dom__dis.txt			\

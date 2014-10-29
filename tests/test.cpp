@@ -167,10 +167,10 @@ int main(int argc, char *argv[])
     #endif
 
     params.r = 2;
-    params.fnameOutFiles = "examples/results/normal";
-    params.fnameAL = "examples/XL";
-    params.fnameAR = "examples/XR";
-    params.fnameY = "examples/Y";
+    params.fnameOutFiles = "tests/results/normal";
+    params.fnameAL = DATADIR "examples/XL";
+    params.fnameAR = DATADIR "examples/XR";
+    params.fnameY = DATADIR "examples/Y";
 
     params.limit_t = 1000;
     params.limit_m = params.limit_t * params.r;
@@ -189,20 +189,20 @@ int main(int argc, char *argv[])
     //!-------------------------------------
     //!-------------------------------------
     //!interactions
-    params.fnameOutFiles = "examples/results/normal";
-    params.fnameAL = "examples/interactions/XL";
-    params.fnameAR = "examples/interactions/XR";
-    params.fnameY = "examples/interactions/Y";
+    params.fnameOutFiles = "tests/results/normal";
+    params.fnameAL = DATADIR "examples/interactions/XL";
+    params.fnameAR = DATADIR "examples/interactions/XR";
+    params.fnameY = DATADIR "examples/interactions/Y";
 
     params.use_interactions = true;
     params.r = 2;
     params.limit_t = 50;
     params.limit_m = params.limit_t * params.r;
     // params.limit_n = 1000;
-    params.fname_excludelist = "examples/exclude_individuals.txt";
-    string source_path = "examples/interactions/INT";
-    string out_path[] = {"examples/results/single_inter_",
-                         "examples/results/multi_inter_"};
+    params.fname_excludelist = DATADIR "examples/exclude_individuals.txt";
+    string source_path = DATADIR "examples/interactions/INT";
+    string out_path[] = {"tests/results/single_inter_",
+                         "tests/results/multi_inter_"};
     string out_keep[] = {"", "keep_"};
     string dosagename[] = {"", "add_", "dom_", "res_", "mylin_", "myadd_"};
     int dosage_r[] = {1, 2, 2, 2, 1, 2};
@@ -236,7 +236,7 @@ int main(int argc, char *argv[])
                 params.dosages = d;
                 params.model = d - 1;
                 params.r = dosage_r[d];
-                params.fname_dosages = "examples/dosages_";
+                params.fname_dosages = DATADIR "examples/dosages_";
                 params.fname_dosages += std::to_string(params.r);
                 params.fname_dosages += ".txt";
 
@@ -314,21 +314,21 @@ int main(int argc, char *argv[])
     //!-------------------------------------
     //!dosages alone
     //!-------------------------------------
-    string out_dos_path[] = {"examples/results/dosages_",
-                             "examples/results/dosages_excl_"};
+    string out_dos_path[] = {"tests/results/dosages_",
+                             "tests/results/dosages_excl_"};
 
     for (int j = 0; j < 2; j++)
     {
         params.fname_excludelist = "";
         if (j)
-            params.fname_excludelist = "examples/exclude_individuals.txt";
+            params.fname_excludelist = DATADIR "examples/exclude_individuals.txt";
 
         for (int d = 0; d < 6; d++)
         {
             params.dosages = d;
             params.model = d-1;
             params.r = dosage_r[d];
-            params.fname_dosages = "examples/dosages_";
+            params.fname_dosages = DATADIR "examples/dosages_";
             params.fname_dosages += std::to_string(params.r);
             params.fname_dosages += ".txt";
 
