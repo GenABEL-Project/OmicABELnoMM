@@ -7,7 +7,7 @@ oanomm_cpp = src/AIOwrapper.cpp src/Algorithm.cpp src/Utility.cpp
 oanomm_headers = $(oanomm_cpp:.cpp=.h) src/Definitions.h
 
 omicabelnomm_SOURCES = $(oanomm_headers) $(oanomm_cpp) src/main.cpp
-omicabelnomm_CXXFLAGS = $(AM_CXXFLAGS)
+omicabelnomm_CPPFLAGS = $(AM_CPPFLAGS)
 if USE_MPI
-omicabelnomm_CXXFLAGS += -DUSE_MPI
+omicabelnomm_CPPFLAGS += -DUSE_MPI
 endif
