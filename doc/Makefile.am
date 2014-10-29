@@ -9,7 +9,7 @@ dist_doc_DATA = doc/howtocompile.txt doc/UserGuide.tex	\
 ## enabled via ./configure.
 if BUILD_latexdoc
 if HAVE_PDFLATEX
-DOCDIR = doc/
+DOCDIR = doc
 MANNAME = $(DOCDIR)/UserGuide
 MANPDF = $(MANNAME).pdf
 MANTEXSRC = $(MANNAME).tex
@@ -22,10 +22,11 @@ CLEANFILES += $(MANPDF) $(MANNAME).log $(MANNAME).idx $(MANNAME).out \
 endif
 endif
 
-
+SUFFIXES = .aux .tex .pdf
 # Several make rules to generate the PDF from the LaTeX source
 .aux.pdf:
 	@echo === Making PDF: $@ from $^ ===
+	$(MKDIR_P) $(DOCDIR)
 	$(PDFLATEX) $(PDFLATEXOPTS) $(srcdir)/$(MANTEXSRC)
 	@while ( grep "Rerun to "			\
 		$(MANNAME).log  ); do			\
@@ -41,6 +42,7 @@ endif
 
 .tex.aux:
 	@echo === Making $@ file from $^ ===
+	$(MKDIR_P) $(DOCDIR)
 	$(PDFLATEX) $(PDFLATEXOPTS) $(srcdir)/$(MANTEXSRC)
 ## Look for citations. Make sure grep never returns an error code.
 	@grep "^\\\\citation" $(MANAUX) > .btmp.new || true
