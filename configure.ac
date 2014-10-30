@@ -126,8 +126,8 @@ AC_ARG_WITH([boost-include-path],
       [location of the Boost math headers, defaults to /usr/include/boost/]
       )
     ],
-   [CPPFLAGS+=" -I${withval}"],
-   [CPPFLAGS+=' -I/usr/include/boost/']
+   [AC_SUBST(CPPFLAGS, "$CPPFLAGS -I${withval}")],
+   [AC_SUBST(CPPFLAGS, "$CPPFLAGS -I/usr/include/boost/")]
 )
 
 # Check for the Boost Math header files; this uses a compile check, so
