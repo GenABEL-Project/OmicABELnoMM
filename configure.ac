@@ -66,16 +66,13 @@ AC_OPENMP
 AC_SUBST(AM_CXXFLAGS, "$OPENMP_CFLAGS")
 
 #AM_CXXFLAGS="-static  -g -ggdb -I../libs/include -I./libs/include $AM_CXXFLAGS"
-AM_CXXFLAGS=" -I../libs/include -I./libs/include $AM_CXXFLAGS"
+
 # Checks for libraries.
 # pthread library
 AC_SEARCH_LIBS([pthread_mutex_init], [pthread], [],
    [AC_MSG_ERROR([Make sure pthread is available on the system])]
 )
 
-if test -z "$LDFLAGS"; then
-   LDFLAGS="-L./libs/lib -L../libs/lib"
-fi
 
 found_blas=0
 
