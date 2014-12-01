@@ -6,6 +6,10 @@
 #include <unistd.h>
 #include <getopt.h>
 
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "Definitions.h"
 #include "Algorithm.h"
 
@@ -17,7 +21,7 @@ string helpcmd = "usage: omicabelnomm -c <path/fname> --geno <path/fname> "
     "-e <-10.0~1.0> -i -f";
 
 string helpcmd_expl =
-"omicabelnomm Version 0.96b \n\t"
+    PACKAGE_NAME " v" PACKAGE_VERSION " \n\t"
 "Required: \n\t"
 "-p --phe    \t <path/filename> to the inputs containing phenotypes. \n\t"
 "-g --geno   \t <path/filename> to the inputs containing genotypes. \n\t"
@@ -433,7 +437,7 @@ int main(int argc, char *argv[] )
     blas_set_num_threads(params.threads);
     if (params.mpi_id == 0)
     {
-        cout << "Omicabelnomm Version 0.96b \n";
+        cout << PACKAGE_NAME " v" PACKAGE_VERSION "\n";
     }
 
 
