@@ -1,26 +1,82 @@
 \documentclass{report}
 
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage[smaller]{acronym}
 \usepackage{fullpage}
 
 \usepackage{graphicx,color}
 \usepackage{mhchem}
-\usepackage{xcolor}
+
+\usepackage[svgnames]{xcolor}
+\definecolor{webgreen}{rgb}{0,.5,0}
+
 \usepackage{listings}
-
-
-\lstdefinestyle{BASH}
-{
-    backgroundcolor=\color{black},
-    basicstyle=\scriptsize\color{white}\ttfamily
+\definecolor{lstbgcolor}{rgb}{0.9,0.9,0.9}
+\lstset{
+  tabsize=4,
+  rulecolor=,
+  basicstyle=\ttfamily,
+  upquote=true,
+  columns=fixed,
+  showstringspaces=false,
+  extendedchars=true,
+  breaklines=true,
+  breakatwhitespace,
+  prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+  frame=single,
+  showtabs=false,
+  showspaces=false,
+  showstringspaces=false,
+  keywordstyle=\color[rgb]{0,0,1},
+  commentstyle=\color[rgb]{0,0.4,0},
+  stringstyle=\color[rgb]{0.5,0,1},
+  basicstyle=\footnotesize\ttfamily,
+  backgroundcolor=\color{lstbgcolor},
+%  basicstyle=\scriptsize\ttfamily
 }
+\lstloadlanguages{bash,awk}
+\lstMakeShortInline{|}
 
+
+\usepackage[pdftex,hyperfootnotes=false,pdfpagelabels]{hyperref}
+\hypersetup{%
+  linktocpage=false, % If true the page numbers in the toc are links
+  % instead of the section headings.
+  pdfstartview=FitH,% pdfstartpage=3,
+  breaklinks=true, pageanchor=true, %
+  pdfpagemode=UseOutlines, plainpages=false, bookmarksnumbered, %
+  bookmarksopen=true, bookmarksopenlevel=1, hypertexnames=true, %
+  pdfhighlight=/O, %hyperfootnotes=true,%nesting=true,%frenchlinks,%
+  pdfauthor={\textcopyright\ A.~Frank, L.C.~Karssen},
+  pdfsubject={OmicABELnoMM User Guide},
+  colorlinks=true, urlcolor=blue, linkcolor=blue, citecolor=webgreen %
+}
+% get the links to the figures and tables right:
+\usepackage[all]{hypcap} % to be loaded after hyperref package
+
+% lowercase letters as footnote numerals (to avoid confusion with powers).
+\renewcommand{\thefootnote}{\alph{footnote}}
+
+
+% Some newly defined commands and operators:
+\DeclareMathOperator{\var}{\mathbf{var}}
+\DeclareMathOperator{\cov}{\mathbf{cov}}
+\newcommand{\eg}{e.g.~}
+\newcommand{\ie}{i.e.~}
+\newcommand{\oanomm}{OmicABELnoMM}
 
 \begin{document}
 
-\title{OmicabelNoMM User's Guide}
-\author{Alvaro Frank, NAME,NAME}
+\title{OmicabelNoMM v0.1.0 User Guide}
+\author{Alvaro Frank$^1$, Lennart C. Karssen$^2$\\
+  $^{1}${\small HelmhotlzZentrum, München, DE}\\
+  $^{2}${\small PolyOmica, Groningen, NL} \\
+}
 \date{October 2014}
 \maketitle
+\tableofcontents
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -28,7 +84,7 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Understanding OmicabelNoMM}
+\chapter{Understanding \oanomm}
 
 \section{Overview}
 
@@ -58,7 +114,7 @@ y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{r} \left( \ph
 y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_r i_1 x_r\\
 y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} i_1 x_r + \dots  + \beta_j j_1 x_r\\
 y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{r}  i_1 \left( x_{l+1}  + \dots + x_p\right) \\
-y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1}  i_1 \left( x_{l+1}  + \dots + x_p\right) +\dots + \beta_{j}  i_j \left( x_{l+1}  + \dots + x_p\right) 
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1}  i_1 \left( x_{l+1}  + \dots + x_p\right) +\dots + \beta_{j}  i_j \left( x_{l+1}  + \dots + x_p\right)
 \end{align}
 
 \subsubsection{Analysis with Interactions/Environmental Effects keeping original variable}
@@ -72,7 +128,7 @@ y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} x_r + \b
 y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_r i_1 \phi_1 x_r\\
 y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} i_1 \phi_1 x_r + \dots  + \beta_j j_1 \phi_1 x_r\\
 y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{r}  i_1 \left( \phi_{l+1} x_{l+1}  + \dots + \phi_p x_p\right) \\
-y &\sim  \dots + \beta_l cov_l + \beta_{l+1}  i_1 \left(  \phi_{l+1} x_{l+1}  + \dots +  \phi_{p} x_p\right) +\dots + \beta_{j}  i_j \left( \phi_{l+1} x_{l+1}  + \dots + \phi_{p} x_p\right) 
+y &\sim  \dots + \beta_l cov_l + \beta_{l+1}  i_1 \left(  \phi_{l+1} x_{l+1}  + \dots +  \phi_{p} x_p\right) +\dots + \beta_{j}  i_j \left( \phi_{l+1} x_{l+1}  + \dots + \phi_{p} x_p\right)
 \end{align}
 
 \subsubsection{Analysis with Interactions and factor keeping original variable}
@@ -95,57 +151,85 @@ $\beta=(X^T X)^{-1} X^T y$
 \section{Compromises}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Setting OmicabelNoMM up}
+\chapter{Installing \oanomm}
 
-\section{Setup a project}
-\begin{lstlisting}[style=BASH,escapechar=\%]
-#projects location
-mkdir GWAS_PROJECT
+There are two ways (or maybe three) to install \oanomm:
+\begin{itemize}
+\item Download a pre-compiled binary version of the tool.
+\item Compile \oanomm from source
+\item Compile \oanomm from source, including the libraries it depends
+  on.
+\end{itemize}
+Option number one is the easiest, however it also means you are
+running a version of \oanomm that is significantly slower then
+possible. Because \oanomm was developed with \ac{HPC} in mind, it
+works most efficient if it can use the specific features of the
+\ac{CPU} of your machine(s), which means compiling it yourself.
 
-cd GWAS_PROJECT
-%
-\end{lstlisting}
+For a fully optimised version of \oanomm the required libraries need
+to be compiled specifically for your hardware as well. In a scientific
+computing environment it may be that your system administrator has
+already done this for you.
 
-\section{Library and program Requirements}
+Details of the first option can be found in \S~\ref{sec:binaryinstall}
+and details of options two and three are documented in
+\S~\ref{sec:compile}.
 
-\subsection{autoconf, autotools}
+\section{Installing the pre-compiled binary}
+\label{sec:binaryinstall}
 
-Make sure you have autoconf/autotools installed
-\begin{lstlisting}[style=BASH,escapechar=\%]
 
-sudo apt-get install autoconf
-autoreconf -fi
-autoconf
-%
-\end{lstlisting}
+\section{Compiling \oanomm from source}
+\label{sec:compile}
+In order to install \oanomm the user should compile the source code of
+\oanomm to create executable programs. In order to do so successfully,
+several libraries need to be installed on the system.  These libraries
+can be pre-installed on the system (e.g. by the system administrator)
+or downloaded separately by the user. If one wants a fully optimised
+version of \oanomm, those libraries should be compiled for the
+specific computer architecture of the user as well, but pre-built
+packages (\eg those provided by the Linux distribution) will work as
+well.
 
-\subsection{Compilers}
+In short the process of compiling \oanomm (after the requirements have
+been installed) looks like this:
+\begin{itemize}
+\item Check for the presence of all requirements: |./configure|
+\item Compile \oanomm: |make|
+\item Install \oanomm: |make install|
+\end{itemize}
 
-You will need the latest gcc compiler for your system for running OmicABELnoMM on a single multi-core computer .
+The following tools and libraries are needed when compiling \oanomm
+yourself. Most of the libraries contain highly optimised code for
+linear algebra and other math.
+\begin{itemize}
+\item Compilers: A C++ and a FORTRAN compiler are needed (we tested
+  GCC (v4.8 or higher) or CLANG, gfortran)
+\item Libraries: \oanomm depends on the following libraries:
+  \begin{itemize}
+  \item \acs{BLAS} (required): a linear algebra library. We tested OpenBLAS,
+  \item LAPACKe (required): The C interface to LAPACK, the linear
+    algebra package.
+  \item Boost (required): For the calculation of p-values \oanomm needs the
+    Boost-math part of the Boost library.
+  \item ACML (AMD Math Core library, optional): if the ACML is found,
+    it will be used where possible.
+  \item Intel KML (Kernel Math Library, optional): if the KML is
+    found, it will be used where possible.
+  \item \acs{MPI} (optional): If the |./configure| step detects an
+    \acf{MPI} library like OpenMPI or MPICH2, \oanomm will be compiled
+    with the option to distribute the computations across multiple
+    machines on a cluster.
+  \end{itemize}
+\end{itemize}
 
-\begin{lstlisting}[style=BASH,escapechar=\%]
 
-sudo apt-get install gcc-4.9
-%
-\end{lstlisting}
-
-For compute-cluster you will need MPI support.
-
-\begin{lstlisting}[style=BASH,escapechar=\%]
-sudo apt-get install openmpi-bin
-sudo apt-get install openmpi-common
-sudo apt-get install libopenmpi
-sudo apt-get install libopenmpi-dbg 
-sudo apt-get install libopenmpi-dev
-\end{lstlisting}
-
-\subsection{Blas and Lapack}
-
-You will need a Linear Algebra Library for high performance matrix computations.
-The standard is to use openblas and lapack.
-
-\begin{lstlisting}[style=BASH,escapechar=\%]
-
+\subsection{Required libraries: \ac{BLAS} and LAPACKe}
+You will need a linear algebra library for high performance matrix
+computations.  The standard is to use OpenBLAS and LAPACKe. On an
+Ubuntu Linux system these can be installed with the following commands
+(other distributions will have similarly named packages):
+\begin{lstlisting}[escapechar=\%]
 sudo apt-get install libopenblas-dev
 sudo apt-get install libopenblas-base
 sudo apt-get install liblapack3gf
@@ -156,16 +240,18 @@ sudo apt-get install liblapacke-dev
 %
 \end{lstlisting}
 
-For alternative ways of installing BLAS and lapack, you can download the source code directly and compile for your own machine, guaranting that the settings will be optimal. Sometimes distributions lack USE\_OPENMP=1.
-Remember to change path\_to\_ with your your own path to the specified folder.
+For alternative ways of installing \ac{BLAS} and LAPACKe, you can download
+the source code directly and compile for your own machine, guaranteeing
+that the settings will be optimal. Sometimes distributions lack
+|USE_OPENMP=1|.  Remember to change |path_to_| with your your own path
+to the specified folder.
 
-\begin{lstlisting}[style=BASH,escapechar=\%]
-
+\begin{lstlisting}[escapechar=\%]
 git clone git://github.com/xianyi/OpenBLAS
 
 cd OpenBLAS
 
-#make sure you use g++ 4.8 or Higher!
+# make sure you use g++ 4.8 or Higher!
 make all HOSTCC=g++ FC=gfortran USE_OPENMP=1
 
 #install the libraries relative to OmicABELnoMM
@@ -173,15 +259,14 @@ make install PREFIX="path_to_/OmicABELnoMM/libs/"
 %
 \end{lstlisting}
 (Status: Support Broken)
-You can Use AMD's ACML (BLAS from AMD) by going to:\\
-http://developer.amd.com/tools-and-sdks/cpu-development/amd-core-math-library-acml/acml-downloads-resources/ \\
-and copy the supplied binary libraries to "/OmicABELnoMM/libs/". IF both libraries are present (Openblas + ACML), the system will use ACML.
+You can use AMD's ACML (\ac{BLAS} from AMD) by going to:\\
+|http://developer.amd.com/tools-and-sdks/cpu-development/amd-core-math-library-acml/acml-downloads-resources/|\\
+and copy the supplied binary libraries to |/OmicABELnoMM/libs/|. If
+both libraries are present (OpenBLAS + ACML), the system will use
+ACML.
 
-Let Omicabel know where BLAS is located by:
-
-
-\begin{lstlisting}[style=BASH,escapechar=\%]
-
+Let \oanomm know where \ac{BLAS} is located by:
+\begin{lstlisting}[escapechar=\%]
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:path_to_/OmicABELnoMM/libs/lib
 autoreconf -fi
 
@@ -189,10 +274,92 @@ autoreconf -fi
 $%
 \end{lstlisting}
 
+\subsection{Install the required libraries (from source)}
+
+\subsection{Compiling \oanomm}
+Once the libraries have been installed, \oanomm can be installed by
+running three commands:
+\begin{itemize}
+\item |./configure|
+\item |make|
+\item |make install|
+\end{itemize}
+The |./configure| step checks whether all required software like
+libraries are in place. If not it will warn or even abort. If one or
+more of the required libraries can not be found in a standard location
+the correct location can be added as an option to the configure step,
+for example to point to a different location of the Boost math library
+run:
+\begin{lstlisting}
+./configure --with-boost-include-path=/path/to/boost/lib
+\end{lstlisting}
+The names of the options for each library can be found by typing
+\begin{lstlisting}
+./configure --help
+\end{lstlisting}
+
+Apart from the library locations, you can specify the installation
+location in the configure step. By default, \oanomm will be installed
+in the |/usr/local/| directory\footnote{In more detail: the binaries
+  will be installed in \lstinline{/usr/local/bin/}, documentation in
+  \lstinline{/usr/local/share/omicabelnomm/doc}.}. To change this,
+use the |--prefix| option. For example, to install in a subdirectory
+of your home directory run
+\begin{lstlisting}
+./configure --prefix=/home/yourusername/mytools/OmicABELnoMM
+\end{lstlisting}
+
+
+\section{Installing the development version}
+For those of you who want to aid in the development of \oanomm
+
+\subsection{autoconf, autotools}
+
+Make sure you have autoconf/autotools installed
+\begin{lstlisting}[escapechar=\%]
+
+sudo apt-get install autoconf
+autoreconf -fi
+autoconf
+%
+\end{lstlisting}
+
+
+\section{Setup a project}
+\begin{lstlisting}[escapechar=\%]
+#projects location
+mkdir GWAS_PROJECT
+
+cd GWAS_PROJECT
+%
+\end{lstlisting}
+
+\section{Library and program Requirements}
+
+
+\subsection{Compilers}
+
+You will need the latest gcc compiler for your system for running \oanomm on a single multi-core computer .
+
+\begin{lstlisting}[escapechar=\%]
+sudo apt-get install gcc-4.9
+%
+\end{lstlisting}
+
+For compute-cluster you will need \ac{MPI} support.
+
+\begin{lstlisting}[escapechar=\%]
+sudo apt-get install openmpi-bin
+sudo apt-get install openmpi-common
+sudo apt-get install libopenmpi
+sudo apt-get install libopenmpi-dbg
+sudo apt-get install libopenmpi-dev
+\end{lstlisting}
+
+
 \section{Source Files}
 
-\begin{lstlisting}[style=BASH,escapechar=\%]
-
+\begin{lstlisting}[escapechar=\%]
 #get the source files
 svn checkout svn://svn.r-forge.r-project.org/svnroot/genabel/pkg/OmicABELnoMM/
 
@@ -203,15 +370,14 @@ cd OmicABELnoMM
 \section{Compiling}
 
 For compiling the final executable binary use:
-\begin{lstlisting}[style=BASH,escapechar=\%]
-
+\begin{lstlisting}[escapechar=\%]
 #in /OmicABELnoMM/
 make
 %
 \end{lstlisting}
 
 For compiling the test binary use:
-\begin{lstlisting}[style=BASH,escapechar=\%]
+\begin{lstlisting}[escapechar=\%]
 
 #in /OmicABELnoMM/
 make check
@@ -223,7 +389,7 @@ make check
 
 \section{Overview}
 
-OmicABELnoMM uses a DatABEL format for the source files. DatABEL uses less storage space, and helps computations to be done faster.
+\oanomm uses a DatABEL format for the source files. DatABEL uses less storage space, and helps computations to be done faster.
 
 Original source files can be in any format as long as there is a way to load them into R for a table(matrix) format. Once in table format, they can be just transformed to DatABEL format to be used by OmicABEL.
 
@@ -233,7 +399,7 @@ Start R, then use library(DatABEL); help("DatABEL-package")\\
 More info: http://www.genabel.org/packages/DatABEL\\
 Start R and load DatABEL
 
-\begin{lstlisting}[style=BASH,escapechar=\%]
+\begin{lstlisting}[escapechar=\%]
 
 library(DatABEL)
 %
@@ -243,14 +409,14 @@ library(DatABEL)
 
 This example shows how to artificially crate covariates:
 
-\begin{lstlisting}[style=BASH,escapechar=\%]
+\begin{lstlisting}[escapechar=\%]
 
 #START_FAKE_DATA
-n = 2000		 # number of individuals
-l = 3   		 # number of covariates+1 for intercept
-r = 2 			 # how many columns per SNP
-m = r*100000		 # number of snps
-t = 10000  		 # number of traits
+n = 2000                 # number of individuals
+l = 3                    # number of covariates+1 for intercept
+r = 2                    # how many columns per SNP
+m = r*100000             # number of snps
+t = 10000                # number of traits
 set.seed(1001)
 runif(3)
 XL <- matrix(rnorm((l+1)*n),ncol=(l+1)) # first column should be ones (intercept)
@@ -278,38 +444,38 @@ XL_db <- matrix2databel(XL,filename="XL",type="FLOAT")
 \end{lstlisting}
 
 \section{Independent Variables, SNPs,CPG Sites,Measurements used to explain other Measurements}
-\begin{lstlisting}[style=BASH,escapechar=\%]
+\begin{lstlisting}[escapechar=\%]
 #START_FAKE_DATA
-n = 2000		 # number of individuals
-l = 3   		 # number of covariates+1 for intercept
-r = 2 			 # how many columns per SNP
-m = r*100000		 # number of snps
-t = 10000  		 # number of traits
+n = 2000                 # number of individuals
+l = 3                    # number of covariates+1 for intercept
+r = 2                    # how many columns per SNP
+m = r*100000             # number of snps
+t = 10000                # number of traits
 #r=2
 XR <- matrix(rnorm(m*n),ncol=m)
 
 #Assumes that you had the previous Y still stored, this will create XR linearly dependent on the Y
 for(i in 1 + r*(0:((m-2)/r)) )
-{ 
-	#print(i)
-	yIdx=ceiling(i/r)
-	#print(i)
-	#print(yIdx)
-	for(j in 1:n)
-	{ 
-		XR[j,i]=Y[j,yIdx]
-		for(k in 1:l)
-		{
-			XR[j,i]=XR[j,i]-XL[j,k]*0.01
-		}
-		for(k in 1:(r-1))
-		{
-			XR[j,i]=XR[j,i]-XR[j,i+k]*0.01
-		}
-		#XR[j,i]=XR[j,i]/2.8888
-		#XR[j,i] = XR[j,i]*runif(1, 1.0-var, 1.0)
-		
-	}
+{
+        #print(i)
+        yIdx=ceiling(i/r)
+        #print(i)
+        #print(yIdx)
+        for(j in 1:n)
+        {
+                XR[j,i]=Y[j,yIdx]
+                for(k in 1:l)
+                {
+                        XR[j,i]=XR[j,i]-XL[j,k]*0.01
+                }
+                for(k in 1:(r-1))
+                {
+                        XR[j,i]=XR[j,i]-XR[j,i+k]*0.01
+                }
+                #XR[j,i]=XR[j,i]/2.8888
+                #XR[j,i] = XR[j,i]*runif(1, 1.0-var, 1.0)
+
+        }
 }
 
 #add missing data
@@ -327,10 +493,10 @@ for(i in 1:(n*m)){ if(sample(1:100,1) > 90) XR[i]=0/0}
 colnames(XR) <- paste("miss",1:m,sep="")
 for(i in 1:(m/r))
 {
-	for(j in 1:r) 
-	{
-		colnames(XR)[(i-1)*r+(j)] = paste0("snp",paste(i,j,sep="_") )
-	}
+        for(j in 1:r)
+        {
+                colnames(XR)[(i-1)*r+(j)] = paste0("snp",paste(i,j,sep="_") )
+        }
 }
 
 #add your own idnames!
@@ -343,7 +509,7 @@ XR_db <- matrix2databel(XR,filename="XR",type="FLOAT")
 
 \section{Dependent Variable, Phenotypes,Measurements to be explained}
 
-\begin{lstlisting}[style=BASH,escapechar=\%]
+\begin{lstlisting}[escapechar=\%]
 
 
 %
@@ -354,78 +520,78 @@ XR_db <- matrix2databel(XR,filename="XR",type="FLOAT")
 
 \section{Getting help from the program}
 
-\begin{lstlisting}[style=BASH,escapechar=\%]
+\begin{lstlisting}[escapechar=\%]
 
 ./omicabelnomm -h
-usage: omicabelnomm -c <path/fname> --geno <path/fname> -p <path/fname> -o <path/fname> 
+usage: omicabelnomm -c <path/fname> --geno <path/fname> -p <path/fname> -o <path/fname>
                 -x <path/fname> -n <#SNPcols> -t <#CPUs>
                          -d <0.0~1.0> -r <-10.0~1.0> -b -s <0.0~1.0>  -e <-10.0~1.0> -i -f
-omicabelnomm Version 0.96b 
-	Required: 
-	-p --phe    	 <path/filename> to the inputs containing phenotypes. 
-	-g --geno   	 <path/filename> to the inputs containing genotypes. 
-	-c --cov    	 <path/filename> to the inputs containing covariates. 
-	-o --out    	 <path/filename> to store the output to (used for all .txt and .ibin & .dbin). 
+omicabelnomm Version 0.96b
+        Required:
+        -p --phe         <path/filename> to the inputs containing phenotypes.
+        -g --geno        <path/filename> to the inputs containing genotypes.
+        -c --cov         <path/filename> to the inputs containing covariates.
+        -o --out         <path/filename> to store the output to (used for all .txt and .ibin & .dbin).
 
-Optional: 
-	-n --ngpred 	 <#SNPcols> Number of columns in the geno file that represent a single SNP. 
-	-t --thr    	 <#CPUs> Number of computing threads to use to speed computations.
-			 Recommended is 4-8 per node (see MPI). 
-	-x --excl   	 <path/filename> file containing list of individuals to exclude 
-			 from input files, (see example file). 
-	-d --pdisp  	 <0.0~1.0> Value to use as maximum threshold for significance.
-			 Results with P-values UNDER this threshold will be 
-			 displayed in the putput .txt file. 
-	-r --rdisp  	 <-10.0~1.0> Value to use as minimum threshold for R2. 
-			 Results with R2-values ABOVE this threshold will be displayed
-			 in the putput .txt file. 
-	-b --stobin 	 Flag that forces to ALSO store results in a
-			 smaller binary format (*.ibin & *.dbin). 
-	-s --psto   	 <0.0~1.0>  Results with P-values UNDER this threshold will be 
-			 displayed in the putput binary files. 
-	-e --rsto   	 <-10.0~1.0> Results with R2-values ABOVE this threshold will be 
-			 stored in the putput binary files. 
-	-i --fdcov  	 Flag that forces to include covariates (when its genotype is significant) 
-			 as part of the results stored 
-	-f --fdgen  	 Flag that forces to consider all included results 
-			 (causes the analisis to ignores ALL threshold values). 
-	-j --additive  	 Flag that runs the analisis with an Additive Model with 
-			 (2*AA,1*AB,0*BB) effects. 
-	-k --dominant  	 Flag that runs the analisis with an Dominant Model with 
-			 (1*AA,1*AB,0*BB) effects. 
-	-l --recessive 	 Flag that runs the analisis with an Recessive Model with 
-			 (1*AA,0*AB,0*BB) effects. 
-	-z --mylinear 	 <path/filename> to read Factors 'f_i' for a Custom Linear Model with
-			 f1*X1,f2*X2,f3*X3...fn*X_ngpred as effects,
-			 each column of each independent variable will be multiplied with
-			 the specified factors. 
-			 Formula: y~alpha*cov + beta_1*f1*X1 + beta_2*f2*X2 +...+ beta_n*fn*Xn, 
-			 (see example files!). 
+Optional:
+        -n --ngpred      <#SNPcols> Number of columns in the geno file that represent a single SNP.
+        -t --thr         <#CPUs> Number of computing threads to use to speed computations.
+                         Recommended is 4-8 per node (see MPI).
+        -x --excl        <path/filename> file containing list of individuals to exclude
+                         from input files, (see example file).
+        -d --pdisp       <0.0~1.0> Value to use as maximum threshold for significance.
+                         Results with P-values UNDER this threshold will be
+                         displayed in the putput .txt file.
+        -r --rdisp       <-10.0~1.0> Value to use as minimum threshold for R2.
+                         Results with R2-values ABOVE this threshold will be displayed
+                         in the putput .txt file.
+        -b --stobin      Flag that forces to ALSO store results in a
+                         smaller binary format (*.ibin & *.dbin).
+        -s --psto        <0.0~1.0>  Results with P-values UNDER this threshold will be
+                         displayed in the putput binary files.
+        -e --rsto        <-10.0~1.0> Results with R2-values ABOVE this threshold will be
+                         stored in the putput binary files.
+        -i --fdcov       Flag that forces to include covariates (when its genotype is significant)
+                         as part of the results stored
+        -f --fdgen       Flag that forces to consider all included results
+                         (causes the analisis to ignores ALL threshold values).
+        -j --additive    Flag that runs the analisis with an Additive Model with
+                         (2*AA,1*AB,0*BB) effects.
+        -k --dominant    Flag that runs the analisis with an Dominant Model with
+                         (1*AA,1*AB,0*BB) effects.
+        -l --recessive   Flag that runs the analisis with an Recessive Model with
+                         (1*AA,0*AB,0*BB) effects.
+        -z --mylinear    <path/filename> to read Factors 'f_i' for a Custom Linear Model with
+                         f1*X1,f2*X2,f3*X3...fn*X_ngpred as effects,
+                         each column of each independent variable will be multiplied with
+                         the specified factors.
+                         Formula: y~alpha*cov + beta_1*f1*X1 + beta_2*f2*X2 +...+ beta_n*fn*Xn,
+                         (see example files!).
 %
 \end{lstlisting}
 \pagebreak
-\begin{lstlisting}[style=BASH,escapechar=\%]
+\begin{lstlisting}[escapechar=\%]
 
-	-y --myaddit  	 <path/filename> to read Factors 'f_i' for a Custom Additive Model with
-			 (f1*X1,f2*X2,f3*X3...fn*X_ngpred) as effects,
-			 each column of each independent variable will be multiplied with the 
-			 specified factors and then added together. 
-			 Formula: y~alpha*cov + beta*(f1*X1 + f2*X2 +...+ fn*Xn), (see example files!).
-	-v --simpleinter <path/filename> to read the interactions from;
-			 for single analysis using multile interactions. 
-	-w --multinter 	 <path/filename> to read the interactions from;
-			 for multiple analysis using single interaction per analysis. 
-	-u --keepinter 	 Flag that sets if the interaction analysis chose is to too keep the dependent 
-			 variable X. If set, Formula: y~alpha*cov + beta_1*INT*X + beta_2*X, 
-			 (see example files!).  Default not set, 
-			 Formula: y~alpha*cov + beta_1*INT*X, (see example files!). 
+        -y --myaddit     <path/filename> to read Factors 'f_i' for a Custom Additive Model with
+                         (f1*X1,f2*X2,f3*X3...fn*X_ngpred) as effects,
+                         each column of each independent variable will be multiplied with the
+                         specified factors and then added together.
+                         Formula: y~alpha*cov + beta*(f1*X1 + f2*X2 +...+ fn*Xn), (see example files!).
+        -v --simpleinter <path/filename> to read the interactions from;
+                         for single analysis using multile interactions.
+        -w --multinter   <path/filename> to read the interactions from;
+                         for multiple analysis using single interaction per analysis.
+        -u --keepinter   Flag that sets if the interaction analysis chose is to too keep the dependent
+                         variable X. If set, Formula: y~alpha*cov + beta_1*INT*X + beta_2*X,
+                         (see example files!).  Default not set,
+                         Formula: y~alpha*cov + beta_1*INT*X, (see example files!).
 
-			 Support for MPI is available. 
-			 Simply use mpirun -np <#nodes> omicabelnomm <params> 
-			 on an Open-MPI enabled computer/cluster.
-			 Recommended is to use MPI when dealing with problems with over 2000 genotypes,
-			 at a rate of 1 node per 2000 genotypes.
-	
+                         Support for MPI is available.
+                         Simply use mpirun -np <#nodes> omicabelnomm <params>
+                         on an Open-MPI enabled computer/cluster.
+                         Recommended is to use MPI when dealing with problems with over 2000 genotypes,
+                         at a rate of 1 node per 2000 genotypes.
+
 
 %
 \end{lstlisting}
@@ -436,7 +602,7 @@ Optional:
 
 Simple linear regression analysis with 4 threads can be done using (note long and short versions).
 This setup assumes as default 1 column per XR (-n 1). In the default case, each column (-n 1) gets its own regression coefficient.
-\begin{lstlisting}[style=BASH,escapechar=\%]
+\begin{lstlisting}[escapechar=\%]
 
 ./omicabelnomm --cov examples/XL --geno examples/XR --phe examples/Y --out examples/B --thr 4
 
@@ -444,9 +610,9 @@ This setup assumes as default 1 column per XR (-n 1). In the default case, each 
 %
 \end{lstlisting}
 
-When using more than one column per snp, you specify the value with -n 3, where each column of XR gets its own regression coefficient, i.e: 
+When using more than one column per snp, you specify the value with -n 3, where each column of XR gets its own regression coefficient, i.e:
 
-\begin{lstlisting}[style=BASH,escapechar=\%]
+\begin{lstlisting}[escapechar=\%]
 
 ./omicabelnomm -c examples/XL -g examples/XR -p examples/Y -o examples/B -t 4 -n 3
 %
@@ -454,7 +620,7 @@ When using more than one column per snp, you specify the value with -n 3, where 
 
 For analysis involving snp's and dosage models, the following popular options are allowed:
 
-\begin{lstlisting}[style=BASH,escapechar=\%]
+\begin{lstlisting}[escapechar=\%]
 
 ./omicabelnomm -c examples/XL -g examples/XR -p examples/Y -o examples/B -t 4 --additive
 
@@ -466,26 +632,26 @@ For analysis involving snp's and dosage models, the following popular options ar
 
 \section{Custom Dosage Analysis}
 
-When using custom dosages, you need to specify how many columns per snp are you using. You also have to specify the file from which the dosage factors will be read. The file has to contain 1 factor per column of the snp. 
+When using custom dosages, you need to specify how many columns per snp are you using. You also have to specify the file from which the dosage factors will be read. The file has to contain 1 factor per column of the snp.
 Using --myaddit will cause for all columns to be multiplied by the specific factors and then added together. The resulting vector (1 per -n  of the snp) will obtain a collective regression coefficient.\\
 Using --mylinear each single -n will obtain its own regression coefficient after being multiplied by the respective dosage factor.
 
-\begin{lstlisting}[style=BASH,escapechar=\%]
-
-./omicabelnomm -c examples/XL -g examples/XR -p examples/Y -o examples/B -t 4 
-						-n 2 --myaddit examples/dosages_2.txt
+\begin{lstlisting}[escapechar=\%]
 
 ./omicabelnomm -c examples/XL -g examples/XR -p examples/Y -o examples/B -t 4
-						-n 1 --mylinear examples/dosages_1.txt
+                                                -n 2 --myaddit examples/dosages_2.txt
+
+./omicabelnomm -c examples/XL -g examples/XR -p examples/Y -o examples/B -t 4
+                                                -n 1 --mylinear examples/dosages_1.txt
 %
 \end{lstlisting}
 
 
-\section{MPI and Cluster usage for Simple Linear Regression}
+\section{\ac{MPI} and Cluster usage for Simple Linear Regression}
 
-Compute clusters offer multiple compute nodes(computers) where each has multi threading capabilities. On OmicABELnoMM compiled using MPI support, you could use mpirun to use multiple nodes at once. 10 nodes using 8 threads each:
+Compute clusters offer multiple compute nodes(computers) where each has multi threading capabilities. On \oanomm compiled using \ac{MPI} support, you could use mpirun to use multiple nodes at once. 10 nodes using 8 threads each:
 
-\begin{lstlisting}[style=BASH,escapechar=\%]
+\begin{lstlisting}[escapechar=\%]
 
 mpirun -np 10 ./omicabelnomm -c examples/XL --g examples/XR -p examples/Y -o examples/B -t 8
 %
@@ -500,5 +666,19 @@ In this case each process (1 per node specified using -np for a total of 10 in t
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{FAQ}
+
+\chapter{List of acronyms}
+\label{ch:acro}
+
+\begin{acronym}[BLAS] % Put longest acronym here for alignment
+  \acro{BLAS}{Basic Linear Algebra Subprograms\acroextra{, a type of
+      library for efficient matrix operations, for example OpenBLAS}}
+  \acro{CPU}{Central Processing Unit\acroextra{, i.e. the processor of
+    your computer}}
+  \acro{HPC}{High-Performance Computing}
+  \acro{MPI}{Message Passing Interface\acroextra{, library for
+      distributed memory parallelisation that allows a program to be
+      run in parallel on multiple machines in a cluster}}
+\end{acronym}
 
 \end{document}
