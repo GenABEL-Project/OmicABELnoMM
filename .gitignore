@@ -1,0 +1,24 @@
+
+# /
+/Makefile.in
+/Makefile
+/configure
+/aclocal.m4
+/autom4te.cache
+/autoscan.log
+/config.h.in
+/.deps
+/install-sh
+/missing
+/depcomp
+/config.log
+/config.status
+
+# /src/
+/src/config.h.in
+/src/.deps
+/src/.dirstamp
+/src/stamp-h1
+
+# /tests/
+/tests/Makefile.in
