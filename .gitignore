@@ -1,4 +1,3 @@
-
 # /
 /Makefile.in
 /Makefile
@@ -22,3 +21,33 @@
 
 # /tests/
 /tests/Makefile.in
+
+# /examples
+/examples/INT0.fvd
+/examples/INT0.fvi
+/examples/INT01.fvd
+/examples/INT01.fvi
+/examples/INT011.fvd
+/examples/INT011.fvi
+/examples/INT01R.fvd
+/examples/INT01R.fvi
+/examples/INT1.fvd
+/examples/INT1.fvi
+/examples/INT10.fvd
+/examples/INT10.fvi
+/examples/INT11.fvd
+/examples/INT11.fvi
+/examples/INT1RR.fvd
+/examples/INT1RR.fvi
+/examples/INTR.fvd
+/examples/INTR.fvi
+/examples/INTR0.fvd
+/examples/INTR0.fvi
+/examples/INTR1.fvd
+/examples/INTR1.fvi
+/examples/INTRR.fvd
+/examples/INTRR.fvi
+/examples/XRint01.fvd
+/examples/XRint01.fvi
+/examples/Y.fvd
+/examples/Y.fvi
