@@ -605,7 +605,7 @@ void AIOwrapper::initialize(struct Settings &params)
             ofstream fp_InfoResults;
 
             fp_InfoResults.open((Fhandler->fnameOutFiles + "_sto.ibin").c_str(),ios::out | ios::binary | ios::trunc);
-            if(fp_InfoResults == 0)
+            if(!fp_InfoResults)
             {
                 cout << "Error Creating File: "  << (Fhandler->fnameOutFiles + "_sto.ibin") << endl;
                 exit(1);
@@ -841,7 +841,7 @@ void* AIOwrapper::async_io( void *ptr )
 
 
         fp_sigResults.open((Fhandler->fnameOutFiles + "_dis.txt").c_str(),ios::out | ios::trunc);
-        if(fp_sigResults == 0)
+        if(!fp_sigResults)
         {
             cout << "Error Creating File " << (Fhandler->fnameOutFiles + "_dis.txt") << endl;
             exit(1);
@@ -911,7 +911,7 @@ void* AIOwrapper::async_io( void *ptr )
         {
 
             fp_allResults.open((Fhandler->fnameOutFiles + "_sto.dbin").c_str(),ios::out | ios::binary | ios::trunc);
-            if(fp_allResults == 0)
+            if(!fp_allResults)
             {
                 cout << "Error Creating File "<< (Fhandler->fnameOutFiles + "_sto.bin") << endl;
                 exit(1);
@@ -1822,7 +1822,7 @@ void AIOwrapper::removeALmissings(list< pair<int,int> >* excl_List, struct Setti
 
     FILE *fp;
     fp = fopen((Fhandler->fnameAL+".fvd").c_str(), "rb");
-    if(fp == 0)
+    if(fp == NULL)
     {
         cout << "Error Reading File " << Fhandler->fnameAL << endl;
         exit(1);
@@ -1953,7 +1953,7 @@ void AIOwrapper::load_AL(type_precision** AL)
 
     FILE *fp;
     fp = fopen((Fhandler->fnameAL+".fvd").c_str(), "rb");
-    if(fp == 0)
+    if(fp == NULL)
     {
         cout << "Error Reading File " << Fhandler->fnameAL << endl;
         exit(1);
@@ -2008,7 +2008,7 @@ void AIOwrapper::read_excludeList(list< pair<int,int> >* excl, int &excl_count, 
 {
 
     ifstream fp_exL(fname_excludeList.c_str());
-    if(fp_exL == 0)
+    if(!fp_exL)
     {
         cout << "Error reading exclude list file."<< endl;
         exit(1);
@@ -2098,7 +2098,7 @@ void AIOwrapper::read_excludeList(list< pair<int,int> >* excl, int &excl_count, 
 void AIOwrapper::read_dosages(string fname_dosages, int expected_count, float* vec)
 {
     ifstream fp_dos(fname_dosages.c_str());
-    if(fp_dos == 0)
+    if(!fp_dos)
     {
         cout << "Error reading dosages file."<< endl;
         exit(1);
