@@ -49,7 +49,6 @@ class Algorithm
 
  protected:
 
-
  private:
     list < resultH > sigResults;
 
@@ -105,7 +104,7 @@ class Algorithm
 
 
     void check_result(float* AL, float* AR, int rowsA, int colsA, int rhs,
-                      int colsAR,float* y, float* res, struct Settings params,
+                      int colsAR, float* y, float* res, struct Settings params,
                       int iX, int iiX, int jY, int jjY);
 
 
@@ -124,13 +123,13 @@ class Algorithm
                  float* __restrict y, float* __restrict B);
 
 
-    void singleSSY( float* __restrict sum, float* __restrict b,
-                    float* __restrict b2, float* __restrict b3,
-                    float* __restrict b4, float* __restrict y1,
-                    float* __restrict y2, float* __restrict y3,
-                    float* __restrict y4, float* __restrict sy,
-                    float* __restrict Xl_n, float* __restrict XR_n,
-                    int l, int r, int p, int n, int thead_id);
+    void singleSSY(float* __restrict sum, float* __restrict b,
+                   float* __restrict b2, float* __restrict b3,
+                   float* __restrict b4, float* __restrict y1,
+                   float* __restrict y2, float* __restrict y3,
+                   float* __restrict y4, float* __restrict sy,
+                   float* __restrict Xl_n, float* __restrict XR_n,
+                   int l, int r, int p, int n, int thead_id);
 
 
     inline float singleSSY(float* __restrict b, float* __restrict y,

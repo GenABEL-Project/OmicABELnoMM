@@ -160,8 +160,10 @@ void parse_params(int argc, char *argv[], struct Settings &params)
 
         if (!optarg && (c != 'f' && c != 'b' && c != 'i' && c != 'h'))
         {
-            if (params.mpi_id == 0)
-            cerr << "\nerror with argument parameter " << (char)c << endl;
+            if (params.mpi_id == 0) {
+                cerr << "\nerror with argument parameter " <<
+                    static_cast<char>(c) << endl;
+            }
             exit(1);
         }
 
@@ -248,8 +250,11 @@ void parse_params(int argc, char *argv[], struct Settings &params)
 
          case 'x':
             params.fname_excludelist = string(optarg);
-            if (params.mpi_id == 0)
-                cout << "-x Excluding ids on " << params.fname_excludelist << endl;
+            if (params.mpi_id == 0) {
+                cout << "-x Excluding ids on "
+                     << params.fname_excludelist
+                     << endl;
+            }
             break;
 
 
@@ -282,62 +287,83 @@ void parse_params(int argc, char *argv[], struct Settings &params)
 
         case 'e':
             params.minR2store =  (atof(optarg));
-            if (params.mpi_id == 0)
-                cout << "-e Minimum R2 to store in .bin will be above " << params.minR2store << endl;
+            if (params.mpi_id == 0) {
+                cout << "-e Minimum R2 to store in .bin will be above "
+                     << params.minR2store << endl;
+            }
             break;
 
         case 'i':
             params.disp_cov = true;
-            if (params.mpi_id == 0)
-                cout << "-i Covariate results (significant) will be included in results whenever their respective snps are also significant" << endl;
+            if (params.mpi_id == 0) {
+                cout << "-i Covariate results (significant) will be "
+                     << "included in results whenever their respective "
+                     << "snps are also significant" << endl;
+            }
             break;
 
         case 'f':
             params.storePInd = true;
-            if (params.mpi_id == 0)
-                cout << "-f Forcing all included results to be considered independently of max P-val or min R2. (SLOW!)" << endl;
+            if (params.mpi_id == 0) {
+                cout << "-f Forcing all included results to be considered"
+                     << " independently of max P-val or min R2. (SLOW!)"
+                     << endl;
+            }
             break;
 
         case 'j':
             params.model = 0;
             params.dosages = true;
-            if (params.mpi_id == 0)
-                cout << "-j Using Additive Model with (2*AA, 1*AB, 0*BB) effects" << endl;
+            if (params.mpi_id == 0) {
+                cout << "-j Using Additive Model with (2*AA, 1*AB, 0*BB)"
+                     << " effects" << endl;
+            }
             break;
 
         case 'k':
             params.model = 1;
             params.dosages = true;
-            if (params.mpi_id == 0)
-                cout << "-k Using Dominant Model with (1*AA, 1*AB, 0*BB) effects" << endl;
+            if (params.mpi_id == 0) {
+                cout << "-k Using Dominant Model with (1*AA, 1*AB, 0*BB)"
+                     << " effects" << endl;
+            }
             break;
 
         case 'l':
             params.model = 2;
             params.dosages = true;
-            if (params.mpi_id == 0)
-                cout << "-j Using Recessive Model with (1*AA, 0*AB, 0*BB) effects" << endl;
+            if (params.mpi_id == 0) {
+                cout << "-j Using Recessive Model with (1*AA, 0*AB, 0*BB)"
+                     << " effects" << endl;
+            }
             break;
 
         case 'z':
             params.model = 3;
             params.dosages = true;
-            if (params.mpi_id == 0)
-                cout << "-z Using Custom Linear Model with parameters read from the file " << params.fname_dosages << endl;
+            if (params.mpi_id == 0) {
+                cout << "-z Using Custom Linear Model with parameters "
+                     << "read from the file " << params.fname_dosages << endl;
+            }
             break;
 
         case 'y':
             params.model = 4;
             params.dosages = true;
-            if (params.mpi_id == 0)
-                cout << "-z Using Custom Additive Model with parameters read from the file " << params.fname_dosages << endl;
+            if (params.mpi_id == 0) {
+                cout << "-z Using Custom Additive Model with parameters"
+                     << " read from the file " << params.fname_dosages
+                     << endl;
+            }
             break;
 
         case 'b':
             params.storeBin = true;
 
-            if (params.mpi_id == 0)
-                cout << "-b Results will be stored in binary format too" << endl;
+            if (params.mpi_id == 0) {
+                cout << "-b Results will be stored in binary format too"
+                     << endl;
+            }
             break;
 
         case 'v':
@@ -345,8 +371,10 @@ void parse_params(int argc, char *argv[], struct Settings &params)
             params.use_interactions = true;
             params.keep_depVar = true;
             params.use_multiple_interaction_sets = false;
-            if (params.mpi_id == 0)
-                cout << "-v File containing single interactions " << params.fname_interactions << endl;
+            if (params.mpi_id == 0) {
+                cout << "-v File containing single interactions "
+                     << params.fname_interactions << endl;
+            }
             break;
 
         case 'w':
@@ -354,14 +382,18 @@ void parse_params(int argc, char *argv[], struct Settings &params)
             params.use_interactions = true;
             params.keep_depVar = true;
             params.use_multiple_interaction_sets = true;
-            if (params.mpi_id == 0)
-                cout << "-w File containing multiple interactions " << params.fname_interactions << endl;
+            if (params.mpi_id == 0) {
+                cout << "-w File containing multiple interactions "
+                     << params.fname_interactions << endl;
+            }
             break;
 
         case 'u':
             params.keep_depVar = true;
-            if (params.mpi_id == 0)
-                cout << "-u Keeping independent variable for interaction analysis " <<  endl;
+            if (params.mpi_id == 0) {
+                cout << "-u Keeping independent variable for interaction"
+                     << " analysis " << endl;
+            }
             break;
 
         case 'h':

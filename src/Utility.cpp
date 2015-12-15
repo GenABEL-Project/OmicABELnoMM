@@ -3,7 +3,7 @@
 
 double gemm_flops(double m, double n, double k, int sum)
 {
-    return  (double)((2.0*m / 1000.0*n / 1000.0*k / 1000.0 +
+    return  static_cast<double>((2.0*m / 1000.0*n / 1000.0*k / 1000.0 +
                       sum*m / 1000.0*k / 1000.0 / 1000.0));
 }
 
@@ -48,7 +48,7 @@ void cpu_benchmark(int n, int samples, double &duration, double &GFLOPS)
         cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n,
                  1.0, A, n, B, n, 1.0, C, n);
         get_ticks(end_tick);
-        duration = min(duration, (double)(ticks2sec(end_tick, start_tick)));
+        duration = min(duration, static_cast<double>(ticks2sec(end_tick, start_tick)));
         int a = 0;
         for (int j = 0; j < n * n ; j++)
         {
@@ -84,10 +84,10 @@ type_precision* replicate_vec(type_precision* old, int size)
     type_precision* vec =
         (type_precision*)malloc(size * sizeof(type_precision));
 
-    if (vec==0)
+    if (vec == 0)
     {
         cout << "\nNot enough RAM! "
-             << (int)(size*sizeof(type_precision)/1024/1024) << "MB\n";
+             << static_cast<int>(size*sizeof(type_precision)/1024/1024) << "MB\n";
         //system("pause");
         exit(1);
     }
@@ -209,10 +209,10 @@ void matlab_print_matrix(string name, int m, int n, type_precision* A)
         cout << endl << name << " = [\n";
         int i;
         int j;
-        int index=0;
-        for (j=0;j<m;j++)
+        int index = 0;
+        for (j = 0; j < m; j++)
         {
-          for (i=0;i<n;i++)
+          for (i = 0; i < n; i++)
           {
               if (i != 0)
               {
@@ -231,7 +231,7 @@ void matlab_print_matrix(string name, int m, int n, type_precision* A)
                   }
                   else
                   {
-                      cout << " "<<std::setprecision(2) << A[index];
+                      cout << " " << std::setprecision(2) << A[index];
                   }
               }
           }
