@@ -51,3 +51,15 @@
 /examples/XRint01.fvi
 /examples/Y.fvd
 /examples/Y.fvi
+/.btmp
+/doc/UserGuide.log
+/doc/UserGuide.out
+/doc/UserGuide.pdf
+/doc/UserGuide.toc
+/omicabelnomm
+/src/config.h
+/src/omicabelnomm-AIOwrapper.o
+/src/omicabelnomm-Algorithm.o
+/src/omicabelnomm-Utility.o
+/src/omicabelnomm-main.o
+/tests/.deps/tests_test_omicabelnomm-test.Po
