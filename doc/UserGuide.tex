@@ -225,10 +225,18 @@ linear algebra and other math.
 
 
 \subsection{Required libraries: \ac{BLAS} and LAPACKe}
-You will need a linear algebra library for high performance matrix
-computations.  The standard is to use OpenBLAS and LAPACKe. On an
-Ubuntu Linux system these can be installed with the following commands
-(other distributions will have similarly named packages):
+In order to use \oanomm you will need a linear algebra library for
+high performance matrix computations. The standard is to use OpenBLAS
+and LAPACKe. The following sections describe three ways of installing
+these libraries on your system, each with their own advantages and
+disadvantages.
+
+\subsubsection{Using the packages provided by your Linux distribution}
+The easiest way to install the \ac{BLAS} and LAPACKe libraries is to
+use the pre-compiled packages provided by your Linux distribution. For
+example, on an Ubuntu Linux system these can be installed with the
+following commands (other distributions will have similarly named
+packages):
 \begin{lstlisting}[escapechar=\%]
 sudo apt-get install libopenblas-dev
 sudo apt-get install libopenblas-base
@@ -237,48 +245,84 @@ sudo apt-get install liblapack-doc
 sudo apt-get install liblapack-dev
 sudo apt-get install liblapacke
 sudo apt-get install liblapacke-dev
-%
+\end{lstlisting}
+The downside of using this method is that the BLAS packages won't be
+optimised for your system, probably leading to worse performance.
+
+
+\subsubsection{Compiling and installing the libraries yourself}
+An alternative way of installing \ac{BLAS} and LAPACKe, is to download
+the source code directly and compile for your own machine,
+guaranteeing that the settings will be optimally adjusted for your
+hardware. One reason for compiling the \ac{BLAS} library yourself
+instead of using the packages supplied by your Linux distribution is
+that sometimes the distribution packages didn't use the |USE_OPENMP=1|
+flag. Remember to change |path_to_| with your your own path to the
+specified folder.
+
+The latest release from the OpenBLAS library can be found at
+\url{https://github.com/xianyi/OpenBLAS/releases}. At the time of
+writing this is is version 0.2.15. Download the |tar.gz| file to the
+server and decompress the archive:
+\begin{lstlisting}
+wget https://github.com/xianyi/OpenBLAS/archive/v0.2.15.tar.gz
+tar -xzf v0.2.15.tar.gz
+cd OpenBLAS-0.2.15
 \end{lstlisting}
 
-For alternative ways of installing \ac{BLAS} and LAPACKe, you can download
-the source code directly and compile for your own machine, guaranteeing
-that the settings will be optimal. Sometimes distributions lack
-|USE_OPENMP=1|.  Remember to change |path_to_| with your your own path
-to the specified folder.
-
+Alternatively, you can download the development version from GitHub:
 \begin{lstlisting}[escapechar=\%]
-git clone git://github.com/xianyi/OpenBLAS
-
+git clone https://github.com/xianyi/OpenBLAS.git
 cd OpenBLAS
-
-# make sure you use g++ 4.8 or Higher!
-make all HOSTCC=g++ FC=gfortran USE_OPENMP=1
-
-#install the libraries relative to OmicABELnoMM
-make install PREFIX="path_to_/OmicABELnoMM/libs/"
-%
 \end{lstlisting}
-(Status: Support Broken)
-You can use AMD's ACML (\ac{BLAS} from AMD) by going to:\\
-|http://developer.amd.com/tools-and-sdks/cpu-development/amd-core-math-library-acml/acml-downloads-resources/|\\
-and copy the supplied binary libraries to |/OmicABELnoMM/libs/|. If
+
+Now the OpenBLAS library can be compiled\footnote{Make sure you use
+  g++ 4.8 or higher!}:
+\begin{lstlisting}[escapechar=\%]
+make all USE_OPENMP=1
+\end{lstlisting}
+This will take a while. If you have multiple CPU cores at your
+disposal, you can add the |-j4| flag to the make command to tell it to
+use 4 cores (adjust as appropriate).
+
+The next step is to install the library in a directory relative to
+OmicABELnoMM's source code:
+\begin{lstlisting}
+make install PREFIX="path_to_/OmicABELnoMM/lib/"
+\end{lstlisting}
+Note that |path_to_| is to be defined by you, depending on where you
+downloaded and extracted the \oanomm source code\footnote{Note that if
+you are installing this as system administrator and want to allow all
+users to use this library, using a central directory like
+\lstinline{/usr/local/lib/} is more appropriate.}.
+
+\subsubsection{Using AMD's ACML}
+\textbf{(Status: Support Broken)}
+
+Instead of using OpenBLAS one can use AMD's ACML (a highly optimised
+\ac{BLAS} library from AMD) by going to:
+\url{http://developer.amd.com/tools-and-sdks/cpu-development/amd-core-math-library-acml/acml-downloads-resources/}
+and copy the supplied binary libraries to |/OmicABELnoMM/lib/|. If
 both libraries are present (OpenBLAS + ACML), the system will use
 ACML.
 
-Let \oanomm know where \ac{BLAS} is located by:
-\begin{lstlisting}[escapechar=\%]
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:path_to_/OmicABELnoMM/libs/lib
-autoreconf -fi
-
-./configure
-$%
-\end{lstlisting}
-
-\subsection{Install the required libraries (from source)}
 
 \subsection{Compiling \oanomm}
-Once the libraries have been installed, \oanomm can be installed by
-running three commands:
+\label{sec:compiling-oanomm}
+Now that the prerequisites have been installed \oanomm itself can be compiled.
+
+First, let \oanomm know where the \ac{BLAS} library is located by
+setting the |LD_LIBRARY_PATH| environment variable\footnote{If the
+  \ac{BLAS} library is installed in a central 'default' directory
+  (like \lstinline{/usr/local/lib/}), this step is not necessary}:
+\begin{lstlisting}[escapechar=\%]
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:path_to_/OmicABELnoMM/libs/lib
+\end{lstlisting}
+Again, make sure to replace |path_to_| with the proper path on your system.
+
+The actual compilation and installation of \oanomm is done by running
+the following three commands, which will be explained in more detail
+below:
 \begin{itemize}
 \item |./configure|
 \item |make|
