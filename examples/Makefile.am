@@ -54,7 +54,7 @@ exampledir = $(pkgdatadir)/examples
 dist_example_DATA = $(examplefiles)
 
 if BUILD_examples
-largeexamplefiles: $(exmpldir)/$(examplescripts) $(examplefiles)
+$(largeexamplefiles): $(exmpldir)/$(examplescripts) $(examplefiles)
 	cd $(exmpldir) && R --vanilla --no-save < $(examplescripts)
 
 dist_example_DATA += $(largeexamplefiles)
