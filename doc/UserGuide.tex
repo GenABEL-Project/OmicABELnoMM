@@ -433,28 +433,36 @@ make check
 
 \section{Overview}
 
-\oanomm uses a DatABEL format for the source files. DatABEL uses less storage space, and helps computations to be done faster.
+\oanomm uses the DatABEL (also called filevector) file format for the
+input files. DatABEL files use less storage space than plain text
+files and stores data in a way that make the columns and rows easily
+and quickly addressable, and thus helps the computations to be done
+faster. The DatABEL R package is the easiest way to work with DatABEL files\footnote{The DatABEL page on the GenABEL project website is
+  \url{http://www.genabel.org/packages/DatABEL}. The R package can be
+  downloaded from CRAN:
+  \url{https://cran.r-project.org/web/packages/DatABEL/}.}.
 
-Original source files can be in any format as long as there is a way to load them into R for a table(matrix) format. Once in table format, they can be just transformed to DatABEL format to be used by OmicABEL.
+
+Original source files can be in any format as long as there is a way
+to load them into R for a table(matrix) format. Once in table format,
+they can be just transformed to DatABEL format to be used by OmicABEL.
 
 
 \section{Databel}
-Start R, then use library(DatABEL); help("DatABEL-package")\\
+Start R, then use
+
+library(DatABEL); help("DatABEL-package")\\
 More info: http://www.genabel.org/packages/DatABEL\\
 Start R and load DatABEL
 
 \begin{lstlisting}[escapechar=\%]
-
 library(DatABEL)
-%
 \end{lstlisting}
 
 \section{Covariates}
 
-This example shows how to artificially crate covariates:
-
+The following example code shows how to artificially create covariates:
 \begin{lstlisting}[escapechar=\%]
-
 #START_FAKE_DATA
 n = 2000                 # number of individuals
 l = 3                    # number of covariates+1 for intercept
@@ -463,23 +471,31 @@ m = r*100000             # number of snps
 t = 10000                # number of traits
 set.seed(1001)
 runif(3)
-XL <- matrix(rnorm((l+1)*n),ncol=(l+1)) # first column should be ones (intercept)
-for(i in 1:(n*(l+1))){ if(sample(1:100,1) > 95){XL[i]=0/0} }#fill in NANs
+XL <- matrix(rnorm((l+1)*n), ncol=(l+1)) # first column should be ones (intercept)
+for (i in 1:(n * (l+1))) {
+    if (sample(1:100, 1) > 95){
+        XL[i]=0/0    # fill in NANs
+    }
+}
 #END_FAKE_DATA
 
-#FROM here on if you have your real data stored in the matrix variable XL you are ok.
-#how to get your data into XL depends on your original files and how they were stored.
+# From here on if you have your real data stored in the matrix
+# variable XL you are ok.
+# How to get your data into XL depends on your original files and
+# how they were stored.
 
-#The first column of covariates has to have 1's! it is the intercepts
-#Make sure you add this column of ones and that you have the space for it
-#without loosing your own data.
-for(i in 1:n){ XL[i]=1}
+# The first column of covariates has to have 1's! it is the intercept
+# Make sure you add this column of ones and that you have the space for it
+# without loosing your own data.
+for (i in 1:n) {
+   XL[i] = 1
+}
 
-#add your own idnames!
-colnames(XL) <- c("intercept", paste("cov",1:l,sep=""))
-rownames(XL) <- paste("ind",1:n,sep="")
+# Add your own idnames!
+colnames(XL) <- c("intercept", paste("cov", 1:l, sep=""))
+rownames(XL) <- paste("ind", 1:n, sep="")
 
-#transform to databel (store it)
+# Convert to databel (i.e. store the data in a file)
 XL_db <- matrix2databel(XL,filename="XL",type="FLOAT")
 
 #XL[1:n,1:(l+1)]
@@ -726,3 +742,8 @@ In this case each process (1 per node specified using -np for a total of 10 in t
 \end{acronym}
 
 \end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
