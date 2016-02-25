@@ -10,30 +10,27 @@ AIOwrapper::AIOwrapper()
 
 AIOwrapper::~AIOwrapper()
 {
-
 }
 
 
 void AIOwrapper::initialize(struct Settings &params)
 {
-
-
-    pthread_mutex_init( &(FHandler.m_more), NULL);
-    pthread_mutex_init( &(FHandler.m_read), NULL);
-    pthread_mutex_init( &(FHandler.m_buff_upd), NULL);
-    pthread_mutex_init( &(FHandler.out_buff_upd), NULL);
+    pthread_mutex_init(&(FHandler.m_more), NULL);
+    pthread_mutex_init(&(FHandler.m_read), NULL);
+    pthread_mutex_init(&(FHandler.m_buff_upd), NULL);
+    pthread_mutex_init(&(FHandler.out_buff_upd), NULL);
 
     pthread_cond_init(&(FHandler.condition_more), NULL);
     pthread_cond_init(&(FHandler.condition_read), NULL);
 
-    pthread_barrier_init(&(FHandler.finalize_barrier),NULL,2);
+    pthread_barrier_init(&(FHandler.finalize_barrier), NULL,2);
 
 
     Fhandler->fakefiles = params.use_fake_files;
 
 
     Fhandler->use_dosages = params.dosages;
-    if(params.dosages && params.model ==-1)
+    if (params.dosages && params.model == -1)
     {
         cout << "Requested dosages model wihtout a valid model!" << endl;
         exit(1);
@@ -51,7 +48,7 @@ void AIOwrapper::initialize(struct Settings &params)
     int ar_names_toskip = 0;
 
 
-    if(!Fhandler->fakefiles)
+    if (!Fhandler->fakefiles)
     {
         Fhandler->fnameAL = params.fnameAL;
         Fhandler->fnameAR = params.fnameAR;
@@ -71,30 +68,39 @@ void AIOwrapper::initialize(struct Settings &params)
         ALfvi = load_databel_fvi( (Fhandler->fnameAL+".fvi").c_str() );
         ARfvi = load_databel_fvi( (Fhandler->fnameAR+".fvi").c_str() );
 
-        if(ALfvi->fvi_header.numObservations !=  ARfvi->fvi_header.numObservations &&  ARfvi->fvi_header.numObservations != Yfvi->fvi_header.numObservations
-              &&  ALfvi->fvi_header.numObservations != Yfvi->fvi_header.numObservations   )
+        if(ALfvi->fvi_header.numObservations !=  ARfvi->fvi_header.numObservations
+           &&  ARfvi->fvi_header.numObservations != Yfvi->fvi_header.numObservations
+           &&  ALfvi->fvi_header.numObservations != Yfvi->fvi_header.numObservations   )
         {
-            cout << "The number of elements/individuals from the input files do not coincide with each other! See:" << endl;
-            cout << Fhandler->fnameY << ":" <<  Yfvi->fvi_header.numObservations << endl;
-            cout << Fhandler->fnameAL << ":" << ALfvi->fvi_header.numObservations  << endl;
-            cout << Fhandler->fnameAR << ":" << ARfvi->fvi_header.numObservations << endl;
+            cout << "The number of elements/individuals from the input files "
+                 << "do not coincide with each other! See:" << endl;
+            cout << Fhandler->fnameY << ":"
+                 <<  Yfvi->fvi_header.numObservations << endl;
+            cout << Fhandler->fnameAL << ":"
+                 << ALfvi->fvi_header.numObservations  << endl;
+            cout << Fhandler->fnameAR << ":"
+                 << ARfvi->fvi_header.numObservations << endl;
             exit(1);
         }
 
-        params.n = min((int)(ALfvi->fvi_header.numObservations),params.limit_n);
+        params.n = min((int)(ALfvi->fvi_header.numObservations),
+                       params.limit_n);
         Fhandler->fileN = params.n;
         realN = params.n;
 
-        params.m = min((int)(ARfvi->fvi_header.numVariables/params.r),params.limit_m/params.r);
+        params.m = min((int)(ARfvi->fvi_header.numVariables/params.r),
+                       params.limit_m/params.r);
 
-        if(params.mpi_num_threads > 1 && params.m >= params.mpi_num_threads)
+        if (params.mpi_num_threads > 1
+            && params.m >= params.mpi_num_threads)
         {
             int m_mpi = params.m/params.mpi_num_threads;
             ar_names_toskip = m_mpi;
-            Fhandler->initial_file_pos = (m_mpi*params.mpi_id) * params.r * params.n;
+            Fhandler->initial_file_pos = (m_mpi*params.mpi_id)
+                * params.r * params.n;
             //cout << Fhandler->initial_file_pos << endl;
             //corner case for non whole divisions of data among mpi procs
-            if((params.mpi_num_threads-1) == params.mpi_id)
+            if ((params.mpi_num_threads - 1) == params.mpi_id)
             {
                 //portion+rest
                 params.m = m_mpi + (params.m-params.mpi_num_threads* m_mpi);
@@ -115,7 +121,7 @@ void AIOwrapper::initialize(struct Settings &params)
         cout << "calcM:" << params.m << endl;
         #endif
 
-        if((int)(ARfvi->fvi_header.numVariables) % params.r != 0)
+        if ((int)(ARfvi->fvi_header.numVariables) % params.r != 0)
         {
             cout << "Number of elements in "<< (Fhandler->fnameAR+".fvi") <<":"<<  (int)(ARfvi->fvi_header.numVariables)
                         << " is not consistent with the value of --ngpred (-n)" << params.r << " provided" << endl;
@@ -144,21 +150,21 @@ void AIOwrapper::initialize(struct Settings &params)
             YidNames = string(&(Yfvi->fvi_data[yname_idx]));
             ALidName = string(&(ALfvi->fvi_data[yname_idx]));
             ARidName = string(&(ARfvi->fvi_data[yname_idx]));
-            if(YidNames.compare(ALidName))
+            if (YidNames.compare(ALidName))
             {
-                if(params.mpi_id == 0)
+                if (params.mpi_id == 0)
                 cout << "Warning, ID names between -p file and -c file do not coincide! The files must have the same meaningful order" << endl;
                 i = params.n;//exit
             }
-            if(YidNames.compare(ARidName))
+            if (YidNames.compare(ARidName))
             {
-                if(params.mpi_id == 0)
+                if (params.mpi_id == 0)
                 cout << "Warning, ID names between -p file and -g file do not coincide! The files must have the same meaningful order" << endl;
                 i = params.n;//exit
             }
-            if(ARidName.compare(ALidName))
+            if (ARidName.compare(ALidName))
             {
-                if(params.mpi_id == 0)
+                if (params.mpi_id == 0)
                 cout << "Warning, ID names between -g file and -c file do not coincide! The files must have the same meaningful order" << endl;
                 i = params.n;//exit
             }
@@ -221,7 +227,7 @@ void AIOwrapper::initialize(struct Settings &params)
 
     (Fhandler->excl_List)->push_back( make_pair(0,params.n) );
 
-    if(params.fname_excludelist.size()!=0)
+    if (params.fname_excludelist.size()!=0)
     {
         read_excludeList( Fhandler->excl_List,excl_count,params.n,params.fname_excludelist);
 //         for (list<  pair<int,int>  >::iterator it= (Fhandler->excl_List)->begin(); it !=  (Fhandler->excl_List)->end(); ++it)
@@ -230,14 +236,14 @@ void AIOwrapper::initialize(struct Settings &params)
 //         }
     }
 
-    if(!Fhandler->fakefiles)
+    if (!Fhandler->fakefiles)
     {
         removeALmissings(Fhandler->excl_List,params,Almissings);
     }
 
 
     //!DOSAGES
-    if(params.dosages)
+    if (params.dosages)
     {
 
         Fhandler->ArDosage = new float[Fhandler->fileR*params.n];
@@ -251,38 +257,38 @@ void AIOwrapper::initialize(struct Settings &params)
 
         break;
         case 0://add
-            if(Fhandler->fileR != 3 && Fhandler->fileR != 2)
+            if (Fhandler->fileR != 3 && Fhandler->fileR != 2)
             {
                 cout << "The amount of columns per Independent Variable (--ngpred) is not 2 or 3 for a valid Additive Model!" << endl;
                 exit(1);
             }
             Fhandler->dosages[0] = 2;Fhandler->dosages[1] = 1;//Fhandler->dosages[2] = 0;
-            if(Fhandler->fileR == 3)
+            if (Fhandler->fileR == 3)
                 Fhandler->dosage_skip = 1;//last columns is irrelevant
             params.r = 1;
             Fhandler->add_dosages = true;
         break;
         case 1://dom
-            if(Fhandler->fileR != 3 && Fhandler->fileR != 2)
+            if (Fhandler->fileR != 3 && Fhandler->fileR != 2)
             {
                 cout << "The amount of columns per Independent Variable (--ngpred) is not 2 or 3 for a valid Dominant Model!" << endl;
                 exit(1);
             }
             Fhandler->dosages[0] = 1;Fhandler->dosages[1] = 1;//Fhandler->dosages[2] = 0;
-            if(Fhandler->fileR == 3)
+            if (Fhandler->fileR == 3)
                 Fhandler->dosage_skip = 1;//last columns is irrelevant
             params.r = 1;
             Fhandler->add_dosages = true;
         break;
         case 2://rec
-            if(Fhandler->fileR != 3 && Fhandler->fileR != 2)
+            if (Fhandler->fileR != 3 && Fhandler->fileR != 2)
             {
                 cout << "The amount of columns per Independent Variable (--ngpred) is not 2 or 3 for a valid Recessive Model!" << endl;
                 exit(1);
             }
             Fhandler->dosages[0] = 1;//Fhandler->dosages[1] = 0;Fhandler->dosages[2] = 0;
             Fhandler->dosage_skip = 2;
-            if(Fhandler->fileR == 3)
+            if (Fhandler->fileR == 3)
                 (Fhandler->dosage_skip)--;//last 2 columns is irrelevant
             params.r = 1;
             Fhandler->add_dosages = true;
@@ -309,9 +315,9 @@ void AIOwrapper::initialize(struct Settings &params)
     Fhandler->use_multiple_interaction_sets = params.use_multiple_interaction_sets;
     Fhandler->fname_interactions = params.fname_interactions;
 
-    if(Fhandler->use_interactions && Fhandler->modelR > 1)
+    if (Fhandler->use_interactions && Fhandler->modelR > 1)
     {
-        if(Fhandler->use_dosages)
+        if (Fhandler->use_dosages)
         {
             cout << "Cannot use Interactions with the current dosage model! #Of factors can be at most 1!" << endl;
         }
@@ -325,13 +331,13 @@ void AIOwrapper::initialize(struct Settings &params)
 
 
     int interaction_missings = 0;
-    if( Fhandler->use_interactions)
+    if ( Fhandler->use_interactions)
     {
 
         //cout << Fhandler->fname_interactions;
         Ifvi  = load_databel_fvi( (Fhandler->fname_interactions+".fvi").c_str() );
 
-        if(Ifvi->fvi_header.numObservations !=  ARfvi->fvi_header.numObservations  )
+        if (Ifvi->fvi_header.numObservations !=  ARfvi->fvi_header.numObservations  )
         {
             cout << "The number of elements/individuals from the input files do not coincide with each other! See:" << endl;
             cout << Fhandler->fnameY << ":" <<  Ifvi->fvi_header.numObservations << endl;
@@ -344,9 +350,9 @@ void AIOwrapper::initialize(struct Settings &params)
         {
             string ARidName = string(&(ARfvi->fvi_data[name_idx]));
             string INTidName = string(&(Ifvi->fvi_data[name_idx]));
-            if(ARidName.compare(INTidName))
+            if (ARidName.compare(INTidName))
             {
-                if(params.mpi_id == 0)
+                if (params.mpi_id == 0)
                 cout << "Warning, ID names between -g file and interactions file do not coincide! The files must have the same meaningful order!" << endl;
                 i = params.n;//exit
             }
@@ -355,7 +361,7 @@ void AIOwrapper::initialize(struct Settings &params)
         }
 
 
-        if(params.end_IDX_interactions != -1 || params.ini_IDX_interactions != -1)
+        if (params.end_IDX_interactions != -1 || params.ini_IDX_interactions != -1)
         {
             Fhandler->numInter = params.end_IDX_interactions - params.ini_IDX_interactions+1;
             Fhandler->ini_IDX_interactions =  params.ini_IDX_interactions;
@@ -368,26 +374,26 @@ void AIOwrapper::initialize(struct Settings &params)
             Fhandler->end_IDX_interactions = Fhandler->numInter;
         }
 
-        if((unsigned int)(Fhandler->numInter) > Ifvi->fvi_header.numVariables)
+        if ((unsigned int)(Fhandler->numInter) > Ifvi->fvi_header.numVariables)
         {
             cout << "Amount of data requested to be read from the Interactions file exceeds its contents!" << endl;
             exit(1);
         }
 
-        if((unsigned int)Fhandler->ini_IDX_interactions > Ifvi->fvi_header.numVariables || (unsigned int)Fhandler->end_IDX_interactions > Ifvi->fvi_header.numVariables)
+        if ((unsigned int)Fhandler->ini_IDX_interactions > Ifvi->fvi_header.numVariables || (unsigned int)Fhandler->end_IDX_interactions > Ifvi->fvi_header.numVariables)
         {
             cout << "The specified range for data to be read from the Interactions file exceeds its content dimensions!" << endl;
             exit(1);
         }
 
-        if(Fhandler->use_multiple_interaction_sets)
+        if (Fhandler->use_multiple_interaction_sets)
         {
             //cout << "rm:"<< params.m<<  " rmb:" << params.mb << endl;
 
             params.m *= Fhandler->numInter;
             Fhandler->Ar_file_blocksize = params.mb/Fhandler->numInter;
 
-            if(Fhandler->Ar_file_blocksize < 1)
+            if (Fhandler->Ar_file_blocksize < 1)
                 Fhandler->Ar_file_blocksize = 1;
 
             params.mb = (Fhandler->Ar_file_blocksize*Fhandler->numInter);
@@ -404,7 +410,7 @@ void AIOwrapper::initialize(struct Settings &params)
             #endif
         }
 
-        if(Fhandler->keep_depVar)
+        if (Fhandler->keep_depVar)
         {
             params.r += 1;
         }
@@ -417,7 +423,7 @@ void AIOwrapper::initialize(struct Settings &params)
 
         ifstream fp_I;
         fp_I.open ((Fhandler->fname_interactions+".fvd").c_str(), ios::in | ios::binary);
-        if(!fp_I.is_open())
+        if (!fp_I.is_open())
         {
             cout << "Error opening Interactions File " << Fhandler->fname_interactions << endl;
             exit(1);
@@ -428,7 +434,7 @@ void AIOwrapper::initialize(struct Settings &params)
 
         int ini_filepos = Fhandler->ini_IDX_interactions*Fhandler->fileN;
         fp_I.seekg(  ini_filepos*sizeof(type_precision) , ios::beg );
-        if(fp_I.fail())
+        if (fp_I.fail())
         {
             cout << "Error reading Interactions File while positioning! " <<  ini_filepos << endl;
             exit(1);
@@ -449,11 +455,11 @@ void AIOwrapper::initialize(struct Settings &params)
         {
             for (int j=0; j < Fhandler->fileN; j++)
             {
-                if(isnan(Fhandler->interaction_data[i*Fhandler->fileN+j]))
+                if (isnan(Fhandler->interaction_data[i*Fhandler->fileN+j]))
                 {
                     //cout << "fmi"<<" ";
                     bool removed  = splitpair(j,excl_List,Fhandler->fileN );
-                    if(removed)
+                    if (removed)
                     {
                         interaction_missings++;
                     }
@@ -461,7 +467,7 @@ void AIOwrapper::initialize(struct Settings &params)
                 }
             }
         }
-        if(interaction_missings && params.mpi_id == 0)
+        if (interaction_missings && params.mpi_id == 0)
             cout << "Excluding " << interaction_missings << " from Interaction missings" << endl;
         #ifdef DEBUG
         cout << params.mb << " " << params.r << " " << params.m << endl;
@@ -484,18 +490,18 @@ void AIOwrapper::initialize(struct Settings &params)
 
     params.p = params.l + params.r;
 
-    if(!Fhandler->fakefiles)
+    if (!Fhandler->fakefiles)
     {
 
         //!******nameGATHER****************
 
         int Aname_idx=Fhandler->fileN*ARfvi->fvi_header.namelength;//skip the names of the rows
         Aname_idx += ARfvi->fvi_header.namelength*Fhandler->fileR*params.mpi_id*ar_names_toskip; // skipnot mine according to mpi
-        if(Fhandler->use_dosages && Fhandler->add_dosages)
+        if (Fhandler->use_dosages && Fhandler->add_dosages)
         {
             for(int i = 0; i < Fhandler->fileM; i++)
             {
-                if(Fhandler->use_interactions && !Fhandler->use_multiple_interaction_sets)
+                if (Fhandler->use_interactions && !Fhandler->use_multiple_interaction_sets)
                 {
                     for(int ii = 0; ii < Fhandler->numInter; ii++)
                     {
@@ -507,7 +513,7 @@ void AIOwrapper::initialize(struct Settings &params)
                         Fhandler->ARnames.push_back(interaction_name);
                     }
                 }
-                if( !Fhandler->use_interactions || Fhandler->keep_depVar ||  Fhandler->use_multiple_interaction_sets)
+                if ( !Fhandler->use_interactions || Fhandler->keep_depVar ||  Fhandler->use_multiple_interaction_sets)
                 {
                     Fhandler->ARnames.push_back(string(&(ARfvi->fvi_data[Aname_idx])));
                 }
@@ -519,7 +525,7 @@ void AIOwrapper::initialize(struct Settings &params)
         {
             for(int i = 0; i < Fhandler->fileM*Fhandler->fileR; i++)
             {
-                if(Fhandler->use_interactions && !Fhandler->use_multiple_interaction_sets)
+                if (Fhandler->use_interactions && !Fhandler->use_multiple_interaction_sets)
                 {
                     for(int ii = 0; ii < Fhandler->numInter; ii++)
                     {
@@ -532,7 +538,7 @@ void AIOwrapper::initialize(struct Settings &params)
                        // cout << interaction_name<< endl;
                     }
                 }
-                if( Fhandler->use_multiple_interaction_sets || !Fhandler->use_interactions || Fhandler->keep_depVar)
+                if ( Fhandler->use_multiple_interaction_sets || !Fhandler->use_interactions || Fhandler->keep_depVar)
                 {
                     Fhandler->ARnames.push_back(string(&(ARfvi->fvi_data[Aname_idx])));
                    // cout << string(&(ARfvi->fvi_data[Aname_idx])) << endl;
@@ -542,7 +548,7 @@ void AIOwrapper::initialize(struct Settings &params)
 
         }
 
-        if(Fhandler->use_interactions && Fhandler->use_multiple_interaction_sets)
+        if (Fhandler->use_interactions && Fhandler->use_multiple_interaction_sets)
         {
             int ar_name_restamount = Fhandler->fileM;
             vector<string> original_names = std::move(Fhandler->ARnames);
@@ -554,7 +560,7 @@ void AIOwrapper::initialize(struct Settings &params)
             {
 
                 int ar_name_blocksize = Fhandler->Ar_file_blocksize;
-                if(ar_name_restamount < ar_name_blocksize)
+                if (ar_name_restamount < ar_name_blocksize)
                 {
                     ar_name_blocksize = ar_name_restamount;
                 }
@@ -569,7 +575,7 @@ void AIOwrapper::initialize(struct Settings &params)
                     {
                         Fhandler->ARnames.push_back(interaction_name+original_names[name_idx]);
                        // cout <<interaction_name+original_names[name_idx] << endl;
-                        if( Fhandler->keep_depVar)
+                        if ( Fhandler->keep_depVar)
                         {
                             string interaction_name_orig= interaction_name+"o_";
                             Fhandler->ARnames.push_back(interaction_name_orig+original_names[name_idx]);
@@ -590,22 +596,22 @@ void AIOwrapper::initialize(struct Settings &params)
 
         //!******endofnameGATHER****************
 
-        if(params.l > 255 || params.p > 255 || params.n > 65535)//can remove if fixed for output files
+        if (params.l > 255 || params.p > 255 || params.n > 65535)//can remove if fixed for output files
         {
-            if(params.mpi_id == 0)
+            if (params.mpi_id == 0)
             {
             cout << "Warning, output binary format does not yet support current problem sizes for the provided p, l, r and n." << endl;
             cout << "Omitting outputfile." << endl;
             }
         }
 
-        if(params.storeBin)
+        if (params.storeBin)
         {
             //!write info file for results
             ofstream fp_InfoResults;
 
             fp_InfoResults.open((Fhandler->fnameOutFiles + "_sto.ibin").c_str(),ios::out | ios::binary | ios::trunc);
-            if(!fp_InfoResults)
+            if (!fp_InfoResults)
             {
                 cout << "Error Creating File: "  << (Fhandler->fnameOutFiles + "_sto.ibin") << endl;
                 exit(1);
@@ -624,7 +630,7 @@ void AIOwrapper::initialize(struct Settings &params)
             fp_InfoResults.write( (char*)&ALfvi->fvi_data[Aname_idx],ALfvi->fvi_header.namelength*(params.l-1)*sizeof(char));
 
             Aname_idx=Fhandler->fileN*ARfvi->fvi_header.namelength;//skip the names of the rows
-            if(Fhandler->use_dosages && Fhandler->add_dosages)
+            if (Fhandler->use_dosages && Fhandler->add_dosages)
             {
                 for(int i = 0; i < params.m; i++)
                 {
@@ -647,7 +653,7 @@ void AIOwrapper::initialize(struct Settings &params)
 
 
     //check p < n!!!!
-    if(params.p >= params.n)
+    if (params.p >= params.n)
      {
         cout << "Error! The amount of unknows (individuals|elements) must be greater than total of variables (#covariates+#ind.variables)!" << endl;
         exit(1);
@@ -676,7 +682,7 @@ void AIOwrapper::initialize(struct Settings &params)
 void AIOwrapper::generate_singleinteraction_multset(float* interaction_data, int cols_indp_data, float* ARorig, int ar_orig_block_size, int n, float* dest, bool keep_original )
 {
     int new_r = 1;
-    if(keep_original)
+    if (keep_original)
     {
         new_r += 1;
     }
@@ -694,7 +700,7 @@ void AIOwrapper::generate_singleinteraction_multset(float* interaction_data, int
                 dest[h*ar_orig_block_size*n*new_r+i*n*new_r+k] = idta*ak;
 
             }
-            if(keep_original)
+            if (keep_original)
             {
                 for(int k = 0; k < n; k++)
                 {
@@ -710,7 +716,7 @@ void AIOwrapper::generate_multinteraction_singleset(float* interaction_data, int
 
 
     int new_r = cols_data;
-    if(keep_original)
+    if (keep_original)
     {
         new_r = cols_data+1;
     }
@@ -723,12 +729,12 @@ void AIOwrapper::generate_multinteraction_singleset(float* interaction_data, int
             for(int k = 0; k < n; k++)
             {
                 dest[i*new_r*n+h*n+k] = interaction_data[h*n+k]*AR[i*n+k];
-//                if(h==2)
+//                if (h==2)
 //                    dest[i*new_r*n+h*n+k] = interaction_data[h*n+k];
             }
             //cout << dest[i*new_r*n+h*n] << ":" << AR[i*n] << " ";
         }
-        if(keep_original)
+        if (keep_original)
         {
             for(int k = 0; k < n; k++)
             {
@@ -765,7 +771,7 @@ void AIOwrapper::finalize()
     pthread_cond_destroy(&(Fhandler->condition_read));
 
     delete Fhandler->excl_List;
-    if(Fhandler->use_dosages)
+    if (Fhandler->use_dosages)
     {
             delete [](Fhandler->ArDosage);
             delete [](Fhandler->dosages);
@@ -776,7 +782,7 @@ void AIOwrapper::finalize()
     free_databel_fvi(&ALfvi);
     free_databel_fvi(&ARfvi);
 
-    if( Fhandler->use_interactions)
+    if ( Fhandler->use_interactions)
     {
 
         free_databel_fvi(&Ifvi);
@@ -823,17 +829,17 @@ void* AIOwrapper::async_io( void *ptr )
     int max_secuential_write_count= 10;
 
 
-    if(!Fhandler->fakefiles)
+    if (!Fhandler->fakefiles)
     {
         fp_Y = fopen((Fhandler->fnameY+".fvd").c_str(), "rb");
-        if(fp_Y == 0)
+        if (fp_Y == 0)
         {
             cout << "Error opening File Y " << Fhandler->fnameY << endl;
             exit(1);
         }
         fp_Ar.open ((Fhandler->fnameAR+".fvd").c_str(), ios::in | ios::binary);
 
-        if(!fp_Ar.is_open())
+        if (!fp_Ar.is_open())
         {
             cout << "Error opening File Xr " << Fhandler->fnameAR << endl;
             exit(1);
@@ -841,7 +847,7 @@ void* AIOwrapper::async_io( void *ptr )
 
 
         fp_sigResults.open((Fhandler->fnameOutFiles + "_dis.txt").c_str(),ios::out | ios::trunc);
-        if(!fp_sigResults)
+        if (!fp_sigResults)
         {
             cout << "Error Creating File " << (Fhandler->fnameOutFiles + "_dis.txt") << endl;
             exit(1);
@@ -851,7 +857,7 @@ void* AIOwrapper::async_io( void *ptr )
 
         //float *a= new float [Fhandler->fileM*Fhandler->fileM*Fhandler->fileM];
 
-        if(Fhandler->use_interactions)
+        if (Fhandler->use_interactions)
         {
             //!************************************************
             int ini_filepos = Fhandler->ini_IDX_interactions*Fhandler->fileN;
@@ -859,14 +865,14 @@ void* AIOwrapper::async_io( void *ptr )
 
 
             fp_I.open ((Fhandler->fname_interactions+".fvd").c_str(), ios::in | ios::binary);
-            if(!fp_I.is_open())
+            if (!fp_I.is_open())
             {
                 cout << "Error opening Interactions File in AIO" << Fhandler->fname_interactions << endl;
                 exit(1);
             }
 
             fp_I.seekg(  ini_filepos*sizeof(type_precision) , ios::beg );
-            if(fp_I.fail())
+            if (fp_I.fail())
             {
                 cout << "Error reading Interactions File while positioning in AIO! " <<  ini_filepos << endl;
                 exit(1);
@@ -887,7 +893,7 @@ void* AIOwrapper::async_io( void *ptr )
                     chunk_size_buff = it->second;
 
                     fp_I.read ((char*)&(Fhandler->interaction_data[buff_pos]),sizeof(type_precision)*chunk_size_buff);
-                    if(fp_I.fail())
+                    if (fp_I.fail())
                     {
                         cout << "Error reading Interaction File! in AIO, size:"<<  chunk_size_buff<< " pos:" << file_pos <<endl;
                         exit(1);
@@ -907,11 +913,11 @@ void* AIOwrapper::async_io( void *ptr )
 
         //!*************************************************
 
-        if(Fhandler->storeBin)
+        if (Fhandler->storeBin)
         {
 
             fp_allResults.open((Fhandler->fnameOutFiles + "_sto.dbin").c_str(),ios::out | ios::binary | ios::trunc);
-            if(!fp_allResults)
+            if (!fp_allResults)
             {
                 cout << "Error Creating File "<< (Fhandler->fnameOutFiles + "_sto.bin") << endl;
                 exit(1);
@@ -926,7 +932,7 @@ void* AIOwrapper::async_io( void *ptr )
     {
         //cout << "\nPreping files\n" << flush;
         fp_Y = fopen("tempY.bin", "w+b");
-        if(fp_Y == 0)
+        if (fp_Y == 0)
         {
             cout << "Error creating temp File Y " << endl;
             exit(1);
@@ -939,7 +945,7 @@ void* AIOwrapper::async_io( void *ptr )
 
         ofstream fp_Art;
         fp_Art.open ("tempAR.bin",ios::out | ios::binary );
-        if(!fp_Art.is_open())
+        if (!fp_Art.is_open())
         {
             cout << "Error creating temp File AR "  << endl;
             exit(1);
@@ -971,7 +977,7 @@ void* AIOwrapper::async_io( void *ptr )
         {
 
             tmp_y_blockSize = Fhandler->y_blockSize;
-            if(Fhandler->y_to_readSize < Fhandler->y_blockSize)
+            if (Fhandler->y_to_readSize < Fhandler->y_blockSize)
                 tmp_y_blockSize = Fhandler->y_to_readSize;
 
             Fhandler->y_to_readSize -= tmp_y_blockSize;
@@ -988,7 +994,7 @@ void* AIOwrapper::async_io( void *ptr )
             tobeFilled->size = tmp_y_blockSize;
             //cout << "tbz:" << tmp_y_blockSize << " " << flush;
 
-            if(Fhandler->fakefiles)
+            if (Fhandler->fakefiles)
             {
                 //no longer used
             }
@@ -1020,7 +1026,7 @@ void* AIOwrapper::async_io( void *ptr )
                 y_file_pos += tmp_y_blockSize*Fhandler->fileN;
 
 
-                if(Fhandler->y_to_readSize <= 0)
+                if (Fhandler->y_to_readSize <= 0)
                 {
                     fseek ( fp_Y , 0 , SEEK_SET );
                     //cout << "resetY" << endl;
@@ -1043,7 +1049,7 @@ void* AIOwrapper::async_io( void *ptr )
         {
 
             tmp_ar_blockSize = Fhandler->Ar_file_blocksize;
-            if(Fhandler->Ar_to_readSize < Fhandler->Ar_file_blocksize)
+            if (Fhandler->Ar_to_readSize < Fhandler->Ar_file_blocksize)
                 tmp_ar_blockSize = Fhandler->Ar_to_readSize;
 
 
@@ -1063,7 +1069,7 @@ void* AIOwrapper::async_io( void *ptr )
             cout << tmp_ar_blockSize << " " << Fhandler->Ar_file_blocksize << " " ;
             #endif
 
-            if(Fhandler->fakefiles)
+            if (Fhandler->fakefiles)
             {
                 //no longer used
             }
@@ -1083,12 +1089,12 @@ void* AIOwrapper::async_io( void *ptr )
 
 
                 float * file_data = tobeFilled->buff;
-                if(Fhandler->use_interactions)
+                if (Fhandler->use_interactions)
                 {
                     file_data = new float[tmp_ar_blockSize*Fhandler->fileR*Fhandler->n];
                 }
 
-                if(Fhandler->use_dosages)
+                if (Fhandler->use_dosages)
                 {
                     //cout << "loading " << endl << flush;
 
@@ -1102,7 +1108,7 @@ void* AIOwrapper::async_io( void *ptr )
                             {
                                 file_block_offset = i*(Fhandler->fileN*Fhandler->fileR)+ ii*Fhandler->fileN + it->first;
                                 fp_Ar.seekg(  (ar_file_pos+file_block_offset)*sizeof(type_precision) , ios::beg );
-                                if(fp_Ar.fail())
+                                if (fp_Ar.fail())
                                 {
                                     cout << "Error reading AR File while positioning when using dosages! " <<  (ar_file_pos+file_block_offset) << endl;
                                     exit(1);
@@ -1111,7 +1117,7 @@ void* AIOwrapper::async_io( void *ptr )
                                 chunk_size_buff = it->second;
 
                                 fp_Ar.read ((char*)&(Fhandler->ArDosage[buff_pos]),sizeof(type_precision)*chunk_size_buff);
-                                if(fp_Ar.fail())
+                                if (fp_Ar.fail())
                                 {
                                     cout << "Error reading AR File when using dosages" <<  (ar_file_pos+file_block_offset) << endl;
                                     exit(1);
@@ -1121,7 +1127,7 @@ void* AIOwrapper::async_io( void *ptr )
                             }
                         }
 
-                        if(Fhandler->add_dosages)
+                        if (Fhandler->add_dosages)
                         {
                             //cout << "adding ";
                             cblas_sgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
@@ -1164,7 +1170,7 @@ void* AIOwrapper::async_io( void *ptr )
 
 
                             fp_Ar.seekg((ar_file_pos+file_block_offset)*sizeof(type_precision), ios::beg);
-                            if(fp_Ar.fail())
+                            if (fp_Ar.fail())
                             {
                                 cout << "Error reading AR File while positioning! " <<  (ar_file_pos+file_block_offset) << endl;
 
@@ -1174,7 +1180,7 @@ void* AIOwrapper::async_io( void *ptr )
                             chunk_size_buff = it->second;
 
 
-//                            if(buff_pos >= Fhandler->Ar_file_blocksize*Fhandler->fileR*Fhandler->n)
+//                            if (buff_pos >= Fhandler->Ar_file_blocksize*Fhandler->fileR*Fhandler->n)
 //                            {
                             //cout << " "<< buff_pos<< ":" << Fhandler->Ar_file_blocksize*Fhandler->fileR*Fhandler->n << ":"<< chunk_size_buff << " "<< flush;
                                 //cout << buff_pos<< ":" << chunk_size_buff << " "<< flush;
@@ -1182,17 +1188,17 @@ void* AIOwrapper::async_io( void *ptr )
                             //}
 
                             fp_Ar.read ((char*)&(file_data[buff_pos]),sizeof(type_precision)*chunk_size_buff);// result++;
-                            if(fp_Ar.fail())
+                            if (fp_Ar.fail())
                             {
 
                                 cout << "Error reading AR File! " <<  (ar_file_pos+file_block_offset) << ":" << buff_pos << ":" << chunk_size_buff<<  endl;
-                                if((ar_file_pos+file_block_offset) > Fhandler->fileM*Fhandler->fileR*Fhandler->fileN)
+                                if ((ar_file_pos+file_block_offset) > Fhandler->fileM*Fhandler->fileR*Fhandler->fileN)
                                 {
                                     cout << "File pos exceeds file size!" << endl << flush;
 
                                 }
 
-                                if(ar_file_pos > Fhandler->fileM*Fhandler->fileR*Fhandler->fileN)
+                                if (ar_file_pos > Fhandler->fileM*Fhandler->fileR*Fhandler->fileN)
                                 {
                                     cout << "File pos counter exceeds file size!" << endl << flush;
 
@@ -1210,18 +1216,18 @@ void* AIOwrapper::async_io( void *ptr )
 
                 }
 
-                if(Fhandler->use_interactions)
+                if (Fhandler->use_interactions)
                 {
                     //cout << "int" << endl << flush;
 
                     //matlab_print_matrix("orig",Fhandler->n,tmp_ar_blockSize,file_data);
 
-                    if(Fhandler->modelR != 1)
+                    if (Fhandler->modelR != 1)
                     {
                         cout << "unexpected error where Fhandler->modelR !=1 with value of " <<Fhandler->modelR << endl;
                         exit(1);
                     }
-                    if(Fhandler->use_multiple_interaction_sets)
+                    if (Fhandler->use_multiple_interaction_sets)
                     {
                         generate_singleinteraction_multset(Fhandler->interaction_data,Fhandler->numInter,file_data,tmp_ar_blockSize,Fhandler->n,tobeFilled->buff,Fhandler->keep_depVar);
                         tobeFilled->size = tmp_ar_blockSize*Fhandler->numInter;
@@ -1249,13 +1255,13 @@ void* AIOwrapper::async_io( void *ptr )
 
             }
 
-            if(Fhandler->Ar_to_readSize <= 0)
+            if (Fhandler->Ar_to_readSize <= 0)
             {
                 Fhandler->Ar_to_readSize = Fhandler->Ar_Amount;
                 ar_file_pos = initial_file_pos;
                 fp_Ar.seekg(ar_file_pos, ios::beg);
 
-                if(fp_Ar.fail())
+                if (fp_Ar.fail())
                 {
                     cout << "Error reading AR file again!" << flush <<  endl;
                     exit(1);
@@ -1287,10 +1293,10 @@ void* AIOwrapper::async_io( void *ptr )
 
 
 
-            if(!Fhandler->fakefiles && !tobeWritten->empty())
+            if (!Fhandler->fakefiles && !tobeWritten->empty())
             {
 
-                if(!Fhandler->storePInd && Fhandler->storeBin)
+                if (!Fhandler->storePInd && Fhandler->storeBin)
                 {
                     resultH first = tobeWritten->front();
                     fp_allResults.write( (char*)&first.Y_name_idx,sizeof(int));
@@ -1316,13 +1322,13 @@ void* AIOwrapper::async_io( void *ptr )
                     //cout << current.R2 << "\t";
 
 
-                    if(Fhandler->storeBin)
+                    if (Fhandler->storeBin)
                     {
                         fp_allResults.write( (char*)&current.nUsed,sizeof(uint16_t));
                         fp_allResults.write( (char*)&R2,sizeof(uint16_t));
                     }
 
-                    if(!Fhandler->storePInd && Fhandler->storeBin)
+                    if (!Fhandler->storePInd && Fhandler->storeBin)
                     {
                         fp_allResults.write( (char*)&size_p,sizeof(uint8_t));
                     }
@@ -1330,12 +1336,12 @@ void* AIOwrapper::async_io( void *ptr )
                     for (list<  result  >::iterator it2=current.res_p.begin(); it2 != current.res_p.end(); ++it2)
                     {
                         result res_p = *it2;
-                        if((res_p.P <= Fhandler->min_p_disp && current.R2 >= Fhandler->min_R2_disp )|| Fhandler->storePInd)
+                        if ((res_p.P <= Fhandler->min_p_disp && current.R2 >= Fhandler->min_R2_disp )|| Fhandler->storePInd)
                         {
                             Fhandler->io_overhead = "!";//let the user know a result was found
                             string Aname = " ";
 
-                            if(res_p.AL_name_idx < Fhandler->l)
+                            if (res_p.AL_name_idx < Fhandler->l)
                             {
                                 //cout << (int)res_p.AL_name_idx << " " << Fhandler->l << flush;
                                 Aname = Fhandler->ALnames[res_p.AL_name_idx] + ":";
@@ -1355,13 +1361,13 @@ void* AIOwrapper::async_io( void *ptr )
 
                         }
 
-                        if(Fhandler->storeBin)
+                        if (Fhandler->storeBin)
                         {
-                            if(Fhandler->disp_cov && !Fhandler->storePInd)
+                            if (Fhandler->disp_cov && !Fhandler->storePInd)
                             {
                                 fp_allResults.write( (char*)&res_p.AL_name_idx,sizeof(uint8_t));
                             }
-                            if(!Fhandler->storePInd)
+                            if (!Fhandler->storePInd)
                             {
                                 fp_allResults.write( (char*)&res_p.AR_name_idx,sizeof(uint16_t));
                             }
@@ -1399,7 +1405,7 @@ void* AIOwrapper::async_io( void *ptr )
         seq_count = 0;
 
 
-        if(!Fhandler->not_done && Fhandler->write_full_buffers.empty())
+        if (!Fhandler->not_done && Fhandler->write_full_buffers.empty())
                 {Local_not_done = false;}
 
 
@@ -1435,7 +1441,7 @@ void* AIOwrapper::async_io( void *ptr )
     {
     type_buffElement* tmp;
 
-    if(Fhandler->currentReadBuff)
+    if (Fhandler->currentReadBuff)
     {
         Fhandler->full_buffers.push(Fhandler->currentReadBuff);
         Fhandler->currentReadBuff=0;
@@ -1458,7 +1464,7 @@ void* AIOwrapper::async_io( void *ptr )
 
     }
 
-    if(Fhandler->Ar_currentReadBuff)
+    if (Fhandler->Ar_currentReadBuff)
     {
         Fhandler->ar_full_buffers.push(Fhandler->Ar_currentReadBuff);
         Fhandler->Ar_currentReadBuff=0;
@@ -1495,7 +1501,7 @@ void* AIOwrapper::async_io( void *ptr )
     }
 
 
-    if(Fhandler->use_interactions)
+    if (Fhandler->use_interactions)
     {
         delete [](Fhandler->interaction_data);
         fp_I.close();
@@ -1543,7 +1549,7 @@ void AIOwrapper::load_ARblock(type_precision** Ar, int &Ar_blockSize)
     //!read new rdy buffer
     pthread_mutex_lock(&(Fhandler->m_buff_upd));
 
-    if(Fhandler->Ar_currentReadBuff)
+    if (Fhandler->Ar_currentReadBuff)
     {
         Fhandler->ar_empty_buffers.push(Fhandler->Ar_currentReadBuff);
     }
@@ -1599,7 +1605,7 @@ void AIOwrapper::load_Yblock(type_precision** Y, int &y_blockSize)
     pthread_mutex_lock(&(Fhandler->m_buff_upd));
 
 
-        if(Fhandler->currentReadBuff)
+        if (Fhandler->currentReadBuff)
         {
             Fhandler->empty_buffers.push(Fhandler->currentReadBuff);
         }
@@ -1713,7 +1719,7 @@ void AIOwrapper::write_OutFiles(list < resultH >* &sigResults)
     sigResults = 0;
     //cout << Fhandler->write_full_buffers.size() << endl;
 
-    if(Fhandler->io_overhead.compare(""))
+    if (Fhandler->io_overhead.compare(""))
     {
         io_overhead = Fhandler->io_overhead;
     }
@@ -1736,8 +1742,6 @@ void AIOwrapper::write_OutFiles(list < resultH >* &sigResults)
 
 void AIOwrapper::prepare_OutFiles()
 {
-
-
     int buff_count = 500000;
 
     list < resultH >* tmp;
@@ -1750,30 +1754,22 @@ void AIOwrapper::prepare_OutFiles()
     }
     Fhandler->currentWriteBuff = Fhandler->write_empty_buffers.front();
     Fhandler->write_empty_buffers.pop();
-
-
 }
-
-
-
-
 
 
 void AIOwrapper::reset_AR()
 {
-
 }
+
 
 void AIOwrapper::finalize_Y()
 {
-
-
 }
+
 
 void AIOwrapper::prepare_AR( int desired_blockSize, int n, int totalRfile, int columnsAR)
 {
-
-    Fhandler->Ar = new type_precision[desired_blockSize*columnsAR*n];
+    Fhandler->Ar = new type_precision[desired_blockSize * columnsAR * n];
 
     Fhandler->Ar_blockSize = desired_blockSize;
 
@@ -1782,12 +1778,16 @@ void AIOwrapper::prepare_AR( int desired_blockSize, int n, int totalRfile, int c
     Fhandler->Ar_Amount = totalRfile;
     Fhandler->Ar_to_readSize = Fhandler->Ar_Amount;
     #ifdef DEBUG
-    cout << "pr:" << Fhandler->r << " pm:" << Fhandler->Ar_to_readSize << endl << flush;
+    cout << "pr:" << Fhandler->r
+         << " pm:" << Fhandler->Ar_to_readSize
+         << endl << flush;
     #endif
 
 
 
-    int buff_count = max(10,4*(Fhandler->Ar_Amount+desired_blockSize-1)/desired_blockSize+1);
+    int buff_count = max(10,
+                         4 * (Fhandler->Ar_Amount + desired_blockSize-1) /
+                         desired_blockSize + 1);
 
     #ifdef DEBUG
     cout << "buff_count" << buff_count << endl  << flush;
@@ -1813,35 +1813,39 @@ void AIOwrapper::prepare_AR( int desired_blockSize, int n, int totalRfile, int c
 
 void AIOwrapper::finalize_AR()
 {
-
 }
 
-void AIOwrapper::removeALmissings(list< pair<int,int> >* excl_List, struct Settings params, int &Almissings)
+
+void AIOwrapper::removeALmissings(list< pair<int,int> >* excl_List,
+                                  struct Settings params,
+                                  int &Almissings)
 {
     float* tempAL = new float[params.n*params.l];
 
     FILE *fp;
-    fp = fopen((Fhandler->fnameAL+".fvd").c_str(), "rb");
-    if(fp == NULL)
+    fp = fopen((Fhandler->fnameAL + ".fvd").c_str(), "rb");
+    if (fp == NULL)
     {
         cout << "Error Reading File " << Fhandler->fnameAL << endl;
         exit(1);
     }
-    size_t result = fread (tempAL,sizeof(type_precision),params.n*params.l,fp); result++;
+    size_t result = fread (tempAL,
+                           sizeof(type_precision), params.n*params.l,
+                           fp);
+    result++;
     fclose(fp);
-
 
 
     Almissings=0;
 
-    for (int h=0; h < params.l; h++)
+    for (int h = 0; h < params.l; h++)
     {
-        for (int i=0; i < params.n; i++)
+        for (int i = 0; i < params.n; i++)
         {
-            if(isnan(tempAL[h*params.n+i]))
+            if (isnan(tempAL[h*params.n+i]))
             {
-                bool removed  = splitpair(i,excl_List,params.n );
-                if(removed)
+                bool removed = splitpair(i, excl_List, params.n );
+                if (removed)
                 {
                     Almissings++;
                 }
@@ -1851,27 +1855,25 @@ void AIOwrapper::removeALmissings(list< pair<int,int> >* excl_List, struct Setti
     }
 
 
-    if(Almissings > 0 && (params.mpi_id == 0))
-        cout << "Excluding " << Almissings << " from covariate missings" << endl;
+    if (Almissings > 0 && (params.mpi_id == 0))
+        cout << "Excluding " << Almissings
+             << " from covariate missings" << endl;
 
     delete []tempAL;
-
-
 }
 
 
-
-
-
-bool AIOwrapper::splitpair(int value, list< pair<int,int> >* excl_List, int n)
+bool AIOwrapper::splitpair(int value,
+                           list< pair<int,int> >* excl_List,
+                           int n)
 {
-
-
     int buffsize = 0;
     bool removed = false;
 
     //cout << excl_List->size();
-    for (list<  pair<int,int>  >::iterator it=excl_List->begin(); it != excl_List->end(); ++it)
+    for (list<  pair<int,int>  >::iterator it=excl_List->begin();
+         it != excl_List->end();
+         ++it)
     {
         int inipos = it->first;
         int endpos = it->first+it->second-1;
@@ -1879,16 +1881,17 @@ bool AIOwrapper::splitpair(int value, list< pair<int,int> >* excl_List, int n)
         //cout << inipos<< "-" << endpos << ":" << origbuffsize << " ";
 
 
-        if(value <=  endpos)
+        if (value <= endpos)
         {
            // cout << "(" << inipos<< ":" << endpos << ") ";
 
-            if(value > inipos && value < endpos)
+            if (value > inipos
+                && value < endpos)
             {
                 buffsize = value-inipos;
-                excl_List->insert (it,make_pair(inipos,buffsize));
-                buffsize = origbuffsize-buffsize-1;
-                excl_List->insert (it,make_pair(value+1,buffsize));
+                excl_List->insert(it, make_pair(inipos, buffsize));
+                buffsize = origbuffsize - buffsize - 1;
+                excl_List->insert(it, make_pair(value + 1, buffsize));
 //                cout << inipos<< ":" << endpos << " ";
 //                it--;it--;
 //                cout << it->first<< ":" << it->second << " ";
@@ -1900,13 +1903,15 @@ bool AIOwrapper::splitpair(int value, list< pair<int,int> >* excl_List, int n)
 
                 it = excl_List->end();
                 removed = true;
-
             }
             else
             {
-                if(value == inipos && inipos != endpos)
+                if (value == inipos
+                    && inipos != endpos)
                 {
-                    excl_List->insert (it,make_pair(min(inipos+1,n),origbuffsize-1));
+                    excl_List->insert(it,
+                                      make_pair(min(inipos + 1, n),
+                                                origbuffsize - 1));
 //                    cout << inipos<< ":" << endpos << " ";
 //                    it--;
 //                    cout << it->first<< ":" << it->second << " | ";
@@ -1918,9 +1923,11 @@ bool AIOwrapper::splitpair(int value, list< pair<int,int> >* excl_List, int n)
                 }
                 else
                 {
-                     if(value == endpos && endpos != inipos)
+                     if (value == endpos
+                         && endpos != inipos)
                      {
-                        excl_List->insert (it,make_pair(inipos,origbuffsize-1));
+                        excl_List->insert(it,
+                                          make_pair(inipos, origbuffsize - 1));
 //                        cout << inipos<< ":" << endpos << " ";
 //                        it--;
 //                        cout << it->first<< ":" << it->second << " | ";
@@ -1932,7 +1939,9 @@ bool AIOwrapper::splitpair(int value, list< pair<int,int> >* excl_List, int n)
                      }
                      else
                      {
-                        if(value == inipos && value == endpos && endpos == inipos)
+                        if (value == inipos
+                            && value == endpos
+                            && endpos == inipos)
                         {
                             excl_List->remove((*it));
                             it = excl_List->end();
@@ -1947,13 +1956,12 @@ bool AIOwrapper::splitpair(int value, list< pair<int,int> >* excl_List, int n)
     return removed;
 }
 
+
 void AIOwrapper::load_AL(type_precision** AL)
 {
-
-
     FILE *fp;
     fp = fopen((Fhandler->fnameAL+".fvd").c_str(), "rb");
-    if(fp == NULL)
+    if (fp == NULL)
     {
         cout << "Error Reading File " << Fhandler->fnameAL << endl;
         exit(1);
@@ -1965,16 +1973,21 @@ void AIOwrapper::load_AL(type_precision** AL)
     int buff_pos=0;
     int file_pos;
 
-    for (int i=0; i < Fhandler->l; i++)
+    for (int i = 0; i < Fhandler->l; i++)
     {
-        for (list<  pair<int,int>  >::iterator it=excl_List->begin(); it != excl_List->end(); ++it)
+        for (list<  pair<int,int>  >::iterator it=excl_List->begin();
+             it != excl_List->end();
+             ++it)
         {
-
-            file_pos = i*Fhandler->fileN+ it->first;
-            fseek ( fp , file_pos*sizeof(type_precision) , SEEK_SET );
+            file_pos = i * Fhandler->fileN+ it->first;
+            fseek(fp, file_pos * sizeof(type_precision), SEEK_SET );
             chunk_size_buff = it->second;
 
-            size_t result = fread (&(Fhandler->AL[buff_pos]),sizeof(type_precision),chunk_size_buff,fp); result++;
+            size_t result = fread(&(Fhandler->AL[buff_pos]),
+                                  sizeof(type_precision),
+                                  chunk_size_buff,
+                                  fp);
+            result++;
             buff_pos += chunk_size_buff;
         }
     }
@@ -1983,20 +1996,18 @@ void AIOwrapper::load_AL(type_precision** AL)
 
     fclose(fp);
 
-
-
-
     (*AL) = Fhandler->AL;
 
     //matlab_print_matrix("AL",Fhandler->n,Fhandler->l,*AL);
 }
 
-void AIOwrapper::prepare_AL( int columnsAL, int n)
-{
 
-    Fhandler->AL = new type_precision[columnsAL*n];
-    Fhandler->l=columnsAL;
+void AIOwrapper::prepare_AL(int columnsAL, int n)
+{
+    Fhandler->AL = new type_precision[columnsAL * n];
+    Fhandler->l  = columnsAL;
 }
+
 
 void AIOwrapper::finalize_AL()
 {
@@ -2006,9 +2017,8 @@ void AIOwrapper::finalize_AL()
 
 void AIOwrapper::read_excludeList(list< pair<int,int> >* excl, int &excl_count, int n, string fname_excludeList)
 {
-
     ifstream fp_exL(fname_excludeList.c_str());
-    if(!fp_exL)
+    if (!fp_exL)
     {
         cout << "Error reading exclude list file."<< endl;
         exit(1);
@@ -2022,7 +2032,7 @@ void AIOwrapper::read_excludeList(list< pair<int,int> >* excl, int &excl_count, 
     int second = 0;
     int prev_second = -1;
 
-    if(Fhandler->mpi_id == 0)
+    if (Fhandler->mpi_id == 0)
         cout << "Excluding Ids: \n";
 
       while (std::getline(fp_exL, line) && second < n )
@@ -2033,45 +2043,43 @@ void AIOwrapper::read_excludeList(list< pair<int,int> >* excl, int &excl_count, 
 
             iss >> second;
 
-            if(prev_second > first )
+            if (prev_second > first )
             {
-
                 cout << "\nPlease provide valid positive ordered indixes!\n";
                 cout << prev_second << " > " << first << "\n";
-                exit( 1 );
+                exit(1);
             }
 
-            if(second == prev_second)
+            if (second == prev_second)
             {
-                if(Fhandler->mpi_id == 0)
-                cout << first << ", ";
+                if (Fhandler->mpi_id == 0)
+                    cout << first << ", ";
                 second = first;
-
             }
             else
             {
-                if(Fhandler->mpi_id == 0)
-                cout << first << "-" << second << ", ";
-                if(first > second)
+                if (Fhandler->mpi_id == 0)
+                    cout << first << "-" << second << ", ";
+                if (first > second)
                 {
                     cout << "\nPlease provide ordered pairs!\n";
-                    exit( 1 );
+                    exit(1);
                 }
-                if(first < 1 || second < 1)
+                if (first < 1 || second < 1)
                 {
                     cout << "\nPlease provide valid positive indixes!\n";
-                    exit( 1 );
+                    exit(1);
                 }
             }
 
             prev_second = second;
 
 
-            for(int i = first-1; i <= second-1;i++ )
+            for (int i = first - 1; i <= second-1;i++ )
             {
+                bool removed  = splitpair(i, excl, n );
 
-                bool removed  = splitpair(i,excl, n );
-                if(removed)
+                if (removed)
                 {
                     excl_count++;
                 }
@@ -2081,35 +2089,39 @@ void AIOwrapper::read_excludeList(list< pair<int,int> >* excl, int &excl_count, 
       }
 
 
-    if(excl_count >= n)
+    if (excl_count >= n)
     {
 		cout << "\nExclusion List excluded all data!\n";
-		cout << "Total Ids: " << n << "\nExcluded Ids: " << excl_count << endl;
-		exit( 1 );
+		cout << "Total Ids: " << n
+                     << "\nExcluded Ids: " << excl_count
+                     << endl;
+		exit(1);
 	}
-	if(Fhandler->mpi_id == 0)
-	 cout << "Excluded: "  << excl_count << " Using: " << n-excl_count<< endl;
+	if (Fhandler->mpi_id == 0)
+	 cout << "Excluded: " << excl_count << " Using: " << n-excl_count<< endl;
 
 
 
 }
 
 
-void AIOwrapper::read_dosages(string fname_dosages, int expected_count, float* vec)
+void AIOwrapper::read_dosages(string fname_dosages,
+                              int expected_count,
+                              float* vec)
 {
     ifstream fp_dos(fname_dosages.c_str());
-    if(!fp_dos)
+    if (!fp_dos)
     {
-        cout << "Error reading dosages file."<< endl;
+        cout << "Error reading dosages file." << endl;
         exit(1);
     }
     int i;
-    for (i=0; i < expected_count && !fp_dos.eof(); i++)
+    for (i = 0; i < expected_count && !fp_dos.eof(); i++)
     {
        fp_dos >> vec[i];
        //cout << vec[i];
     }
-    if(i!=expected_count)
+    if (i != expected_count)
     {
         cout << "The number of factors for the dosage model! does not coincide with the source data #facctors:" << i << ", expected:" <<expected_count << endl;
         exit(1);
