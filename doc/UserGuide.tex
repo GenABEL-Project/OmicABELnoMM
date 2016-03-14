@@ -1,13 +1,19 @@
-\documentclass{report}
+\documentclass[a4paper,toc=bibliography]{scrreprt}
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{textcomp}
+\usepackage[osf,sc]{mathpazo}
+ \linespread{1.05} % Palatino needs more leading (space between lines)
+\usepackage{microtype}
+% Use Palatino for the section headings as well
+\addtokomafont{sectioning}{\normalfont\bfseries}
+
 \usepackage[smaller]{acronym}
-\usepackage{fullpage}
+%\usepackage{fullpage}
 
 \usepackage{graphicx,color}
-\usepackage{mhchem}
+\usepackage{amsmath}
 
 \usepackage[svgnames]{xcolor}
 \definecolor{webgreen}{rgb}{0,.5,0}
@@ -32,9 +38,8 @@
   keywordstyle=\color[rgb]{0,0,1},
   commentstyle=\color[rgb]{0,0.4,0},
   stringstyle=\color[rgb]{0.5,0,1},
-  basicstyle=\footnotesize\ttfamily,
+%  basicstyle=\footnotesize\ttfamily,
   backgroundcolor=\color{lstbgcolor},
-%  basicstyle=\scriptsize\ttfamily
 }
 \lstloadlanguages{bash,awk}
 \lstMakeShortInline{|}
@@ -49,7 +54,7 @@
   pdfpagemode=UseOutlines, plainpages=false, bookmarksnumbered, %
   bookmarksopen=true, bookmarksopenlevel=1, hypertexnames=true, %
   pdfhighlight=/O, %hyperfootnotes=true,%nesting=true,%frenchlinks,%
-  pdfauthor={\textcopyright\ A.~Frank, L.C.~Karssen},
+  pdfauthor={\textcopyright\ L.C.~Karssen, A.~Frank},
   pdfsubject={OmicABELnoMM User Guide},
   colorlinks=true, urlcolor=blue, linkcolor=blue, citecolor=webgreen %
 }
@@ -65,90 +70,35 @@
 \DeclareMathOperator{\cov}{\mathbf{cov}}
 \newcommand{\eg}{e.g.~}
 \newcommand{\ie}{i.e.~}
-\newcommand{\oanomm}{OmicABELnoMM}
+\usepackage{xspace}
+\newcommand{\oanomm}{OmicABELnoMM\xspace}
 
 \begin{document}
 
 \title{OmicabelNoMM v0.1.0 User Guide}
-\author{Alvaro Frank$^1$, Lennart C. Karssen$^2$\\
-  $^{1}${\small HelmhotlzZentrum, München, DE}\\
-  $^{2}${\small PolyOmica, Groningen, NL} \\
+\author{Lennart C. Karssen$^1$, Alvaro Frank$^{2,3}$\\
+  {\small \textsuperscript{1} PolyOmica, Groningen, NL} \\
+  {\small \textsuperscript{2} HelmholtzZentrum, München, DE}\\
+  {\small \textsuperscript{3} AICES, RWTH, Aachen, DE}\\
 }
-\date{October 2014}
+\date{2016}
 \maketitle
 \tableofcontents
 
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Introduction}
+\oanomm is a tool for running \acp{GWAS} on large omics data sets in a
+computationally efficient manner. It is specifically designed to run
+linear regression on thousands of phenotypes (\eg metabolomics data)
+for thousands of individuals and millions of (imputed) genotypes
+within a reasonable time frame (think days instead of months or
+years).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Quick Usage}
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Understanding \oanomm}
-
-\section{Overview}
-
-\section{Glossary}
-
-\section{Formulas}
-
-\subsection{Possible analysis}
-
-\subsubsection{Basic analysis}
-\begin{align}
-y &\sim \beta_0 1 + \beta_1 x \\
-y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_r x_r\\
-y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} x_{l+1}  + \dots + \beta_p x_p\\
-y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{r} \left(x_{l+1}  + \dots +  x_p\right)
-\end{align}
-
-\subsubsection{Analysis with factors/dosages}
-\begin{align}
-y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_r \phi_1 x_r\\
-y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1}  \phi_1 x_{l+1}  + \dots + \beta_p  \phi_r x_p\\
-y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{r} \left( \phi_1 x_{l+1}  + \dots +   \phi_r x_p\right)
-\end{align}
-
-\subsubsection{Analysis with Interactions/Environmental Effects}
-\begin{align}
-y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_r i_1 x_r\\
-y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} i_1 x_r + \dots  + \beta_j j_1 x_r\\
-y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{r}  i_1 \left( x_{l+1}  + \dots + x_p\right) \\
-y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1}  i_1 \left( x_{l+1}  + \dots + x_p\right) +\dots + \beta_{j}  i_j \left( x_{l+1}  + \dots + x_p\right)
-\end{align}
-
-\subsubsection{Analysis with Interactions/Environmental Effects keeping original variable}
-\begin{align}
-y &\sim\beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l +  \beta_{l+1} x_r +  \beta_{l+2} i_1 x_r\\
-y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} x_r + \beta_{l+2} i_1 x_r + \dots  + \beta_j j_1 x_r
-\end{align}
-
-\subsubsection{Analysis with Interactions and factors}
-\begin{align}
-y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_r i_1 \phi_1 x_r\\
-y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} i_1 \phi_1 x_r + \dots  + \beta_j j_1 \phi_1 x_r\\
-y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{r}  i_1 \left( \phi_{l+1} x_{l+1}  + \dots + \phi_p x_p\right) \\
-y &\sim  \dots + \beta_l cov_l + \beta_{l+1}  i_1 \left(  \phi_{l+1} x_{l+1}  + \dots +  \phi_{p} x_p\right) +\dots + \beta_{j}  i_j \left( \phi_{l+1} x_{l+1}  + \dots + \phi_{p} x_p\right)
-\end{align}
-
-\subsubsection{Analysis with Interactions and factor keeping original variable}
-\begin{align}
-y &\sim\beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l +  \beta_{l+1} \phi_{r} x_r +  \beta_{l+2} i_1 \phi_{r} x_r\\
-y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} \phi_{r} x_r + \beta_{l+2} i_1 \phi_{r} x_r + \dots  + \beta_j j_1 \phi_{r} x_r
-\end{align}
-
-
-\subsection{Regression Coefficients}
-
-$\beta=(X^T X)^{-1} X^T y$
-
-\subsection{T-statistic}
-\subsection{P-values}
-
-
-\section{Algorithm}
-
-\section{Compromises}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Installing \oanomm}
@@ -265,7 +215,7 @@ The latest release from the OpenBLAS library can be found at
 \url{https://github.com/xianyi/OpenBLAS/releases}. At the time of
 writing this is is version 0.2.15. Download the |tar.gz| file to the
 server and decompress the archive:
-\begin{lstlisting}
+\begin{lstlisting}[basicstyle=\footnotesize\ttfamily]
 wget https://github.com/xianyi/OpenBLAS/archive/v0.2.15.tar.gz
 tar -xzf v0.2.15.tar.gz
 cd OpenBLAS-0.2.15
@@ -316,7 +266,7 @@ First, let \oanomm know where the \ac{BLAS} library is located by
 setting the |LD_LIBRARY_PATH| environment variable\footnote{If the
   \ac{BLAS} library is installed in a central 'default' directory
   (like \lstinline{/usr/local/lib/}), this step is not necessary}:
-\begin{lstlisting}[escapechar=\%]
+\begin{lstlisting}[basicstyle=\footnotesize\ttfamily]
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:path_to_/OmicABELnoMM/libs/lib
 \end{lstlisting}
 Again, make sure to replace |path_to_| with the proper path on your system.
@@ -404,8 +354,7 @@ sudo apt-get install libopenmpi-dev
 
 \section{Source Files}
 
-\begin{lstlisting}[escapechar=\%]
-#get the source files
+\begin{lstlisting}[basicstyle=\footnotesize\ttfamily,]
 svn checkout svn://svn.r-forge.r-project.org/svnroot/genabel/pkg/OmicABELnoMM/
 
 cd OmicABELnoMM
@@ -449,7 +398,7 @@ to load them into R for a table(matrix) format. Once in table format,
 they can be just transformed to DatABEL format to be used by OmicABEL.
 
 
-\section{Databel}
+\section{DatABEL}
 Start R, then use
 
 library(DatABEL); help("DatABEL-package")\\
@@ -581,7 +530,7 @@ XR_db <- matrix2databel(XR,filename="XR",type="FLOAT")
 
 \section{Getting help from the program}
 
-\begin{lstlisting}[escapechar=\%]
+\begin{lstlisting}[basicstyle=\footnotesize\ttfamily]
 
 ./omicabelnomm -h
 usage: omicabelnomm -c <path/fname> --geno <path/fname> -p <path/fname> -o <path/fname>
@@ -726,7 +675,89 @@ In this case each process (1 per node specified using -np for a total of 10 in t
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Understanding \oanomm}
+
+\section{Overview}
+
+\section{Glossary}
+
+\section{Formulas}
+
+\subsection{Possible analysis}
+
+\subsubsection{Basic analysis}
+\begin{align}
+y &\sim \beta_0 1 + \beta_1 x \\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_r x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} x_{l+1}  + \dots + \beta_p x_p\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{r} \left(x_{l+1}  + \dots +  x_p\right)
+\end{align}
+
+\subsubsection{Analysis with factors/dosages}
+\begin{align}
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_r \phi_1 x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1}  \phi_1 x_{l+1}  + \dots + \beta_p  \phi_r x_p\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{r} \left( \phi_1 x_{l+1}  + \dots +   \phi_r x_p\right)
+\end{align}
+
+\subsubsection{Analysis with Interactions/Environmental Effects}
+\begin{align}
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_r i_1 x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} i_1 x_r + \dots  + \beta_j j_1 x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{r}  i_1 \left( x_{l+1}  + \dots + x_p\right) \\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1}  i_1 \left( x_{l+1}  + \dots + x_p\right) +\dots + \beta_{j}  i_j \left( x_{l+1}  + \dots + x_p\right)
+\end{align}
+
+\subsubsection{Analysis with Interactions/Environmental Effects keeping original variable}
+\begin{align}
+y &\sim\beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l +  \beta_{l+1} x_r +  \beta_{l+2} i_1 x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} x_r + \beta_{l+2} i_1 x_r + \dots  + \beta_j j_1 x_r
+\end{align}
+
+\subsubsection{Analysis with Interactions and factors}
+\begin{align}
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_r i_1 \phi_1 x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} i_1 \phi_1 x_r + \dots  + \beta_j j_1 \phi_1 x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{r}  i_1 \left( \phi_{l+1} x_{l+1}  + \dots + \phi_p x_p\right) \\
+y &\sim  \dots + \beta_l cov_l + \beta_{l+1}  i_1 \left(  \phi_{l+1} x_{l+1}  + \dots +  \phi_{p} x_p\right) +\dots + \beta_{j}  i_j \left( \phi_{l+1} x_{l+1}  + \dots + \phi_{p} x_p\right)
+\end{align}
+
+\subsubsection{Analysis with Interactions and factor keeping original variable}
+\begin{align}
+y &\sim\beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l +  \beta_{l+1} \phi_{r} x_r +  \beta_{l+2} i_1 \phi_{r} x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} \phi_{r} x_r + \beta_{l+2} i_1 \phi_{r} x_r + \dots  + \beta_j j_1 \phi_{r} x_r
+\end{align}
+
+
+\subsection{Regression Coefficients}
+
+$\beta=(X^T X)^{-1} X^T y$
+
+\subsection{T-statistic}
+\subsection{P-values}
+
+
+\section{Algorithm}
+
+\section{Compromises}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{FAQ}
+
+\chapter{Acknowledgements and citation}
+We thank the following people for their help and support in creating
+\oanomm: Prof.~Paolo Bientinesi (AICES, RWTH, Aachen), Prof.~Christian
+Gieger (HMGU, München), Sodbo Sharapov (Novosibirsk State University), ...
+
+Without the financial support from the following sources, this work
+would have been impossible: European Union FP7 framework projects
+MIMOmics (grant agreement nr.~305280) and Pain-Omics (grant agreement
+nr.~602736).
+
+If you use \oanomm, please cite the following reference: XXX
+
+The algorithmic background of \oanomm is described in \cite{Frank2016}.
 
 \chapter{List of acronyms}
 \label{ch:acro}
@@ -746,6 +777,13 @@ In this case each process (1 per node specified using -np for a total of 10 in t
       distributed memory parallelisation that allows a program to be
       run in parallel on multiple machines in a cluster}}
 \end{acronym}
+
+\begin{thebibliography}{99}
+\bibitem{Frank2016}A. Frank, D. Fabregat-Traver, and P. Bientinesi,
+  \emph{Large-scale linear regression: Development of high-performance
+    routines}, Applied Mathematics and Computation, v275, 2016,
+  \href{http://dx.doi.org/10.1016/j.amc.2015.11.078}{doi:10.1016/j.amc.2015.11.078}
+\end{thebibliography}
 
 \end{document}
 
