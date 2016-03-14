@@ -211,10 +211,11 @@ linear algebra and other math.
   \item LAPACKe (required): The C interface to LAPACK, the linear
     algebra package.
   \item Boost (required): For the calculation of p-values \oanomm needs the
-    Boost-math part of the Boost library.
-  \item ACML (AMD Math Core library, optional): if the ACML is found,
+    Boost-math part of the Boost library\footnote{The Boost library
+      can be foundt at \url{}}.
+  \item \ac{ACML} (optional): if the \ac{ACML} is found,
     it will be used where possible.
-  \item Intel KML (Kernel Math Library, optional): if the KML is
+  \item Intel \ac{MKL} (optional): if the \ac{MKL} is
     found, it will be used where possible.
   \item \acs{MPI} (optional): If the |./configure| step detects an
     \acf{MPI} library like OpenMPI or MPICH2, \oanomm will be compiled
@@ -296,15 +297,15 @@ you are installing this as system administrator and want to allow all
 users to use this library, using a central directory like
 \lstinline{/usr/local/lib/} is more appropriate.}.
 
-\subsubsection{Using AMD's ACML}
+\subsubsection{Using AMD's \ac{ACML}}
 \textbf{(Status: Support Broken)}
 
-Instead of using OpenBLAS one can use AMD's ACML (a highly optimised
+Instead of using OpenBLAS one can use AMD's \ac{ACML} (a highly optimised
 \ac{BLAS} library from AMD) by going to:
 \url{http://developer.amd.com/tools-and-sdks/cpu-development/amd-core-math-library-acml/acml-downloads-resources/}
 and copy the supplied binary libraries to |/OmicABELnoMM/lib/|. If
-both libraries are present (OpenBLAS + ACML), the system will use
-ACML.
+both libraries are present (OpenBLAS + \ac{ACML}), the system will use
+\ac{ACML}.
 
 
 \subsection{Compiling \oanomm}
@@ -731,11 +732,16 @@ In this case each process (1 per node specified using -np for a total of 10 in t
 \label{ch:acro}
 
 \begin{acronym}[BLAS] % Put longest acronym here for alignment
+  \acro{ACML}{AMD Core Math Library\acroextra{, a highly optimised math
+      library developed by AMD}}
   \acro{BLAS}{Basic Linear Algebra Subprograms\acroextra{, a type of
       library for efficient matrix operations, for example OpenBLAS}}
   \acro{CPU}{Central Processing Unit\acroextra{, i.e. the processor of
     your computer}}
+  \acro{GWAS}{Genome-Wide Association Scan}
   \acro{HPC}{High-Performance Computing}
+  \acro{MKL}{Math Kernel Library\acroextra{, a highly optimised math
+      library developed by Intel}}
   \acro{MPI}{Message Passing Interface\acroextra{, library for
       distributed memory parallelisation that allows a program to be
       run in parallel on multiple machines in a cluster}}
