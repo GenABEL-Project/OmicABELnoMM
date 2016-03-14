@@ -44,23 +44,16 @@ XR <- matrix(rnorm(m*n), ncol=m)
 ##     }
 ##}
 
-## Add some NAs
+## Replace some elements with NAs
 for (i in 1:(n*m)){
     if(sample(1:100,1) > 90) {
         XR[i] <- 0/0
     }
 }
 
-colnames(XR) <- paste0("miss", 1:m)
-cnames <- vector(m)
-for (i in 1:(m/r)) {
-    for (j in 1:r) {
-        cnames[(i-1)*r+(j)] <- paste0("snp",
-                                            paste(i, j, sep="_")
-                                            )
-    }
-}
-colnames(XR) <- cnames
-
+colnames(XR) <- paste0("snp",
+                       paste(ceiling(1:m/r), 1:r, sep="_")
+                       )
 rownames(XR) <- paste0("ind", 1:n)
+
 XR_db <- matrix2databel(XR, filename="XR", type="FLOAT")
