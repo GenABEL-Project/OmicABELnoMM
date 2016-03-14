@@ -3,7 +3,12 @@
 
 exmpldir = examples
 
-examplescripts = CreateData.R
+# examplescripts = $(exmpldir)/CreateData.R	\
+# $(exmpldir)/create_Y.R0				\
+# $(exmpldir)/create_XL.R				\
+# $(exmpldir)/create_XR.R				\
+# $(exmpldir)/settings.R
+
 
 examplefiles = $(exmpldir)/exclude_individuals.txt	\
  $(exmpldir)/dosages_1.txt				\
@@ -54,8 +59,11 @@ exampledir = $(pkgdatadir)/examples
 dist_example_DATA = $(examplefiles)
 
 if BUILD_examples
-$(largeexamplefiles): $(exmpldir)/$(examplescripts) $(examplefiles)
-	cd $(exmpldir) && R --vanilla --no-save < $(examplescripts)
+$(exmpldir)/%.fvi $(exmpldir)/%.fvd: $(exmpldir)/create_%.R $(exmpldir)/settings.R
+	cd $(exmpldir) && R --vanilla --no-save < $(<F)
+
+## An explicit rule for XR because it depends on XL and Y
+$(exmpldir)/XR.fvi $(exmpldir)/XR.fvi: $(exmpldir)/create_XR.R $(exmpldir)/settings.R $(exmpldir)/XL.fvd $(exmpldir)/XL.fvi $(exmpldir)/Y.fvd $(exmpldir)/Y.fvi
 
 dist_example_DATA += $(largeexamplefiles)
 endif
