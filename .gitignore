@@ -72,3 +72,5 @@
 /doc/UserGuide.synctex.gz
 /doc/auto/UserGuide.el
 /lib/
+/doc/*.aux
+/doc/auto/

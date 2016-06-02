@@ -1,0 +1,150 @@
+\chapter{Running Analysis}
+
+\section{Getting help from the program}
+
+\begin{lstlisting}[basicstyle=\footnotesize\ttfamily]
+
+./omicabelnomm -h
+usage: omicabelnomm -c <path/fname> --geno <path/fname> -p <path/fname> -o <path/fname>
+                -x <path/fname> -n <#SNPcols> -t <#CPUs>
+                         -d <0.0~1.0> -r <-10.0~1.0> -b -s <0.0~1.0>  -e <-10.0~1.0> -i -f
+omicabelnomm Version 0.96b
+        Required:
+        -p --phe         <path/filename> to the inputs containing phenotypes.
+        -g --geno        <path/filename> to the inputs containing genotypes.
+        -c --cov         <path/filename> to the inputs containing covariates.
+        -o --out         <path/filename> to store the output to (used for all .txt and .ibin & .dbin).
+
+Optional:
+        -n --ngpred      <#SNPcols> Number of columns in the geno file that represent a single SNP.
+        -t --thr         <#CPUs> Number of computing threads to use to speed computations.
+                         Recommended is 4-8 per node (see MPI).
+        -x --excl        <path/filename> file containing list of individuals to exclude
+                         from input files, (see example file).
+        -d --pdisp       <0.0~1.0> Value to use as maximum threshold for significance.
+                         Results with P-values UNDER this threshold will be
+                         displayed in the putput .txt file.
+        -r --rdisp       <-10.0~1.0> Value to use as minimum threshold for R2.
+                         Results with R2-values ABOVE this threshold will be displayed
+                         in the putput .txt file.
+        -b --stobin      Flag that forces to ALSO store results in a
+                         smaller binary format (*.ibin & *.dbin).
+        -s --psto        <0.0~1.0>  Results with P-values UNDER this threshold will be
+                         displayed in the putput binary files.
+        -e --rsto        <-10.0~1.0> Results with R2-values ABOVE this threshold will be
+                         stored in the putput binary files.
+        -i --fdcov       Flag that forces to include covariates (when its genotype is significant)
+                         as part of the results stored
+        -f --fdgen       Flag that forces to consider all included results
+                         (causes the analisis to ignores ALL threshold values).
+        -j --additive    Flag that runs the analisis with an Additive Model with
+                         (2*AA,1*AB,0*BB) effects.
+        -k --dominant    Flag that runs the analisis with an Dominant Model with
+                         (1*AA,1*AB,0*BB) effects.
+        -l --recessive   Flag that runs the analisis with an Recessive Model with
+                         (1*AA,0*AB,0*BB) effects.
+        -z --mylinear    <path/filename> to read Factors 'f_i' for a Custom Linear Model with
+                         f1*X1,f2*X2,f3*X3...fn*X_ngpred as effects,
+                         each column of each independent variable will be multiplied with
+                         the specified factors.
+                         Formula: y~alpha*cov + beta_1*f1*X1 + beta_2*f2*X2 +...+ beta_n*fn*Xn,
+                         (see example files!).
+%
+\end{lstlisting}
+\pagebreak
+\begin{lstlisting}[escapechar=\%]
+
+        -y --myaddit     <path/filename> to read Factors 'f_i' for a Custom Additive Model with
+                         (f1*X1,f2*X2,f3*X3...fn*X_ngpred) as effects,
+                         each column of each independent variable will be multiplied with the
+                         specified factors and then added together.
+                         Formula: y~alpha*cov + beta*(f1*X1 + f2*X2 +...+ fn*Xn), (see example files!).
+        -v --simpleinter <path/filename> to read the interactions from;
+                         for single analysis using multile interactions.
+        -w --multinter   <path/filename> to read the interactions from;
+                         for multiple analysis using single interaction per analysis.
+        -u --keepinter   Flag that sets if the interaction analysis chose is to too keep the dependent
+                         variable X. If set, Formula: y~alpha*cov + beta_1*INT*X + beta_2*X,
+                         (see example files!).  Default not set,
+                         Formula: y~alpha*cov + beta_1*INT*X, (see example files!).
+
+                         Support for MPI is available.
+                         Simply use mpirun -np <#nodes> omicabelnomm <params>
+                         on an Open-MPI enabled computer/cluster.
+                         Recommended is to use MPI when dealing with problems with over 2000 genotypes,
+                         at a rate of 1 node per 2000 genotypes.
+
+
+%
+\end{lstlisting}
+
+\section{WARNING: Theoretical Caveats}
+
+\section{Simple Linear Regression}
+
+Simple linear regression analysis with 4 threads can be done using (note long and short versions).
+This setup assumes as default 1 column per XR (-n 1). In the default case, each column (-n 1) gets its own regression coefficient.
+\begin{lstlisting}[escapechar=\%]
+
+./omicabelnomm --cov examples/XL --geno examples/XR --phe examples/Y --out examples/B --thr 4
+
+./omicabelnomm -c examples/XL -g examples/XR -p examples/Y -o examples/B -t 4
+%
+\end{lstlisting}
+
+When using more than one column per snp, you specify the value with -n 3, where each column of XR gets its own regression coefficient, i.e:
+
+\begin{lstlisting}[escapechar=\%]
+
+./omicabelnomm -c examples/XL -g examples/XR -p examples/Y -o examples/B -t 4 -n 3
+%
+\end{lstlisting}
+
+For analysis involving snp's and dosage models, the following popular options are allowed:
+
+\begin{lstlisting}[escapechar=\%]
+
+./omicabelnomm -c examples/XL -g examples/XR -p examples/Y -o examples/B -t 4 --additive
+
+./omicabelnomm -c examples/XL -g examples/XR -p examples/Y -o examples/B -t 4 --recessive
+
+./omicabelnomm -c examples/XL -g examples/XR -p examples/Y -o examples/B -t 4 --dominant
+%
+\end{lstlisting}
+
+\section{Custom Dosage Analysis}
+
+When using custom dosages, you need to specify how many columns per snp are you using. You also have to specify the file from which the dosage factors will be read. The file has to contain 1 factor per column of the snp.
+Using --myaddit will cause for all columns to be multiplied by the specific factors and then added together. The resulting vector (1 per -n  of the snp) will obtain a collective regression coefficient.\\
+Using --mylinear each single -n will obtain its own regression coefficient after being multiplied by the respective dosage factor.
+
+\begin{lstlisting}[escapechar=\%]
+
+./omicabelnomm -c examples/XL -g examples/XR -p examples/Y -o examples/B -t 4
+                                                -n 2 --myaddit examples/dosages_2.txt
+
+./omicabelnomm -c examples/XL -g examples/XR -p examples/Y -o examples/B -t 4
+                                                -n 1 --mylinear examples/dosages_1.txt
+%
+\end{lstlisting}
+
+
+\section{\ac{MPI} and Cluster usage for Simple Linear Regression}
+
+Compute clusters offer multiple compute nodes(computers) where each has multi threading capabilities. On \oanomm compiled using \ac{MPI} support, you could use mpirun to use multiple nodes at once. 10 nodes using 8 threads each:
+
+\begin{lstlisting}[escapechar=\%]
+
+mpirun -np 10 ./omicabelnomm -c examples/XL --g examples/XR -p examples/Y -o examples/B -t 8
+%
+\end{lstlisting}
+
+In this case each process (1 per node specified using -np for a total of 10 in the example) will create a different outputfile named from B\_mpi1\_dis.txt ... B\_mpi10\_dis.txt
+
+
+\section{Simple interactions of non linear terms, Enviromental Effects}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "UserGuide"
+%%% End:

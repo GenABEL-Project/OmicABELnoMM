@@ -1,0 +1,199 @@
+\chapter{Preparing input data}
+
+\section{Overview}
+
+\oanomm uses the filevector (also called DatABEL) file format for the
+input files. Filevector files use less storage space than plain text
+files and stores data in a way that make the columns and rows easily
+and quickly addressable, and thus helps the computations to be done
+faster\footnote{The source code of the filevector libary
+  \lstinline{fvlib} can be found on Github:
+  \url{https://github.com/GenABEL-Project/filevector}. This repository
+  also contains a few command line utilities for manipulate filevector
+  files (see \S)}. DatABEL is an R package providing an easy way to work
+with filevector files\footnote{The DatABEL page on the GenABEL project
+  website is \url{http://www.genabel.org/packages/DatABEL}. The R
+  package can be downloaded from CRAN:
+  \url{https://cran.r-project.org/web/packages/DatABEL/}.}.
+
+
+Original source files can be in any format as long as there is a way
+to load them into R for a table(matrix) format. Once in table format,
+they can be just transformed to DatABEL format to be used by OmicABEL.
+
+
+\section{Using DatABEL to convert input files to filevector format}
+Start R, then use
+
+library(DatABEL); help("DatABEL-package")\\
+More info: http://www.genabel.org/packages/DatABEL\\
+Start R and load DatABEL
+
+\begin{lstlisting}[escapechar=\%]
+library(DatABEL)
+\end{lstlisting}
+
+\subsection{Covariates}
+
+The following example code shows how to artificially create covariates:
+\begin{lstlisting}[escapechar=\%]
+#START_FAKE_DATA
+n = 2000                 # number of individuals
+l = 3                    # number of covariates+1 for intercept
+r = 2                    # how many columns per SNP
+m = r*100000             # number of snps
+t = 10000                # number of traits
+set.seed(1001)
+runif(3)
+XL <- matrix(rnorm((l+1)*n), ncol=(l+1)) # first column should be ones (intercept)
+for (i in 1:(n * (l+1))) {
+    if (sample(1:100, 1) > 95){
+        XL[i]=0/0    # fill in NANs
+    }
+}
+#END_FAKE_DATA
+
+# From here on if you have your real data stored in the matrix
+# variable XL you are ok.
+# How to get your data into XL depends on your original files and
+# how they were stored.
+
+# The first column of covariates has to have 1's! it is the intercept
+# Make sure you add this column of ones and that you have the space for it
+# without loosing your own data.
+for (i in 1:n) {
+   XL[i] = 1
+}
+
+# Add your own idnames!
+colnames(XL) <- c("intercept", paste("cov", 1:l, sep=""))
+rownames(XL) <- paste("ind", 1:n, sep="")
+
+# Convert to databel (i.e. store the data in a file)
+XL_db <- matrix2databel(XL,filename="XL",type="FLOAT")
+
+#XL[1:n,1:(l+1)]
+#XL
+%
+\end{lstlisting}
+
+\subsection{Independent Variables, SNPs,CPG Sites,Measurements used to explain other Measurements}
+\begin{lstlisting}[escapechar=\%]
+#START_FAKE_DATA
+n = 2000                 # number of individuals
+l = 3                    # number of covariates+1 for intercept
+r = 2                    # how many columns per SNP
+m = r*100000             # number of snps
+t = 10000                # number of traits
+#r=2
+XR <- matrix(rnorm(m*n),ncol=m)
+
+#Assumes that you had the previous Y still stored, this will create XR linearly dependent on the Y
+for(i in 1 + r*(0:((m-2)/r)) )
+{
+        #print(i)
+        yIdx=ceiling(i/r)
+        #print(i)
+        #print(yIdx)
+        for(j in 1:n)
+        {
+                XR[j,i]=Y[j,yIdx]
+                for(k in 1:l)
+                {
+                        XR[j,i]=XR[j,i]-XL[j,k]*0.01
+                }
+                for(k in 1:(r-1))
+                {
+                        XR[j,i]=XR[j,i]-XR[j,i+k]*0.01
+                }
+                #XR[j,i]=XR[j,i]/2.8888
+                #XR[j,i] = XR[j,i]*runif(1, 1.0-var, 1.0)
+
+        }
+}
+
+#add missing data
+for(i in 1:(n*m)){ if(sample(1:100,1) > 90) XR[i]=0/0}
+#END_FAKE_DATA
+
+#FROM here on if you have your real data stored in the matrix variable XL you are ok.
+#how to get your data into XL depends on your original files and how they were stored.
+
+#The first column of covariates has to have 1's! it is the intercepts
+#Make sure you add this column of ones and that you have the space for it
+#without loosing your own data.
+
+#add your own idnames!
+colnames(XR) <- paste("miss",1:m,sep="")
+for(i in 1:(m/r))
+{
+        for(j in 1:r)
+        {
+                colnames(XR)[(i-1)*r+(j)] = paste0("snp",paste(i,j,sep="_") )
+        }
+}
+
+#add your own idnames!
+rownames(XR) <- paste("ind",1:n,sep="")
+
+#transform to databel (store it)
+XR_db <- matrix2databel(XR,filename="XR",type="FLOAT")
+%
+\end{lstlisting}
+
+\subsection{Dependent Variable, Phenotypes,Measurements to be explained}
+
+\begin{lstlisting}[escapechar=\%]
+
+
+%
+\end{lstlisting}
+
+
+\section{Using the \lstinline{fvlib} tools to create filevector files}
+For those of you who would rather use 'regular' command line tools to
+create filevector files the filevector library can be of help.
+
+\subsection{Downloading and compiling the tools}
+At the time of writing the latest release of the filevector library is
+v1.0.1, which can be downloaded from Github and then extracted:
+\begin{lstlisting}[basicstyle=\footnotesize\ttfamily]
+wget https://github.com/GenABEL-Project/filevector/archive/v1.0.1.tar.gz
+tar -xzf
+\end{lstlisting}
+
+The following steps compile the tools:
+\begin{lstlisting}
+cd filevector-1.0.1
+mkdir bin
+make
+\end{lstlisting}
+If compilation succeeds, the |bin/| directory should contain several
+tools, of which |text2fvf| and |fv2text| are the most interesting. As
+their names already hint, they are used to convert text files to
+filevector format and the other way around, respectively.
+
+\subsection{Converting text files to filevector format}
+For our present purpose, creating input files for \oanomm, |text2fvf|
+is the tool we need. Running the tool without any options lists some
+usage information. The basic format is:
+\begin{lstlisting}[basicstyle=\footnotesize\ttfamily]
+bin/text2fvf -i INFILE -o OUTFILE [-r N2] [--colnames[=CFILE]] [-t] [-datatype=TYPE]
+\end{lstlisting}
+Of special note here is the |-datatype| or |-d| option, which defaults to
+|DOUBLE| by default. For \oanomm |FLOAT| should be specified.
+
+The following command converts a text file |pheno.txt| with phenotype
+data in which the sample IDs are in the first column to filevector
+format:
+\begin{lstlisting}[basicstyle=\footnotesize\ttfamily]
+bin/text2fvf -i pheno.txt -o pheno --rownames=1 -d FLOAT --skipcols=1
+\end{lstlisting}
+Note that the |--skipcols| option needs to be specified because the
+first column contains the ID names (as specified by the |--rownames|
+option).
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "UserGuide"
+%%% End:

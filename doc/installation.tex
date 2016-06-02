@@ -1,0 +1,281 @@
+\chapter{Installing \oanomm}
+
+There are two ways (or maybe three) to install \oanomm:
+\begin{itemize}
+\item Download a pre-compiled binary version of the tool.
+\item Compile \oanomm from source
+\item Compile \oanomm from source, including the libraries it depends
+  on.
+\end{itemize}
+Option number one is the easiest, however it also means you are
+running a version of \oanomm that is significantly slower then
+possible. Because \oanomm was developed with \ac{HPC} in mind, it
+works most efficient if it can use the specific features of the
+\ac{CPU} of your machine(s), which means compiling it yourself.
+
+For a fully optimised version of \oanomm the required libraries need
+to be compiled specifically for your hardware as well. In a scientific
+computing environment it may be that your system administrator has
+already done this for you.
+
+Details of the first option can be found in \S~\ref{sec:binaryinstall}
+and details of options two and three are documented in
+\S~\ref{sec:compile}.
+
+\section{Installing the pre-compiled binary}
+\label{sec:binaryinstall}
+
+
+\section{Compiling \oanomm from source}
+\label{sec:compile}
+In order to install \oanomm the user should compile the source code of
+\oanomm to create executable programs. In order to do so successfully,
+several libraries need to be installed on the system.  These libraries
+can be pre-installed on the system (e.g. by the system administrator)
+or downloaded separately by the user. If one wants a fully optimised
+version of \oanomm, those libraries should be compiled for the
+specific computer architecture of the user as well, but pre-built
+packages (\eg those provided by the Linux distribution) will work as
+well.
+
+In short the process of compiling \oanomm (after the requirements have
+been installed) looks like this:
+\begin{itemize}
+\item Check for the presence of all requirements: |./configure|
+\item Compile \oanomm: |make|
+\item Install \oanomm: |make install|
+\end{itemize}
+
+The following tools and libraries are needed when compiling \oanomm
+yourself. Most of the libraries contain highly optimised code for
+linear algebra and other math.
+\begin{itemize}
+\item Compilers: A C++ and a FORTRAN compiler are needed (we tested
+  GCC (v4.8 or higher) or CLANG, gfortran)
+\item Libraries: \oanomm depends on the following libraries:
+  \begin{itemize}
+  \item \acs{BLAS} (required): a linear algebra library. We tested OpenBLAS,
+  \item LAPACKe (required): The C interface to LAPACK, the linear
+    algebra package.
+  \item Boost (required): For the calculation of p-values \oanomm needs the
+    Boost-math part of the Boost library\footnote{The Boost library
+      can be foundt at \url{}}.
+  \item \ac{ACML} (optional): if the \ac{ACML} is found,
+    it will be used where possible.
+  \item Intel \ac{MKL} (optional): if the \ac{MKL} is
+    found, it will be used where possible.
+  \item \acs{MPI} (optional): If the |./configure| step detects an
+    \acf{MPI} library like OpenMPI or MPICH2, \oanomm will be compiled
+    with the option to distribute the computations across multiple
+    machines on a cluster.
+  \end{itemize}
+\end{itemize}
+
+
+\subsection{Required libraries: \ac{BLAS} and LAPACKe}
+In order to use \oanomm you will need a linear algebra library for
+high performance matrix computations. The standard is to use OpenBLAS
+and LAPACKe. The following sections describe three ways of installing
+these libraries on your system, each with their own advantages and
+disadvantages.
+
+\subsubsection{Using the packages provided by your Linux distribution}
+The easiest way to install the \ac{BLAS} and LAPACKe libraries is to
+use the pre-compiled packages provided by your Linux distribution. For
+example, on an Ubuntu Linux system these can be installed with the
+following commands (other distributions will have similarly named
+packages):
+\begin{lstlisting}[escapechar=\%]
+sudo apt-get install libopenblas-dev
+sudo apt-get install libopenblas-base
+sudo apt-get install liblapack3gf
+sudo apt-get install liblapack-doc
+sudo apt-get install liblapack-dev
+sudo apt-get install liblapacke
+sudo apt-get install liblapacke-dev
+\end{lstlisting}
+The downside of using this method is that the BLAS packages won't be
+optimised for your system, probably leading to worse performance.
+
+
+\subsubsection{Compiling and installing the libraries yourself}
+An alternative way of installing \ac{BLAS} and LAPACKe, is to download
+the source code directly and compile for your own machine,
+guaranteeing that the settings will be optimally adjusted for your
+hardware. One reason for compiling the \ac{BLAS} library yourself
+instead of using the packages supplied by your Linux distribution is
+that sometimes the distribution packages didn't use the |USE_OPENMP=1|
+flag. Remember to change |path_to_| with your your own path to the
+specified folder.
+
+The latest release from the OpenBLAS library can be found at
+\url{https://github.com/xianyi/OpenBLAS/releases}. At the time of
+writing this is is version 0.2.15. Download the |tar.gz| file to the
+server and decompress the archive:
+\begin{lstlisting}[basicstyle=\footnotesize\ttfamily]
+wget https://github.com/xianyi/OpenBLAS/archive/v0.2.15.tar.gz
+tar -xzf v0.2.15.tar.gz
+cd OpenBLAS-0.2.15
+\end{lstlisting}
+
+Alternatively, you can download the development version from GitHub:
+\begin{lstlisting}[escapechar=\%]
+git clone https://github.com/xianyi/OpenBLAS.git
+cd OpenBLAS
+\end{lstlisting}
+
+Now the OpenBLAS library can be compiled\footnote{Make sure you use
+  g++ 4.8 or higher!}:
+\begin{lstlisting}[escapechar=\%]
+make all USE_OPENMP=1
+\end{lstlisting}
+This will take a while. If you have multiple CPU cores at your
+disposal, you can add the |-j4| flag to the make command to tell it to
+use 4 cores (adjust as appropriate).
+
+The next step is to install the library in a directory relative to
+OmicABELnoMM's source code:
+\begin{lstlisting}
+make install PREFIX="path_to_/OmicABELnoMM/lib/"
+\end{lstlisting}
+Note that |path_to_| is to be defined by you, depending on where you
+downloaded and extracted the \oanomm source code\footnote{Note that if
+you are installing this as system administrator and want to allow all
+users to use this library, using a central directory like
+\lstinline{/usr/local/lib/} is more appropriate.}.
+
+\subsubsection{Using AMD's \ac{ACML}}
+\textbf{(Status: Support Broken)}
+
+Instead of using OpenBLAS one can use AMD's \ac{ACML} (a highly optimised
+\ac{BLAS} library from AMD) by going to:
+\url{http://developer.amd.com/tools-and-sdks/cpu-development/amd-core-math-library-acml/acml-downloads-resources/}
+and copy the supplied binary libraries to |/OmicABELnoMM/lib/|. If
+both libraries are present (OpenBLAS + \ac{ACML}), the system will use
+\ac{ACML}.
+
+
+\subsection{Compiling \oanomm}
+\label{sec:compiling-oanomm}
+Now that the prerequisites have been installed \oanomm itself can be compiled.
+
+First, let \oanomm know where the \ac{BLAS} library is located by
+setting the |LD_LIBRARY_PATH| environment variable\footnote{If the
+  \ac{BLAS} library is installed in a central 'default' directory
+  (like \lstinline{/usr/local/lib/}), this step is not necessary}:
+\begin{lstlisting}[basicstyle=\footnotesize\ttfamily]
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:path_to_/OmicABELnoMM/libs/lib
+\end{lstlisting}
+Again, make sure to replace |path_to_| with the proper path on your system.
+
+The actual compilation and installation of \oanomm is done by running
+the following three commands, which will be explained in more detail
+below:
+\begin{itemize}
+\item |./configure|
+\item |make|
+\item |make install|
+\end{itemize}
+The |./configure| step checks whether all required software like
+libraries are in place. If not it will warn or even abort. If one or
+more of the required libraries can not be found in a standard location
+the correct location can be added as an option to the configure step,
+for example to point to a different location of the Boost math library
+run:
+\begin{lstlisting}
+./configure --with-boost-include-path=/path/to/boost/lib
+\end{lstlisting}
+The names of the options for each library can be found by typing
+\begin{lstlisting}
+./configure --help
+\end{lstlisting}
+
+Apart from the library locations, you can specify the installation
+location in the configure step. By default, \oanomm will be installed
+in the |/usr/local/| directory\footnote{In more detail: the binaries
+  will be installed in \lstinline{/usr/local/bin/}, documentation in
+  \lstinline{/usr/local/share/omicabelnomm/doc}.}. To change this,
+use the |--prefix| option. For example, to install in a subdirectory
+of your home directory run
+\begin{lstlisting}
+./configure --prefix=/home/yourusername/mytools/OmicABELnoMM
+\end{lstlisting}
+
+
+\section{Installing the development version}
+For those of you who want to aid in the development of \oanomm
+
+\subsection{autoconf, autotools}
+
+Make sure you have autoconf/autotools installed
+\begin{lstlisting}[escapechar=\%]
+
+sudo apt-get install autoconf
+autoreconf -fi
+autoconf
+%
+\end{lstlisting}
+
+
+\section{Setup a project}
+\begin{lstlisting}[escapechar=\%]
+#projects location
+mkdir GWAS_PROJECT
+
+cd GWAS_PROJECT
+%
+\end{lstlisting}
+
+\section{Library and program Requirements}
+
+
+\subsection{Compilers}
+
+You will need the latest gcc compiler for your system for running \oanomm on a single multi-core computer .
+
+\begin{lstlisting}[escapechar=\%]
+sudo apt-get install gcc-4.9
+%
+\end{lstlisting}
+
+For compute-cluster you will need \ac{MPI} support.
+
+\begin{lstlisting}[escapechar=\%]
+sudo apt-get install openmpi-bin
+sudo apt-get install openmpi-common
+sudo apt-get install libopenmpi
+sudo apt-get install libopenmpi-dbg
+sudo apt-get install libopenmpi-dev
+\end{lstlisting}
+
+
+\section{Source Files}
+
+\begin{lstlisting}[basicstyle=\footnotesize\ttfamily,]
+svn checkout svn://svn.r-forge.r-project.org/svnroot/genabel/pkg/OmicABELnoMM/
+
+cd OmicABELnoMM
+%
+\end{lstlisting}
+
+\section{Compiling}
+
+For compiling the final executable binary use:
+\begin{lstlisting}[escapechar=\%]
+#in /OmicABELnoMM/
+make
+%
+\end{lstlisting}
+
+For compiling the test binary use:
+\begin{lstlisting}[escapechar=\%]
+
+#in /OmicABELnoMM/
+make check
+%
+\end{lstlisting}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "UserGuide"
+%%% End:

@@ -2,8 +2,19 @@
 # in the top Makefile.am
 
 ## Stuff needed for documentation in the doc/ directory
-dist_doc_DATA = doc/howtocompile.txt doc/UserGuide.tex	\
- COPYING INSTALL ChangeLog AUTHORS
+dist_doc_DATA = doc/howtocompile.txt		\
+doc/UserGuide.pdf				\
+COPYING INSTALL ChangeLog AUTHORS
+
+manual_src = doc/UserGuide.tex			\
+doc/acknowledgements.tex			\
+doc/faq.tex					\
+doc/installation.tex				\
+doc/introduction.tex				\
+doc/preparing_input.tex				\
+doc/quickusage.tex				\
+doc/running_analysis.tex			\
+doc/understanding_oanomm.tex
 
 ## Build the PDF documentation if building of the LaTeX docs is
 ## enabled via ./configure.
@@ -12,8 +23,8 @@ if HAVE_PDFLATEX
 DOCDIR = doc
 MANNAME = $(DOCDIR)/UserGuide
 MANPDF = $(MANNAME).pdf
-MANTEXSRC = $(MANNAME).tex
-MANAUX = $(MANNAME).aux
+MANTEXSRC = $(manual_src)
+MANAUX = $(patsubst %.tex, %.aux, $(MANTEXSRC))
 doc_DATA = $(MANPDF)
 PDFLATEXOPTS = --output-directory=$(DOCDIR)
 

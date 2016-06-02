@@ -1,0 +1,71 @@
+\chapter{Understanding \oanomm}
+
+\section{Overview}
+
+\section{Glossary}
+
+\section{Formulas}
+
+\subsection{Possible analysis}
+
+\subsubsection{Basic analysis}
+\begin{align}
+y &\sim \beta_0 1 + \beta_1 x \\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_r x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} x_{l+1}  + \dots + \beta_p x_p\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{r} \left(x_{l+1}  + \dots +  x_p\right)
+\end{align}
+
+\subsubsection{Analysis with factors/dosages}
+\begin{align}
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_r \phi_1 x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1}  \phi_1 x_{l+1}  + \dots + \beta_p  \phi_r x_p\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{r} \left( \phi_1 x_{l+1}  + \dots +   \phi_r x_p\right)
+\end{align}
+
+\subsubsection{Analysis with Interactions/Environmental Effects}
+\begin{align}
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_r i_1 x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} i_1 x_r + \dots  + \beta_j j_1 x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{r}  i_1 \left( x_{l+1}  + \dots + x_p\right) \\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1}  i_1 \left( x_{l+1}  + \dots + x_p\right) +\dots + \beta_{j}  i_j \left( x_{l+1}  + \dots + x_p\right)
+\end{align}
+
+\subsubsection{Analysis with Interactions/Environmental Effects keeping original variable}
+\begin{align}
+y &\sim\beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l +  \beta_{l+1} x_r +  \beta_{l+2} i_1 x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} x_r + \beta_{l+2} i_1 x_r + \dots  + \beta_j j_1 x_r
+\end{align}
+
+\subsubsection{Analysis with Interactions and factors}
+\begin{align}
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_r i_1 \phi_1 x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} i_1 \phi_1 x_r + \dots  + \beta_j j_1 \phi_1 x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{r}  i_1 \left( \phi_{l+1} x_{l+1}  + \dots + \phi_p x_p\right) \\
+y &\sim  \dots + \beta_l cov_l + \beta_{l+1}  i_1 \left(  \phi_{l+1} x_{l+1}  + \dots +  \phi_{p} x_p\right) +\dots + \beta_{j}  i_j \left( \phi_{l+1} x_{l+1}  + \dots + \phi_{p} x_p\right)
+\end{align}
+
+\subsubsection{Analysis with Interactions and factor keeping original variable}
+\begin{align}
+y &\sim\beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l +  \beta_{l+1} \phi_{r} x_r +  \beta_{l+2} i_1 \phi_{r} x_r\\
+y &\sim \beta_0 1 + \beta_1 cov_1 + \dots + \beta_l cov_l + \beta_{l+1} \phi_{r} x_r + \beta_{l+2} i_1 \phi_{r} x_r + \dots  + \beta_j j_1 \phi_{r} x_r
+\end{align}
+
+
+\subsection{Regression Coefficients}
+
+$\beta=(X^T X)^{-1} X^T y$
+
+\subsection{T-statistic}
+\subsection{P-values}
+
+
+\section{Algorithm}
+
+\section{Compromises}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "UserGuide"
+%%% End:
