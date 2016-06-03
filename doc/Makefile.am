@@ -1,11 +1,6 @@
 # NOTE: This is not a recursive makefile. This file is to be included
 # in the top Makefile.am
 
-## Stuff needed for documentation in the doc/ directory
-dist_doc_DATA = doc/howtocompile.txt		\
-doc/UserGuide.pdf				\
-COPYING INSTALL ChangeLog AUTHORS
-
 MANTEXSRC = doc/UserGuide.tex			\
 doc/acknowledgements.tex			\
 doc/faq.tex					\
@@ -25,6 +20,12 @@ doc/preparing_input.aux				\
 doc/quickusage.aux				\
 doc/running_analysis.aux			\
 doc/understanding_oanomm.aux
+
+## Stuff needed for documentation in the doc/ directory
+dist_doc_DATA = doc/howtocompile.txt	\
+ $(MANTEXSRC)				\
+ COPYING INSTALL ChangeLog AUTHORS
+
 
 ## Build the PDF documentation if building of the LaTeX docs is
 ## enabled via ./configure.
