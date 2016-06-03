@@ -19,6 +19,8 @@ tests_test_omicabelnomm_SOURCES =		\
  $(oanomm_cpp)					\
  tests/test.cpp
 
+EXTRA_tests_test_omicabelnomm_DEPENDENCIES = $(largeexamplefiles)
+
 # List of programs to run when running 'make check'
 TESTS = $(check_PROGRAMS)
 
