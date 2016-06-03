@@ -6,7 +6,7 @@ dist_doc_DATA = doc/howtocompile.txt		\
 doc/UserGuide.pdf				\
 COPYING INSTALL ChangeLog AUTHORS
 
-manual_src = doc/UserGuide.tex			\
+MANTEXSRC = doc/UserGuide.tex			\
 doc/acknowledgements.tex			\
 doc/faq.tex					\
 doc/installation.tex				\
@@ -16,6 +16,16 @@ doc/quickusage.tex				\
 doc/running_analysis.tex			\
 doc/understanding_oanomm.tex
 
+MANAUX = doc/UserGuide.aux			\
+doc/acknowledgements.aux			\
+doc/faq.aux					\
+doc/installation.aux				\
+doc/introduction.aux				\
+doc/preparing_input.aux				\
+doc/quickusage.aux				\
+doc/running_analysis.aux			\
+doc/understanding_oanomm.aux
+
 ## Build the PDF documentation if building of the LaTeX docs is
 ## enabled via ./configure.
 if BUILD_latexdoc
@@ -23,8 +33,6 @@ if HAVE_PDFLATEX
 DOCDIR = doc
 MANNAME = $(DOCDIR)/UserGuide
 MANPDF = $(MANNAME).pdf
-MANTEXSRC = $(manual_src)
-MANAUX = $(patsubst %.tex, %.aux, $(MANTEXSRC))
 doc_DATA = $(MANPDF)
 PDFLATEXOPTS = --output-directory=$(DOCDIR)
 
