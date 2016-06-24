@@ -61,8 +61,14 @@
 % get the links to the figures and tables right:
 \usepackage[all]{hypcap} % to be loaded after hyperref package
 
-% lowercase letters as footnote numerals (to avoid confusion with powers).
-\renewcommand{\thefootnote}{\alph{footnote}}
+% Lowercase letters with a bracket as footnote numerals.
+\renewcommand*{\thefootnote}{\alph{footnote})}
+% Define the footnote mark in the text.
+\deffootnotemark{\textsuperscript{\hspace{1pt}\thefootnotemark}}
+% Add a bit of space after the footnote mark when we write the
+% footnote at the bottom of the page.
+\deffootnote[1em]{1.5em}{1em}
+{\textsuperscript{\thefootnotemark} }
 
 
 % Some newly defined commands and operators:
