@@ -1,0 +1,59 @@
+* Introduction
+  OmicABELnoMM is a tool for running Genome-Wide Association Studies
+  (GWASn) on large multi-omics datasets in a computationally efficient
+  manner. The tool is specifically designed to run linear regression
+  on thousands of phenotypes (e.g. metabolomics data) for thousands of
+  individuals and millions of (imputed) genotypes within a reasonable
+  time frame (think days instead of months or years).
+* Requirements
+** Hardware
+   OmicABELnoMM requires a modern high-end computer with a multi-core
+   processor. Currently, OmicABELnoMM has experimental support for
+   MPI, which means that the tasks can be distributed over different
+   compute nodes in a cluster.
+** Software
+   OmicABELnoMM is designed to run on Linux (it won't run on MS
+   Windows; well, we actually never tested that). In terms of
+   libraries, OmicABELnoMM depends on LAPACKe and a BLAS library.
+   There are several choices for a BLAS library: [[https://github.com/xianyi/OpenBLAS/releases][OpenBLAS]], AMD's ACML
+   or the Intel MKL. For the calculation of p-values OmicABEL depends
+   on the Boost library.
+
+   If you would like to use/test the MPI functionality, you will need
+   either the OpenMPI or the MPICH2 library.
+* Installation
+  Because OmicABELnoMM was designed and developed with
+  High-Performance Computing (HPC) in mind, it works most efficiently
+  when compiled from the source code, including the libraries it
+  depends on, on the machine it will be run. This will allow the
+  compiler to choose the most optimal settings that match your
+  hardware (mainly the processor).
+
+  Unfortunately, the process of compiling from source, while not
+  prohibitively complicated, is not trivial. As an alternative to
+  compiling both OmicABELnoMM and its dependencies from source you can
+  opt for installing existing packages provided in the repositories of
+  your Linux distribution. However, this will come at a cost:
+  performance will be lower than if you compile the package and its
+  libraries for your own architecture.
+* Support
+  Community support for OmicABELnoMM can be found at the [[http://forum.genabel.org][GenABEL
+  forum]]. Feel free to ask your questions there and to contribute with
+  your own knowledge and skills.
+
+  Commercial support for OmicABELnoMM can be obtained via [[http://www.polyomica.com][PolyOmica]].
+  Typical things PolyOmica can help you with are installing
+  OmicABELnoMM on your server or cluster, or the development of custom
+  features.
+* Contributing
+  OmicABELnoMM is a free software project, we therefore welcome
+  contributions of all kind. Development takes place [[https://github.com/GenABEL-Project/OmicABELnoMM][on GitHub]], where
+  you will find the source code and [[https://github.com/GenABEL-Project/OmicABELnoMM/issues][the list of bugs]]. Feel free to
+  submit your bug reports or feature requests there, or, even better,
+  fork the project and start fixing those bugs. Development
+  discussions take place on [[https://lists.r-forge.r-project.org/mailman/listinfo/genabel-devel][the GenABEL development mailing list]]. We
+  are looking forward to working with you!
+* Licence
+  OmicABELnoMM is free software licensed under the [[https://www.gnu.org/licenses/gpl.html][GNU Generap Public
+  License v3]]. A copy of the licence can be found in the file
+  =COPYING=.
