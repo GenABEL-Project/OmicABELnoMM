@@ -187,7 +187,7 @@ void parse_params(int argc, char *argv[], struct Settings &params)
             phe = !phe;
             params.fnameY = string(optarg);
 
-            pos = string(optarg).find(".");
+            pos = string(optarg).find_last_of(".");
             if (pos != string::npos)
             {
                 params.fnameY = string(optarg).substr(0, pos);
@@ -200,7 +200,7 @@ void parse_params(int argc, char *argv[], struct Settings &params)
             snp = !snp;
             params.fnameAR = string(optarg);
 
-            pos = string(optarg).find(".");
+            pos = string(optarg).find_last_of(".");
             if (pos != string::npos)
                 params.fnameAR = string(optarg).substr(0, pos);
             if (params.mpi_id == 0)
@@ -221,7 +221,7 @@ void parse_params(int argc, char *argv[], struct Settings &params)
             cov = !cov;
             params.fnameAL = string(optarg);
 
-            pos = string(optarg).find(".");
+            pos = string(optarg).find_last_of(".");
             if (pos != string::npos)
                 params.fnameAL = string(optarg).substr(0, pos);
             if (params.mpi_id == 0)
@@ -232,7 +232,7 @@ void parse_params(int argc, char *argv[], struct Settings &params)
             bout = !bout;
             params.fnameOutFiles = string(optarg);
 
-            pos = string(optarg).find(".");
+            pos = string(optarg).find_last_of(".");
             if (pos != string::npos)
                 params.fnameOutFiles = string(optarg).substr(0, pos);
             if (params.mpi_id == 0)
