@@ -171,7 +171,10 @@ AS_IF([test "x$enable_examples" = "xyes"], [
    if test -z "$R"; then
       AC_MSG_NOTICE([R not found - Unable to create example data files])
    fi
-])
+], [
+    AC_MSG_NOTICE([building of the example data files is disabled])
+]
+)
 AM_CONDITIONAL([HAVE_R], test -n "$R")
 AM_CONDITIONAL([BUILD_examples], test "x$enable_examples" = "xyes")
 
