@@ -54,6 +54,6 @@
   discussions take place on [[https://lists.r-forge.r-project.org/mailman/listinfo/genabel-devel][the GenABEL development mailing list]]. We
   are looking forward to working with you!
 * Licence
-  OmicABELnoMM is free software licensed under the [[https://www.gnu.org/licenses/gpl.html][GNU Generap Public
+  OmicABELnoMM is free software licensed under the [[https://www.gnu.org/licenses/gpl.html][GNU General Public
   License v3]]. A copy of the licence can be found in the file
   =COPYING=.
