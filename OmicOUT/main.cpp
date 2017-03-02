@@ -56,14 +56,8 @@ void statistics(float b,  float SE, int AL_name_idx, int AR_name_idx, resultH &r
 
         t=fabs(b/SE);
 
-        if( t < 1.6)
-        {
-            t1=4.4-t;
-            ptemp=0.5-0.1*t1*t;
-        }
-        else
-        {
-            ptemp=erfc(t*one_oversqrt2);
+        ptemp=erfc(t*one_oversqrt2);
+
         }
 
         result rdata;
