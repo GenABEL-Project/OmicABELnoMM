@@ -235,21 +235,21 @@ int main(int argc, char *argv[] )
 
         ifstream fp_allResults;
         fp_allResults.open((source + ".dbin").c_str(),ios::in | ios::binary );
-        if(fp_allResults == 0)
+        if(!fp_allResults.is_open())
         {
             cout << "Error reading File "<< (source + ".dbin") << endl;
             exit(1);
         }
         ifstream fp_InfoResults;
         fp_InfoResults.open((source + ".ibin").c_str(),ios::in | ios::binary );
-        if(fp_InfoResults == 0)
+        if(!fp_InfoResults)
         {
             cout << "Error Creating File " << (source + ".ibin") << endl;
             exit(1);
         }
         ofstream fp_sigResults;
         fp_sigResults.open((dest + ".txt").c_str(),ios::out | ios::trunc);
-        if(fp_sigResults == 0)
+        if(!fp_sigResults)
         {
             cout << "Error Creating File "<< (dest + ".txt") << endl;
             exit(1);

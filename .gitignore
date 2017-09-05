@@ -74,3 +74,8 @@
 /lib/
 /doc/*.aux
 /doc/auto/
+/OmicOUT/.deps/
+/OmicOUT/.deps/
+/OmicOUT/.dirstamp
+/OmicOUT/omicout-main.o
+/omicout
