@@ -5,6 +5,11 @@
   on thousands of phenotypes (e.g. metabolomics data) for thousands of
   individuals and millions of (imputed) genotypes within a reasonable
   time frame (think days instead of months or years).
+* IMPORTANT NOTICE
+  Early 2018, PolyOmica, the main sponsor of the GenABEL project announced that it would discontinue its support. 
+  As PolyOmica was our only sponsor, we regretfully have to announce the likely discontinuation of the GenABEL 
+  Project in its current form, unless a new sponsor steps up or someone takes over maintenance and futher 
+  development of (some of) the tools. 
 * Requirements
 ** Hardware
    OmicABELnoMM requires a modern high-end computer with a multi-core
