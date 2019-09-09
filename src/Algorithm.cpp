@@ -1156,15 +1156,8 @@ void Algorithm::hpc_statistics(int Ymiss, int n, int realN,
                     if(h >= l)
                         hasTminStorage = true;
 
-                    if( t < 1.6)
-                    {
-                        t1=4.4-t;
-                        ptemp=0.5-0.1*t1*t;
-                    }
-                    else
-                    {
-                        ptemp=erfc(t*one_oversqrt2);
-                    }
+                    ptemp=erfc(t*one_oversqrt2);
+
 
                     result rdata;
 
